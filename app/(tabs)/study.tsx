@@ -68,8 +68,8 @@ export default function StudyScreen() {
   return (
     <View style={styles.container}>
       <PageHeader
-        title="Boards Study Zone"
-        subtitle="...becase failure is not an option"
+        title="Quiet Study Area"
+        subtitle="Shh...becase failure is not an option"
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
