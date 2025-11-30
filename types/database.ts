@@ -7,6 +7,32 @@ export interface Profile {
   specialty_interest: string | null;
   created_at: string;
   updated_at: string;
+
+  // ML Backend required fields
+  first_name: string | null;
+  last_name: string | null;
+  enrollment_date: string | null;
+  institution: string | null;
+  program_name: string;
+  expected_graduation: string | null;
+  cohort_year: number | null;
+  program_track: string;
+
+  // ML Backend sync metadata
+  ml_user_id: number | null;
+  ml_last_synced_at: string | null;
+
+  // Optional profile fields
+  phone: string | null;
+  gpa: number | null;
+  clinical_hours: number;
+  current_semester: number;
+  preferred_study_time: string | null;
+  daily_goal_minutes: number;
+  exam_date: string | null;
+  email_notifications: boolean;
+  weekly_report_enabled: boolean;
+  is_active: boolean;
 }
 
 export interface CarePlan {
@@ -101,4 +127,41 @@ export interface StudySession {
   questions_correct: number;
   notes: string | null;
   created_at: string;
+}
+
+export interface MLSyncStatus {
+  id: string;
+  user_id: string;
+  sync_status: 'pending' | 'active' | 'failed' | 'archived';
+  last_sync_at: string | null;
+  last_sync_error: string | null;
+  pending_responses_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TAUser {
+  id: string;
+  user_id: string;
+  bio: string;
+  specialties: string[];
+  is_active: boolean;
+  total_responses: number;
+  average_rating: number | null;
+  created_at: string;
+}
+
+export interface TARequest {
+  id: string;
+  user_id: string;
+  question_text: string;
+  category: string | null;
+  priority: 'urgent' | 'normal' | 'low';
+  status: 'pending' | 'in_progress' | 'answered';
+  response_text: string | null;
+  assigned_ta_id: string | null;
+  rating: number | null;
+  created_at: string;
+  responded_at: string | null;
+  updated_at: string;
 }

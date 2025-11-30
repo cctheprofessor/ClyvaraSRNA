@@ -130,3 +130,9 @@ export const GRADUATION_YEARS = Array.from(
   { length: 2040 - 2025 + 1 },
   (_, i) => (2025 + i).toString()
 );
+
+export const PROGRAM_TRACKS = [
+  'Full-time',
+  'Part-time',
+  'Accelerated',
+] as const;

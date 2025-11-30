@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, ChevronDown, Stethoscope } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
-import { CRNA_SCHOOLS, ROLES, GRADUATION_YEARS } from '@/constants/crna-schools';
+import { CRNA_SCHOOLS, ROLES, PROGRAM_TRACKS } from '@/constants/crna-schools';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -24,19 +24,22 @@ export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [school, setSchool] = useState('');
-  const [graduationYear, setGraduationYear] = useState('');
+  const [institution, setInstitution] = useState('');
+  const [enrollmentDate, setEnrollmentDate] = useState('');
+  const [expectedGraduation, setExpectedGraduation] = useState('');
+  const [programTrack, setProgramTrack] = useState('Full-time');
   const [role, setRole] = useState('');
   const [specialtyInterest, setSpecialtyInterest] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showSchoolPicker, setShowSchoolPicker] = useState(false);
-  const [showYearPicker, setShowYearPicker] = useState(false);
+  const [showProgramTrackPicker, setShowProgramTrackPicker] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
 
   const handleSignup = async () => {
-    if (!fullName || !email || !password || !confirmPassword || !school || !graduationYear || !role || !specialtyInterest) {
-      setError('Please fill in all fields');
+    if (!fullName || !email || !password || !confirmPassword || !institution || !enrollmentDate || !role || !specialtyInterest) {
+      setError('Please fill in all required fields');
       return;
     }
 
@@ -53,7 +56,18 @@ export default function SignupScreen() {
     setLoading(true);
     setError('');
 
-    const { error } = await signUp(email.trim(), password, fullName.trim(), school, graduationYear, role, specialtyInterest.trim());
+    const { error } = await signUp(
+      email.trim(),
+      password,
+      fullName.trim(),
+      institution.trim(),
+      enrollmentDate,
+      expectedGraduation || null,
+      programTrack,
+      role,
+      specialtyInterest.trim(),
+      phone.trim() || null
+    );
 
     if (error) {
       setError(error.message || 'Failed to create account');
@@ -135,28 +149,57 @@ export default function SignupScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>School</Text>
+            <Text style={styles.label}>Institution *</Text>
+            <TextInput
+              style={styles.inputStandalone}
+              placeholder="Your university name (e.g., Duke University)"
+              placeholderTextColor={Colors.text.tertiary}
+              value={institution}
+              onChangeText={setInstitution}
+              editable={!loading}
+            />
             <Pressable
-              style={styles.dropdownButton}
+              style={{marginTop: 4}}
               onPress={() => setShowSchoolPicker(true)}
-              disabled={loading}
             >
-              <Text style={[styles.dropdownText, !school && styles.placeholderText]}>
-                {school || 'Select your CRNA school'}
-              </Text>
-              <ChevronDown color={Colors.text.tertiary} size={20} />
+              <Text style={{fontSize: 12, color: Colors.primary}}>Or select from CRNA schools list</Text>
             </Pressable>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Graduation Year</Text>
+            <Text style={styles.label}>Program Start Date *</Text>
+            <TextInput
+              style={styles.inputStandalone}
+              placeholder="YYYY-MM (e.g., 2024-08)"
+              placeholderTextColor={Colors.text.tertiary}
+              value={enrollmentDate}
+              onChangeText={setEnrollmentDate}
+              editable={!loading}
+            />
+            <Text style={{fontSize: 12, color: Colors.text.tertiary, marginTop: 4}}>When did you start your program?</Text>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Expected Graduation (Optional)</Text>
+            <TextInput
+              style={styles.inputStandalone}
+              placeholder="YYYY-MM (Auto-calculated if blank)"
+              placeholderTextColor={Colors.text.tertiary}
+              value={expectedGraduation}
+              onChangeText={setExpectedGraduation}
+              editable={!loading}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Program Track</Text>
             <Pressable
               style={styles.dropdownButton}
-              onPress={() => setShowYearPicker(true)}
+              onPress={() => setShowProgramTrackPicker(true)}
               disabled={loading}
             >
-              <Text style={[styles.dropdownText, !graduationYear && styles.placeholderText]}>
-                {graduationYear || 'Select graduation year'}
+              <Text style={[styles.dropdownText, !programTrack && styles.placeholderText]}>
+                {programTrack || 'Select program track'}
               </Text>
               <ChevronDown color={Colors.text.tertiary} size={20} />
             </Pressable>
@@ -190,6 +233,19 @@ export default function SignupScreen() {
                 editable={!loading}
               />
             </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Phone Number (Optional)</Text>
+            <TextInput
+              style={styles.inputStandalone}
+              placeholder="+1 (555) 123-4567"
+              placeholderTextColor={Colors.text.tertiary}
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              editable={!loading}
+            />
           </View>
 
           <Pressable
@@ -231,7 +287,7 @@ export default function SignupScreen() {
                 <Pressable
                   style={styles.pickerItem}
                   onPress={() => {
-                    setSchool(item);
+                    setInstitution(item);
                     setShowSchoolPicker(false);
                   }}
                 >
@@ -243,30 +299,27 @@ export default function SignupScreen() {
         </View>
       </Modal>
 
-      <Modal visible={showYearPicker} animationType="slide" transparent>
+      <Modal visible={showProgramTrackPicker} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Graduation Year</Text>
-              <Pressable onPress={() => setShowYearPicker(false)}>
+              <Text style={styles.modalTitle}>Select Program Track</Text>
+              <Pressable onPress={() => setShowProgramTrackPicker(false)}>
                 <Text style={styles.modalClose}>Done</Text>
               </Pressable>
             </View>
-            <FlatList
-              data={GRADUATION_YEARS}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={styles.pickerItem}
-                  onPress={() => {
-                    setGraduationYear(item);
-                    setShowYearPicker(false);
-                  }}
-                >
-                  <Text style={styles.pickerItemText}>{item}</Text>
-                </Pressable>
-              )}
-            />
+            {PROGRAM_TRACKS.map((item) => (
+              <Pressable
+                key={item}
+                style={styles.pickerItem}
+                onPress={() => {
+                  setProgramTrack(item);
+                  setShowProgramTrackPicker(false);
+                }}
+              >
+                <Text style={styles.pickerItemText}>{item}</Text>
+              </Pressable>
+            ))}
           </View>
         </View>
       </Modal>
