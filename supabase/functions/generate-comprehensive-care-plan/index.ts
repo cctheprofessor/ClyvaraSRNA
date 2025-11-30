@@ -169,7 +169,16 @@ const SCHEMA_EXAMPLE = `{
   }
 }`;
 
-const ANESTHESIA_CARE_PLAN_SYSTEM_PROMPT = `You are an expert CRNA (Certified Registered Nurse Anesthetist) anesthesia planning assistant with access to the latest 2024-2025 clinical guidelines and evidence-based practices. Your role is to generate comprehensive, clinically accurate anesthesia care plans based on patient case descriptions.
+const ANESTHESIA_CARE_PLAN_SYSTEM_PROMPT = `You are an expert CRNA (Certified Registered Nurse Anesthetist) anesthesia planning assistant with access to web search, medical journal databases, and vector stores containing the latest 2024-2025 clinical guidelines and evidence-based practices. Your role is to generate comprehensive, clinically accurate anesthesia care plans based on patient case descriptions.
+
+IMPORTANT: You have access to web search and file search tools. Use them to:
+1. Search for the latest clinical guidelines, protocols, and evidence-based practices for the specific procedure and patient conditions
+2. Access medical journal articles and research papers for drug interactions, contraindications, and best practices
+3. Find current medication dosing guidelines and safety recommendations
+4. Research rare conditions or complex cases
+5. Verify the most recent anesthesia management strategies
+
+When generating care plans, actively search for relevant medical literature and guidelines to ensure your recommendations are based on the most current evidence.
 
 CRITICAL INSTRUCTIONS:
 1. You MUST respond with ONLY valid JSON. No markdown, no explanations, no extra text.
@@ -256,6 +265,16 @@ function buildCarePlanUserPrompt(caseDescription: string): string {
   return `Generate a complete anesthesia care plan for the following case:
 
 ${caseDescription}
+
+IMPORTANT - USE YOUR TOOLS:
+Before generating the care plan, use your web search and file search tools to:
+1. Search for the latest anesthesia guidelines for this specific procedure (e.g., "anesthesia management for [procedure name] 2024 guidelines")
+2. Search for drug interactions and contraindications related to the patient's medications and conditions
+3. Search for evidence-based practices for managing the patient's specific comorbidities during anesthesia
+4. Search medical journals for recent studies on optimal anesthetic techniques for this procedure type
+5. Search for the most current medication dosing protocols and safety guidelines
+
+Use the vector store to access specialized anesthesia protocols and guidelines.
 
 CRITICAL REQUIREMENTS:
 
@@ -376,7 +395,7 @@ Deno.serve(async (req: Request) => {
         Authorization: `Bearer ${openAIKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5-nano',
+        model: 'gpt-5-nano-2025-08-07',
         messages: [
           {
             role: 'system',
@@ -389,6 +408,20 @@ Deno.serve(async (req: Request) => {
         ],
         max_completion_tokens: 16000,
         response_format: { type: 'json_object' },
+        tools: [
+          {
+            type: 'web_search',
+            web_search: {
+              search_context_size: 'low'
+            }
+          },
+          {
+            type: 'file_search',
+            file_search: {
+              vector_store_ids: ['vs_69123b1024148191bcf08ad702436fc9']
+            }
+          }
+        ],
       }),
     });
 
@@ -403,7 +436,7 @@ Deno.serve(async (req: Request) => {
     let carePlan;
     try {
       carePlan = JSON.parse(carePlanJson);
-    } catch (parseError) {
+    } catch (parseError: any) {
       throw new Error(`Failed to parse care plan JSON: ${parseError.message}`);
     }
 
