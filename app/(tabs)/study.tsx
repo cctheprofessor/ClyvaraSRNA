@@ -2,12 +2,11 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import {
-  GraduationCap,
   Brain,
   Target,
-  TrendingUp,
-  Clock,
-  Award,
+  Focus,
+  BarChart3,
+  MessageCircleQuestion,
 } from 'lucide-react-native';
 import PageHeader from '@/components/PageHeader';
 
@@ -16,52 +15,44 @@ export default function StudyScreen() {
 
   const features = [
     {
-      id: 'plan',
-      title: 'Study Plan Generator',
-      description: 'Create personalized NBCRNA study plans',
-      icon: GraduationCap,
-      color: Colors.primary,
-      route: '/study/plan-generator',
-    },
-    {
-      id: 'questions',
-      title: 'Practice Questions',
-      description: 'Test knowledge with curated questions',
+      id: 'practice25',
+      title: '25 Practice Questions',
+      description: 'Quick practice session with ML-powered selection',
       icon: Brain,
-      color: Colors.secondary,
-      route: '/study/questions',
-    },
-    {
-      id: 'progress',
-      title: 'Study Progress',
-      description: 'Track your learning journey',
-      icon: TrendingUp,
-      color: Colors.primaryDark,
-      route: '/study/progress',
-    },
-    {
-      id: 'sessions',
-      title: 'Study Sessions',
-      description: 'View your study history',
-      icon: Clock,
-      color: Colors.secondaryLight,
-      route: '/study/sessions',
-    },
-    {
-      id: 'topics',
-      title: 'NBCRNA Topics',
-      description: 'Browse exam topics',
-      icon: Target,
-      color: Colors.secondaryDark,
-      route: '/study/topics',
-    },
-    {
-      id: 'achievements',
-      title: 'Achievements',
-      description: 'Your study milestones',
-      icon: Award,
       color: Colors.primary,
-      route: '/study/achievements',
+      route: '/study/practice-25',
+    },
+    {
+      id: 'practice50',
+      title: '50 Practice Questions',
+      description: 'Extended practice with comprehensive tracking',
+      icon: Target,
+      color: Colors.secondary,
+      route: '/study/practice-50',
+    },
+    {
+      id: 'focused',
+      title: 'Focused Topic Practice',
+      description: 'Deep dive into specific anesthesia topics',
+      icon: Focus,
+      color: Colors.primaryDark,
+      route: '/study/focused-topic',
+    },
+    {
+      id: 'analytics',
+      title: 'Clyvara Analytica',
+      description: 'Performance insights and learning analytics',
+      icon: BarChart3,
+      color: Colors.accent,
+      route: '/study/analytics',
+    },
+    {
+      id: 'ta',
+      title: 'Ask a Teaching Assistant',
+      description: 'Get expert help from experienced CRNAs',
+      icon: MessageCircleQuestion,
+      color: Colors.secondaryLight,
+      route: '/study/ask-ta',
     },
   ];
 
@@ -69,7 +60,7 @@ export default function StudyScreen() {
     <View style={styles.container}>
       <PageHeader
         title="Quiet Study Area"
-        subtitle="Shh...becase failure is not an option"
+        subtitle="ML-Powered Practice & Analytics"
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>

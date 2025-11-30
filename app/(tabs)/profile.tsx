@@ -13,7 +13,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { User, Building2, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
-import { CRNA_SCHOOLS, ROLES, GRADUATION_YEARS } from '@/constants/crna-schools';
+import { CRNA_SCHOOLS, ROLES, PROGRAM_TRACKS } from '@/constants/crna-schools';
 import PageHeader from '@/components/PageHeader';
 import { router } from 'expo-router';
 
@@ -22,12 +22,24 @@ export default function ProfileScreen() {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSchoolPicker, setShowSchoolPicker] = useState(false);
-  const [showYearPicker, setShowYearPicker] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
+  const [showProgramTrackPicker, setShowProgramTrackPicker] = useState(false);
+  const [showStudyTimePicker, setShowStudyTimePicker] = useState(false);
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
+    first_name: profile?.first_name || '',
+    last_name: profile?.last_name || '',
     school: profile?.school || '',
-    graduation_year: profile?.graduation_year?.toString() || '',
+    institution: profile?.institution || '',
+    phone: profile?.phone || '',
+    program_track: profile?.program_track || 'Full-time',
+    current_semester: profile?.current_semester || 1,
+    gpa: profile?.gpa?.toString() || '',
+    clinical_hours: profile?.clinical_hours || 0,
+    preferred_study_time: profile?.preferred_study_time || '',
+    daily_goal_minutes: profile?.daily_goal_minutes || 30,
+    email_notifications: profile?.email_notifications ?? true,
+    weekly_report_enabled: profile?.weekly_report_enabled ?? true,
     role: profile?.role || '',
     specialty_interest: profile?.specialty_interest || '',
   });
@@ -36,8 +48,19 @@ export default function ProfileScreen() {
     if (profile) {
       setFormData({
         full_name: profile.full_name || '',
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
         school: profile.school || '',
-        graduation_year: profile.graduation_year?.toString() || '',
+        institution: profile.institution || '',
+        phone: profile.phone || '',
+        program_track: profile.program_track || 'Full-time',
+        current_semester: profile.current_semester || 1,
+        gpa: profile.gpa?.toString() || '',
+        clinical_hours: profile.clinical_hours || 0,
+        preferred_study_time: profile.preferred_study_time || '',
+        daily_goal_minutes: profile.daily_goal_minutes || 30,
+        email_notifications: profile.email_notifications ?? true,
+        weekly_report_enabled: profile.weekly_report_enabled ?? true,
         role: profile.role || '',
         specialty_interest: profile.specialty_interest || '',
       });
@@ -49,8 +72,18 @@ export default function ProfileScreen() {
 
     const updates = {
       full_name: formData.full_name,
+      first_name: formData.first_name || null,
+      last_name: formData.last_name || null,
       school: formData.school || null,
-      graduation_year: formData.graduation_year ? parseInt(formData.graduation_year) : null,
+      phone: formData.phone || null,
+      program_track: formData.program_track,
+      current_semester: formData.current_semester,
+      gpa: formData.gpa ? parseFloat(formData.gpa) : null,
+      clinical_hours: formData.clinical_hours,
+      preferred_study_time: formData.preferred_study_time || null,
+      daily_goal_minutes: formData.daily_goal_minutes,
+      email_notifications: formData.email_notifications,
+      weekly_report_enabled: formData.weekly_report_enabled,
       role: formData.role || null,
       specialty_interest: formData.specialty_interest || null,
     };
@@ -76,8 +109,19 @@ export default function ProfileScreen() {
   const handleCancel = () => {
     setFormData({
       full_name: profile?.full_name || '',
+      first_name: profile?.first_name || '',
+      last_name: profile?.last_name || '',
       school: profile?.school || '',
-      graduation_year: profile?.graduation_year?.toString() || '',
+      institution: profile?.institution || '',
+      phone: profile?.phone || '',
+      program_track: profile?.program_track || 'Full-time',
+      current_semester: profile?.current_semester || 1,
+      gpa: profile?.gpa?.toString() || '',
+      clinical_hours: profile?.clinical_hours || 0,
+      preferred_study_time: profile?.preferred_study_time || '',
+      daily_goal_minutes: profile?.daily_goal_minutes || 30,
+      email_notifications: profile?.email_notifications ?? true,
+      weekly_report_enabled: profile?.weekly_report_enabled ?? true,
       role: profile?.role || '',
       specialty_interest: profile?.specialty_interest || '',
     });
@@ -149,30 +193,6 @@ export default function ProfileScreen() {
 
             <View style={styles.inputGroup}>
               <View style={styles.inputLabel}>
-                <GraduationCap color="#64748b" size={18} />
-                <Text style={styles.label}>Graduation Year</Text>
-              </View>
-              {editing ? (
-                <Pressable
-                  style={styles.dropdownButton}
-                  onPress={() => setShowYearPicker(true)}
-                >
-                  <Text style={[styles.dropdownText, !formData.graduation_year && styles.placeholderText]}>
-                    {formData.graduation_year || 'Select graduation year'}
-                  </Text>
-                  <ChevronDown color={Colors.text.tertiary} size={20} />
-                </Pressable>
-              ) : (
-                <TextInput
-                  style={[styles.input, styles.inputDisabled]}
-                  value={formData.graduation_year}
-                  editable={false}
-                />
-              )}
-            </View>
-
-            <View style={styles.inputGroup}>
-              <View style={styles.inputLabel}>
                 <Briefcase color="#64748b" size={18} />
                 <Text style={styles.label}>Role</Text>
               </View>
@@ -229,6 +249,159 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Program Information</Text>
+          </View>
+          <View style={styles.form}>
+            {profile?.institution && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Institution</Text>
+                <TextInput
+                  style={[styles.input, styles.inputDisabled]}
+                  value={profile.institution}
+                  editable={false}
+                />
+              </View>
+            )}
+            {profile?.enrollment_date && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Enrollment Date</Text>
+                <TextInput
+                  style={[styles.input, styles.inputDisabled]}
+                  value={new Date(profile.enrollment_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                  editable={false}
+                />
+              </View>
+            )}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Program Track</Text>
+              {editing ? (
+                <Pressable
+                  style={styles.dropdownButton}
+                  onPress={() => setShowProgramTrackPicker(true)}
+                >
+                  <Text style={[styles.dropdownText, !formData.program_track && styles.placeholderText]}>
+                    {formData.program_track || 'Select program track'}
+                  </Text>
+                  <ChevronDown color={Colors.text.tertiary} size={20} />
+                </Pressable>
+              ) : (
+                <TextInput
+                  style={[styles.input, styles.inputDisabled]}
+                  value={formData.program_track}
+                  editable={false}
+                />
+              )}
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Current Semester</Text>
+              <TextInput
+                style={[styles.input, !editing && styles.inputDisabled]}
+                value={formData.current_semester.toString()}
+                onChangeText={(text) => setFormData({ ...formData, current_semester: parseInt(text) || 1 })}
+                keyboardType="number-pad"
+                editable={editing}
+              />
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Academic Progress</Text>
+          </View>
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>GPA (0.0 - 4.0)</Text>
+              <TextInput
+                style={[styles.input, !editing && styles.inputDisabled]}
+                value={formData.gpa}
+                onChangeText={(text) => setFormData({ ...formData, gpa: text })}
+                keyboardType="decimal-pad"
+                placeholder="3.5"
+                editable={editing}
+              />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Clinical Hours Completed</Text>
+              <TextInput
+                style={[styles.input, !editing && styles.inputDisabled]}
+                value={formData.clinical_hours.toString()}
+                onChangeText={(text) => setFormData({ ...formData, clinical_hours: parseInt(text) || 0 })}
+                keyboardType="number-pad"
+                editable={editing}
+              />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Phone Number</Text>
+              <TextInput
+                style={[styles.input, !editing && styles.inputDisabled]}
+                value={formData.phone}
+                onChangeText={(text) => setFormData({ ...formData, phone: text })}
+                keyboardType="phone-pad"
+                placeholder="+1 (555) 123-4567"
+                editable={editing}
+              />
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Study Preferences</Text>
+          </View>
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Preferred Study Time</Text>
+              {editing ? (
+                <Pressable
+                  style={styles.dropdownButton}
+                  onPress={() => setShowStudyTimePicker(true)}
+                >
+                  <Text style={[styles.dropdownText, !formData.preferred_study_time && styles.placeholderText]}>
+                    {formData.preferred_study_time ? formData.preferred_study_time.charAt(0).toUpperCase() + formData.preferred_study_time.slice(1) : 'Select preferred time'}
+                  </Text>
+                  <ChevronDown color={Colors.text.tertiary} size={20} />
+                </Pressable>
+              ) : (
+                <TextInput
+                  style={[styles.input, styles.inputDisabled]}
+                  value={formData.preferred_study_time ? formData.preferred_study_time.charAt(0).toUpperCase() + formData.preferred_study_time.slice(1) : 'Not set'}
+                  editable={false}
+                />
+              )}
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Daily Study Goal (minutes)</Text>
+              <TextInput
+                style={[styles.input, !editing && styles.inputDisabled]}
+                value={formData.daily_goal_minutes.toString()}
+                onChangeText={(text) => setFormData({ ...formData, daily_goal_minutes: parseInt(text) || 30 })}
+                keyboardType="number-pad"
+                editable={editing}
+              />
+            </View>
+          </View>
+        </View>
+
+        {profile?.ml_user_id && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>ML Sync Status</Text>
+            <View style={styles.form}>
+              <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                <View style={{width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.success}} />
+                <Text style={styles.label}>Synced with ML Backend</Text>
+              </View>
+              {profile.ml_last_synced_at && (
+                <Text style={{fontSize: 12, color: Colors.text.tertiary}}>
+                  Last synced: {new Date(profile.ml_last_synced_at).toLocaleString()}
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
+
         {isAdmin && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Admin</Text>
@@ -278,34 +451,6 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      <Modal visible={showYearPicker} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Graduation Year</Text>
-              <Pressable onPress={() => setShowYearPicker(false)}>
-                <Text style={styles.modalClose}>Done</Text>
-              </Pressable>
-            </View>
-            <FlatList
-              data={GRADUATION_YEARS}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={styles.pickerItem}
-                  onPress={() => {
-                    setFormData({ ...formData, graduation_year: item });
-                    setShowYearPicker(false);
-                  }}
-                >
-                  <Text style={styles.pickerItemText}>{item}</Text>
-                </Pressable>
-              )}
-            />
-          </View>
-        </View>
-      </Modal>
-
       <Modal visible={showRolePicker} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -325,6 +470,56 @@ export default function ProfileScreen() {
                 }}
               >
                 <Text style={styles.pickerItemText}>{item}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showProgramTrackPicker} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Program Track</Text>
+              <Pressable onPress={() => setShowProgramTrackPicker(false)}>
+                <Text style={styles.modalClose}>Done</Text>
+              </Pressable>
+            </View>
+            {PROGRAM_TRACKS.map((item) => (
+              <Pressable
+                key={item}
+                style={styles.pickerItem}
+                onPress={() => {
+                  setFormData({ ...formData, program_track: item });
+                  setShowProgramTrackPicker(false);
+                }}
+              >
+                <Text style={styles.pickerItemText}>{item}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showStudyTimePicker} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Study Time</Text>
+              <Pressable onPress={() => setShowStudyTimePicker(false)}>
+                <Text style={styles.modalClose}>Done</Text>
+              </Pressable>
+            </View>
+            {['morning', 'afternoon', 'evening', 'night'].map((item) => (
+              <Pressable
+                key={item}
+                style={styles.pickerItem}
+                onPress={() => {
+                  setFormData({ ...formData, preferred_study_time: item });
+                  setShowStudyTimePicker(false);
+                }}
+              >
+                <Text style={styles.pickerItemText}>{item.charAt(0).toUpperCase() + item.slice(1)}</Text>
               </Pressable>
             ))}
           </View>
