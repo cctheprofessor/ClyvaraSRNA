@@ -2,14 +2,9 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import {
-  FileText,
-  Calculator,
-  Syringe,
-  Heart,
-  Baby,
-  Brain,
-  Activity,
-  Droplet,
+  Hospital,
+  UserRound,
+  MessageCircleQuestion,
 } from 'lucide-react-native';
 import PageHeader from '@/components/PageHeader';
 
@@ -18,68 +13,31 @@ export default function ToolsScreen() {
 
   const categories = [
     {
-      title: 'Drug Calculators',
+      title: 'Clinical Preference Cards',
       tools: [
         {
-          id: 'emergency',
-          title: 'Emergency Drugs',
-          description: 'ACLS medication dosing',
-          icon: Heart,
+          id: 'clinical-site',
+          title: 'Clinical Site',
+          description: 'Hospital/clinic and cases!',
+          icon: Hospital,
           color: Colors.primary,
-          route: '/tools/emergency-drugs',
+          route: '/tools/clinical-site',
         },
         {
-          id: 'anesthesia',
-          title: 'Anesthesia Drugs',
-          description: 'Induction & maintenance agents',
-          icon: Syringe,
-          color: Colors.primaryDark,
-          route: '/tools/anesthesia-drugs',
-        },
-        {
-          id: 'pediatric',
-          title: 'Pediatric Dosing',
-          description: 'Weight-based calculations',
-          icon: Baby,
-          color: Colors.primaryLight,
-          route: '/tools/pediatric-drugs',
-        },
-        {
-          id: 'infusion',
-          title: 'Infusion Rates',
-          description: 'IV drip calculations',
-          icon: Droplet,
-          color: Colors.secondaryDark,
-          route: '/tools/infusion-rates',
-        },
-      ],
-    },
-    {
-      title: 'Clinical Scoring',
-      tools: [
-        {
-          id: 'gcs',
-          title: 'Glasgow Coma Scale',
-          description: 'Neurological assessment',
-          icon: Brain,
-          color: Colors.secondaryLight,
-          route: '/tools/gcs',
-        },
-        {
-          id: 'apgar',
-          title: 'APGAR Score',
-          description: 'Newborn assessment',
-          icon: Baby,
-          color: Colors.primary,
-          route: '/tools/apgar',
-        },
-        {
-          id: 'scores',
-          title: 'More Clinical Scores',
-          description: 'ASA, SOFA, RASS',
-          icon: Activity,
+          id: 'preceptor',
+          title: 'Preceptor',
+          description: 'Maximize your learning environment!',
+          icon: UserRound,
           color: Colors.secondary,
-          route: '/tools/clinical-scores',
+          route: '/tools/preceptor',
+        },
+        {
+          id: 'anonymous',
+          title: 'Ask Anonymously!',
+          description: 'Questions for the Clyvara Community',
+          icon: MessageCircleQuestion,
+          color: Colors.accent,
+          route: '/tools/ask-anonymously',
         },
       ],
     },
@@ -89,7 +47,7 @@ export default function ToolsScreen() {
     <View style={styles.container}>
       <PageHeader
         title="Clinical Tools"
-        subtitle="Calculators x Scoring Systems"
+        subtitle="Community-powered clinical insights"
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>

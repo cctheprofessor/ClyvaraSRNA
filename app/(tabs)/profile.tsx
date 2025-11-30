@@ -250,6 +250,36 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Donation</Text>
+          <View style={styles.form}>
+            <Text style={styles.donationText}>
+              Help keep this project going and consider donating!
+            </Text>
+            <View style={styles.donationButtons}>
+              <Pressable
+                style={styles.donationButton}
+                onPress={() => {
+                  alert('Stripe integration coming soon! Thank you for your interest in supporting Clyvara.');
+                }}
+              >
+                <Text style={styles.donationButtonText}>One-Time Donation</Text>
+              </Pressable>
+              <Pressable
+                style={styles.donationButton}
+                onPress={() => {
+                  alert('Stripe integration coming soon! Thank you for your interest in supporting Clyvara.');
+                }}
+              >
+                <Text style={styles.donationButtonText}>Monthly Support</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.donationFooter}>
+              Your support helps us maintain and improve Clyvara for all SRNA students
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Program Information</Text>
           </View>
@@ -731,5 +761,36 @@ const styles = StyleSheet.create({
   pickerItemText: {
     fontSize: 16,
     color: Colors.text.primary,
+  },
+  donationText: {
+    fontSize: 15,
+    color: Colors.text.secondary,
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+  donationButtons: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  donationButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.md,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.sm,
+    alignItems: 'center',
+  },
+  donationButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.text.light,
+  },
+  donationFooter: {
+    fontSize: 13,
+    color: Colors.text.tertiary,
+    textAlign: 'center',
+    marginTop: Spacing.xs,
+    fontStyle: 'italic',
   },
 });
