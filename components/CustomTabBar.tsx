@@ -67,8 +67,12 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
               canPreventDefault: true,
             });
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
+            if (!event.defaultPrevented) {
+              if (routeName === 'study' || routeName === 'tools') {
+                navigation.navigate(route.name, { screen: 'index' });
+              } else if (!isFocused) {
+                navigation.navigate(route.name);
+              }
             }
           };
 
