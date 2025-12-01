@@ -332,24 +332,6 @@ export default function ProfileScreen() {
               />
             </View>
           </View>
-
-          {editing && (
-            <View style={styles.actionButtons}>
-              <Pressable style={styles.cancelButton} onPress={handleCancel}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.saveButton, loading && styles.saveButtonDisabled]}
-                onPress={handleSave}
-                disabled={loading}
-              >
-                <Save color="#ffffff" size={18} />
-                <Text style={styles.saveButtonText}>
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </Text>
-              </Pressable>
-            </View>
-          )}
         </View>
 
         <View style={styles.section}>
@@ -486,6 +468,24 @@ export default function ProfileScreen() {
               />
             </View>
           </View>
+
+          {editing && (
+            <View style={styles.actionButtons}>
+              <Pressable style={styles.cancelButton} onPress={handleCancel}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+                onPress={handleSave}
+                disabled={loading}
+              >
+                <Save color="#ffffff" size={18} />
+                <Text style={styles.saveButtonText}>
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </Text>
+              </Pressable>
+            </View>
+          )}
         </View>
 
         {profile?.ml_user_id && (
