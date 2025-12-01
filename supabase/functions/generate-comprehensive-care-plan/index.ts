@@ -399,7 +399,11 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         model: 'gpt-5-nano-2025-08-07',
         input: combinedInput,
-        response_format: { type: 'json_object' },
+        text: {
+          format: {
+            type: 'json_object',
+          },
+        },
         tools: [
           {
             type: 'web_search',
