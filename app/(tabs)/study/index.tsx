@@ -59,8 +59,8 @@ export default function StudyScreen() {
   return (
     <View style={styles.container}>
       <PageHeader
-        title="Quiet Study Area"
-        subtitle="Curated Practice for your Specific Needs! Powered by Clyvara Analytica"
+        title="Practice Question Specifically Curated for You"
+        subtitle="Powered by Clyvara Analytica"
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
