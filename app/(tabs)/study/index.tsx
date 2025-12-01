@@ -60,7 +60,7 @@ export default function StudyScreen() {
     <View style={styles.container}>
       <PageHeader
         title="Quiet Study Area"
-        subtitle="Curated Practice for your Specific Needs"
+        subtitle="Curated Practice for your Specific Needs!"
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
