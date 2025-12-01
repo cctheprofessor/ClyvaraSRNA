@@ -232,24 +232,47 @@ export default function ProfileScreen() {
         })
         .eq('id', user.id);
 
-      await supabase.from('ml_sync_status').upsert({
+      const { error: syncStatusError } = await supabase.from('ml_sync_status').upsert({
         user_id: user.id,
         sync_status: 'active',
         last_sync_at: new Date().toISOString(),
       });
+
+      if (syncStatusError) {
+        console.error('Failed to update sync status:', syncStatusError);
+      }
 
       await refreshProfile();
 
       Alert.alert('Success', 'Successfully synced with ML backend! You can now access practice questions.');
     } catch (error: any) {
       console.error('ML sync error:', error);
-      Alert.alert('Sync Failed', error.message || 'Failed to sync with ML backend. Please try again later.');
 
-      await supabase.from('ml_sync_status').upsert({
+      const errorMessage = error.message || 'Failed to sync with ML backend';
+      const isNetworkError = errorMessage.includes('fetch') || errorMessage.includes('network');
+
+      if (isNetworkError) {
+        Alert.alert(
+          'ML Backend Unavailable',
+          'The ML backend service is currently unavailable. This may be because:\n\n' +
+          '• The service is starting up (Replit apps sleep when inactive)\n' +
+          '• Network connectivity issues\n' +
+          '• API configuration needs updating\n\n' +
+          'You can still use other features of the app. Practice questions will be available once the ML backend is online.'
+        );
+      } else {
+        Alert.alert('Sync Failed', errorMessage);
+      }
+
+      const { error: syncStatusError } = await supabase.from('ml_sync_status').upsert({
         user_id: user.id,
         sync_status: 'pending',
         last_sync_error: error.message || 'Unknown error',
       });
+
+      if (syncStatusError) {
+        console.error('Failed to update sync status:', syncStatusError);
+      }
     } finally {
       setMlSyncLoading(false);
     }
