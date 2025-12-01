@@ -418,18 +418,27 @@ Deno.serve(async (req: Request) => {
 
     let carePlanJson: string | null = null;
 
-    // Responses API structure: response.output[0].content[0].text
+    // Responses API structure: response.output[] contains multiple items
+    // We need to find the "message" type item, not "reasoning" type
     if (data.output && Array.isArray(data.output) && data.output.length > 0) {
-      const firstOutput = data.output[0];
-      console.log('First output structure:', JSON.stringify(firstOutput, null, 2));
+      console.log('Total output items:', data.output.length);
 
-      if (firstOutput.content && Array.isArray(firstOutput.content) && firstOutput.content.length > 0) {
-        const firstContent = firstOutput.content[0];
-        console.log('First content structure:', JSON.stringify(firstContent, null, 2));
+      // Iterate through all output items to find the message
+      for (let i = 0; i < data.output.length; i++) {
+        const outputItem = data.output[i];
+        console.log(`Output item ${i} type:`, outputItem.type);
+        console.log(`Output item ${i} structure:`, JSON.stringify(outputItem, null, 2));
 
-        if (firstContent.text) {
-          carePlanJson = firstContent.text;
-          console.log('Successfully extracted text from output[0].content[0].text');
+        // Look for message type items
+        if (outputItem.type === 'message' && outputItem.content && Array.isArray(outputItem.content)) {
+          for (const contentItem of outputItem.content) {
+            if (contentItem.type === 'text' && contentItem.text) {
+              carePlanJson = contentItem.text;
+              console.log('Successfully extracted text from message output item');
+              break;
+            }
+          }
+          if (carePlanJson) break;
         }
       }
     }
