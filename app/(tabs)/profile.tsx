@@ -214,6 +214,7 @@ export default function ProfileScreen() {
     setMlSyncLoading(true);
 
     try {
+      console.log('Starting ML sync for user:', user.id);
       const mlData = await mlClient.syncUser({
         external_user_id: user.id,
         email: user.email || '',
@@ -223,14 +224,25 @@ export default function ProfileScreen() {
         institution: profile.institution,
         expected_graduation: profile.expected_graduation || undefined,
       });
+      console.log('ML sync successful, received user_id:', mlData.user_id);
 
-      await supabase
+      const syncTimestamp = new Date().toISOString();
+      console.log('Updating profile with ml_user_id:', mlData.user_id, 'at', syncTimestamp);
+
+      const { error: profileUpdateError } = await supabase
         .from('profiles')
         .update({
           ml_user_id: mlData.user_id,
-          ml_last_synced_at: new Date().toISOString(),
+          ml_last_synced_at: syncTimestamp,
         })
         .eq('id', user.id);
+
+      if (profileUpdateError) {
+        console.error('Failed to update profile:', profileUpdateError);
+        throw new Error('Failed to update profile after sync');
+      }
+
+      console.log('Profile updated successfully');
 
       const { error: syncStatusError } = await supabase.from('ml_sync_status').upsert(
         {
@@ -248,7 +260,9 @@ export default function ProfileScreen() {
         console.error('Failed to update sync status:', syncStatusError);
       }
 
+      console.log('Refreshing profile to get updated data...');
       await refreshProfile();
+      console.log('Profile refreshed, new timestamp should be visible');
 
       Alert.alert('Success', 'Successfully synced with ML backend! You can now access practice questions.');
     } catch (error: any) {
@@ -592,9 +606,14 @@ export default function ProfileScreen() {
                   <Text style={styles.label}>Synced with ML Backend</Text>
                 </View>
                 {profile.ml_last_synced_at && (
-                  <Text style={{fontSize: 12, color: Colors.text.tertiary}}>
-                    Last synced: {new Date(profile.ml_last_synced_at).toLocaleString()}
-                  </Text>
+                  <>
+                    <Text style={{fontSize: 12, color: Colors.text.tertiary}}>
+                      Last synced: {new Date(profile.ml_last_synced_at).toLocaleString()}
+                    </Text>
+                    <Text style={{fontSize: 10, color: Colors.text.tertiary, fontStyle: 'italic'}}>
+                      ML User ID: {profile.ml_user_id}
+                    </Text>
+                  </>
                 )}
                 <Pressable
                   style={[styles.syncButton, mlSyncLoading && styles.syncButtonDisabled]}

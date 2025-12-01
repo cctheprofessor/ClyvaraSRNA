@@ -97,6 +97,7 @@ export class MLBackendClient {
     institution: string;
     expected_graduation?: string;
   }): Promise<{ user_id: number }> {
+    console.log('[MLBackendClient] Calling syncUser API with data:', userData);
     const headers = await this.getAuthHeaders();
     const response = await this.fetchWithRetry(
       `${EDGE_FUNCTION_URL}?action=sync_user`,
@@ -109,10 +110,13 @@ export class MLBackendClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      console.error('[MLBackendClient] Sync user API failed:', errorData);
       throw new Error(errorData.error || `Failed to sync user: ${response.statusText}`);
     }
 
-    return await response.json();
+    const result = await response.json();
+    console.log('[MLBackendClient] Sync user API response:', result);
+    return result;
   }
 
   async batchSyncUsers(users: Array<{
