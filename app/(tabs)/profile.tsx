@@ -211,6 +211,42 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Donation</Text>
+          <View style={styles.form}>
+            <Text style={styles.donationText}>
+              Help keep this project going and consider donating!
+            </Text>
+            <View style={styles.donationButtons}>
+              <Pressable
+                style={[styles.donationButton, donationLoading && styles.donationButtonDisabled]}
+                onPress={() => handleDonation('one_time')}
+                disabled={donationLoading}
+              >
+                {donationLoading ? (
+                  <ActivityIndicator size="small" color={Colors.text.light} />
+                ) : (
+                  <Text style={styles.donationButtonText}>One-Time $10</Text>
+                )}
+              </Pressable>
+              <Pressable
+                style={[styles.donationButton, donationLoading && styles.donationButtonDisabled]}
+                onPress={() => handleDonation('monthly')}
+                disabled={donationLoading}
+              >
+                {donationLoading ? (
+                  <ActivityIndicator size="small" color={Colors.text.light} />
+                ) : (
+                  <Text style={styles.donationButtonText}>Monthly $5</Text>
+                )}
+              </Pressable>
+            </View>
+            <Text style={styles.donationFooter}>
+              Your support helps us maintain and improve Clyvara for all SRNA students
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Personal Information</Text>
             {!editing && (
@@ -314,42 +350,6 @@ export default function ProfileScreen() {
               </Pressable>
             </View>
           )}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Donation</Text>
-          <View style={styles.form}>
-            <Text style={styles.donationText}>
-              Help keep this project going and consider donating!
-            </Text>
-            <View style={styles.donationButtons}>
-              <Pressable
-                style={[styles.donationButton, donationLoading && styles.donationButtonDisabled]}
-                onPress={() => handleDonation('one_time')}
-                disabled={donationLoading}
-              >
-                {donationLoading ? (
-                  <ActivityIndicator size="small" color={Colors.text.light} />
-                ) : (
-                  <Text style={styles.donationButtonText}>One-Time $10</Text>
-                )}
-              </Pressable>
-              <Pressable
-                style={[styles.donationButton, donationLoading && styles.donationButtonDisabled]}
-                onPress={() => handleDonation('monthly')}
-                disabled={donationLoading}
-              >
-                {donationLoading ? (
-                  <ActivityIndicator size="small" color={Colors.text.light} />
-                ) : (
-                  <Text style={styles.donationButtonText}>Monthly $5</Text>
-                )}
-              </Pressable>
-            </View>
-            <Text style={styles.donationFooter}>
-              Your support helps us maintain and improve Clyvara for all SRNA students
-            </Text>
-          </View>
         </View>
 
         <View style={styles.section}>
