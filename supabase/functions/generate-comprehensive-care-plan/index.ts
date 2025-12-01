@@ -414,7 +414,10 @@ Deno.serve(async (req: Request) => {
     }
 
     const data = await openAIResponse.json();
-    console.log('OpenAI API full response:', JSON.stringify(data, null, 2));
+    console.log('=== OpenAI API Response Debug ===');
+    console.log('Response status:', openAIResponse.status);
+    console.log('Response keys:', Object.keys(data));
+    console.log('Full response:', JSON.stringify(data, null, 2));
 
     let carePlanJson: string | null = null;
 
@@ -426,18 +429,46 @@ Deno.serve(async (req: Request) => {
       // Iterate through all output items to find the message
       for (let i = 0; i < data.output.length; i++) {
         const outputItem = data.output[i];
-        console.log(`Output item ${i} type:`, outputItem.type);
-        console.log(`Output item ${i} structure:`, JSON.stringify(outputItem, null, 2));
+        console.log(`\n--- Output item ${i} ---`);
+        console.log(`Type: ${outputItem.type}`);
+        console.log(`Has content: ${!!outputItem.content}`);
+        console.log(`Content is array: ${Array.isArray(outputItem.content)}`);
+        if (outputItem.content) {
+          console.log(`Content length: ${outputItem.content.length}`);
+        }
+        console.log(`Full structure:`, JSON.stringify(outputItem, null, 2));
 
         // Look for message type items
-        if (outputItem.type === 'message' && outputItem.content && Array.isArray(outputItem.content)) {
-          for (const contentItem of outputItem.content) {
-            if (contentItem.type === 'text' && contentItem.text) {
-              carePlanJson = contentItem.text;
-              console.log('Successfully extracted text from message output item');
-              break;
+        if (outputItem.type === 'message') {
+          console.log('Found message type item!');
+          console.log('Message status:', outputItem.status);
+
+          // Check if message has content directly (not in an array)
+          if (outputItem.text) {
+            console.log('Found text directly on message object!');
+            carePlanJson = outputItem.text;
+            console.log('✓ Successfully extracted text from message.text!');
+            console.log(`  Text length: ${outputItem.text.length}`);
+          } else if (outputItem.content && Array.isArray(outputItem.content)) {
+            console.log(`Processing ${outputItem.content.length} content items`);
+            for (let j = 0; j < outputItem.content.length; j++) {
+              const contentItem = outputItem.content[j];
+              console.log(`  Content item ${j} type: ${contentItem.type}`);
+              console.log(`  Content item ${j} has text: ${!!contentItem.text}`);
+              console.log(`  Content item ${j} keys:`, Object.keys(contentItem));
+
+              if (contentItem.text) {
+                carePlanJson = contentItem.text;
+                console.log('✓ Successfully extracted text from message content item!');
+                console.log(`  Text length: ${contentItem.text.length}`);
+                break;
+              }
             }
+          } else {
+            console.log('Message item has no content array or text field');
+            console.log('Message keys:', Object.keys(outputItem));
           }
+
           if (carePlanJson) break;
         }
       }
