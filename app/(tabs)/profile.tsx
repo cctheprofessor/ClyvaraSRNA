@@ -232,11 +232,17 @@ export default function ProfileScreen() {
         })
         .eq('id', user.id);
 
-      const { error: syncStatusError } = await supabase.from('ml_sync_status').upsert({
-        user_id: user.id,
-        sync_status: 'active',
-        last_sync_at: new Date().toISOString(),
-      });
+      const { error: syncStatusError } = await supabase.from('ml_sync_status').upsert(
+        {
+          user_id: user.id,
+          sync_status: 'active',
+          last_sync_at: new Date().toISOString(),
+          last_sync_error: null,
+        },
+        {
+          onConflict: 'user_id',
+        }
+      );
 
       if (syncStatusError) {
         console.error('Failed to update sync status:', syncStatusError);
@@ -264,11 +270,16 @@ export default function ProfileScreen() {
         Alert.alert('Sync Failed', errorMessage);
       }
 
-      const { error: syncStatusError } = await supabase.from('ml_sync_status').upsert({
-        user_id: user.id,
-        sync_status: 'pending',
-        last_sync_error: error.message || 'Unknown error',
-      });
+      const { error: syncStatusError } = await supabase.from('ml_sync_status').upsert(
+        {
+          user_id: user.id,
+          sync_status: 'pending',
+          last_sync_error: error.message || 'Unknown error',
+        },
+        {
+          onConflict: 'user_id',
+        }
+      );
 
       if (syncStatusError) {
         console.error('Failed to update sync status:', syncStatusError);

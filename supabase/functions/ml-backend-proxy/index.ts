@@ -51,6 +51,7 @@ Deno.serve(async (req: Request) => {
           headers: {
             'X-API-Key': ML_API_KEY,
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
           },
           body: JSON.stringify(body),
         });
@@ -75,6 +76,7 @@ Deno.serve(async (req: Request) => {
             method: 'GET',
             headers: {
               'X-API-Key': ML_API_KEY,
+              'X-Requested-With': 'XMLHttpRequest',
             },
           }
         );
@@ -88,6 +90,7 @@ Deno.serve(async (req: Request) => {
           headers: {
             'X-API-Key': ML_API_KEY,
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
           },
           body: JSON.stringify(body),
         });
@@ -106,6 +109,7 @@ Deno.serve(async (req: Request) => {
             method: 'GET',
             headers: {
               'X-API-Key': ML_API_KEY,
+              'X-Requested-With': 'XMLHttpRequest',
             },
           }
         );
@@ -124,6 +128,7 @@ Deno.serve(async (req: Request) => {
             method: 'GET',
             headers: {
               'X-API-Key': ML_API_KEY,
+              'X-Requested-With': 'XMLHttpRequest',
             },
           }
         );
