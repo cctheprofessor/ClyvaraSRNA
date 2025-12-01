@@ -395,7 +395,7 @@ Deno.serve(async (req: Request) => {
         Authorization: `Bearer ${openAIKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-5-nano-2025-08-07',
         messages: [
           {
             role: 'system',
