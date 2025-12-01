@@ -135,6 +135,151 @@ Deno.serve(async (req: Request) => {
         break;
       }
 
+      case 'download_questions': {
+        const mlUserId = url.searchParams.get('ml_user_id');
+        const count = url.searchParams.get('count') || '100';
+
+        if (!mlUserId) {
+          throw new Error('Missing ml_user_id');
+        }
+
+        const params = new URLSearchParams({
+          user_id: mlUserId,
+          count: count,
+        });
+
+        mlResponse = await fetch(
+          `${ML_BACKEND_URL}/api/questions/download-batch?${params}`,
+          {
+            method: 'GET',
+            headers: {
+              'X-API-Key': ML_API_KEY,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+          }
+        );
+        break;
+      }
+
+      case 'sync_offline_responses': {
+        const body = await req.json();
+        mlResponse = await fetch(
+          `${ML_BACKEND_URL}/api/responses/sync-batch`,
+          {
+            method: 'POST',
+            headers: {
+              'X-API-Key': ML_API_KEY,
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify(body),
+          }
+        );
+        break;
+      }
+
+      case 'get_question_type_performance': {
+        const mlUserId = url.searchParams.get('ml_user_id');
+        if (!mlUserId) {
+          throw new Error('Missing ml_user_id');
+        }
+
+        mlResponse = await fetch(
+          `${ML_BACKEND_URL}/api/student-insights/${mlUserId}/question-types`,
+          {
+            method: 'GET',
+            headers: {
+              'X-API-Key': ML_API_KEY,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+          }
+        );
+        break;
+      }
+
+      case 'get_concept_coverage': {
+        const mlUserId = url.searchParams.get('ml_user_id');
+        const topicId = url.searchParams.get('topic_id');
+
+        if (!mlUserId) {
+          throw new Error('Missing ml_user_id');
+        }
+
+        const params = topicId ? `?topic_id=${topicId}` : '';
+        mlResponse = await fetch(
+          `${ML_BACKEND_URL}/api/students/${mlUserId}/concept-coverage${params}`,
+          {
+            method: 'GET',
+            headers: {
+              'X-API-Key': ML_API_KEY,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+          }
+        );
+        break;
+      }
+
+      case 'predict_topic_performance': {
+        const mlUserId = url.searchParams.get('ml_user_id');
+        const topicId = url.searchParams.get('topic_id');
+
+        if (!mlUserId || !topicId) {
+          throw new Error('Missing ml_user_id or topic_id');
+        }
+
+        mlResponse = await fetch(
+          `${ML_BACKEND_URL}/api/students/${mlUserId}/predict-topic/${topicId}`,
+          {
+            method: 'GET',
+            headers: {
+              'X-API-Key': ML_API_KEY,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+          }
+        );
+        break;
+      }
+
+      case 'get_study_path': {
+        const mlUserId = url.searchParams.get('ml_user_id');
+        const pathLength = url.searchParams.get('path_length') || '20';
+
+        if (!mlUserId) {
+          throw new Error('Missing ml_user_id');
+        }
+
+        mlResponse = await fetch(
+          `${ML_BACKEND_URL}/api/students/${mlUserId}/generate-study-path`,
+          {
+            method: 'POST',
+            headers: {
+              'X-API-Key': ML_API_KEY,
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ path_length: parseInt(pathLength) }),
+          }
+        );
+        break;
+      }
+
+      case 'batch_sync_users': {
+        const body = await req.json();
+        mlResponse = await fetch(
+          `${ML_BACKEND_URL}/api/users/batch-sync`,
+          {
+            method: 'POST',
+            headers: {
+              'X-API-Key': ML_API_KEY,
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify(body),
+          }
+        );
+        break;
+      }
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }

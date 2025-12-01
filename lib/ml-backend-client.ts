@@ -115,6 +115,38 @@ export class MLBackendClient {
     return await response.json();
   }
 
+  async batchSyncUsers(users: Array<{
+    external_user_id: string;
+    email: string;
+    username?: string;
+    enrollment_date: string;
+    program_name?: string;
+    institution: string;
+    expected_graduation?: string;
+  }>): Promise<{
+    total_synced: number;
+    successful: number;
+    failed: number;
+    errors: Array<{ external_user_id: string; error: string }>;
+  }> {
+    const headers = await this.getAuthHeaders();
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?action=batch_sync_users`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ users }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to batch sync users: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
   async getUserProgression(userId: number): Promise<{
     current_stage: string;
     performance_tier: string;
@@ -202,7 +234,28 @@ export class MLBackendClient {
     userId: number,
     count: number = 100
   ): Promise<any[]> {
-    throw new Error('Offline download not yet implemented via proxy');
+    const headers = await this.getAuthHeaders();
+    const params = new URLSearchParams({
+      action: 'download_questions',
+      ml_user_id: userId.toString(),
+      count: count.toString(),
+    });
+
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?${params}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to download questions: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.questions || [];
   }
 
   async syncOfflineResponses(responses: Array<{
@@ -213,7 +266,22 @@ export class MLBackendClient {
     is_correct: boolean;
     answered_at: string;
   }>): Promise<{ synced_count: number }> {
-    throw new Error('Offline sync not yet implemented via proxy');
+    const headers = await this.getAuthHeaders();
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?action=sync_offline_responses`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ responses }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to sync offline responses: ${response.statusText}`);
+    }
+
+    return await response.json();
   }
 
   async getStudentInsights(userId: number): Promise<{
@@ -241,34 +309,126 @@ export class MLBackendClient {
   }
 
   async getQuestionTypePerformance(userId: number): Promise<any[]> {
-    throw new Error('Question type performance not yet implemented via proxy');
+    const headers = await this.getAuthHeaders();
+    const params = new URLSearchParams({
+      action: 'get_question_type_performance',
+      ml_user_id: userId.toString(),
+    });
+
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?${params}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to get question type performance: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.question_types || [];
   }
 
-  async getConceptCoverage(userId: number): Promise<{
-    mastered: string[];
-    in_progress: string[];
-    not_started: string[];
-    coverage_percentage: number;
+  async getConceptCoverage(userId: number, topicId?: string): Promise<{
+    overall_stats: {
+      mastered_count: number;
+      in_progress_count: number;
+      not_started_count: number;
+      coverage_percentage: number;
+    };
+    concepts: any[];
   }> {
-    throw new Error('Concept coverage not yet implemented via proxy');
+    const headers = await this.getAuthHeaders();
+    const params = new URLSearchParams({
+      action: 'get_concept_coverage',
+      ml_user_id: userId.toString(),
+    });
+
+    if (topicId) {
+      params.append('topic_id', topicId);
+    }
+
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?${params}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to get concept coverage: ${response.statusText}`);
+    }
+
+    return await response.json();
   }
 
   async predictTopicPerformance(
     userId: number,
     topicId: string
   ): Promise<{
+    topic_name: string;
     predicted_accuracy: number;
     confidence: string;
-    preparation_recommended: boolean;
+    recommendation: string;
+    preparation_needed: boolean;
   }> {
-    throw new Error('Topic performance prediction not yet implemented via proxy');
+    const headers = await this.getAuthHeaders();
+    const params = new URLSearchParams({
+      action: 'predict_topic_performance',
+      ml_user_id: userId.toString(),
+      topic_id: topicId,
+    });
+
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?${params}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to predict topic performance: ${response.statusText}`);
+    }
+
+    return await response.json();
   }
 
   async getRecommendedStudyPath(
     userId: number,
-    limit: number = 20
-  ): Promise<any[]> {
-    throw new Error('Study path recommendations not yet implemented via proxy');
+    pathLength: number = 20
+  ): Promise<{
+    study_path: any[];
+    reasoning: string;
+    estimated_time_minutes: number;
+  }> {
+    const headers = await this.getAuthHeaders();
+    const params = new URLSearchParams({
+      action: 'get_study_path',
+      ml_user_id: userId.toString(),
+      path_length: pathLength.toString(),
+    });
+
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?${params}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to get study path: ${response.statusText}`);
+    }
+
+    return await response.json();
   }
 
   getRateLimitInfo(): RateLimitInfo | null {
