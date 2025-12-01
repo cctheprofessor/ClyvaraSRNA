@@ -20,7 +20,7 @@ export default function StudyScreen() {
       description: 'Quick practice session with ML-powered selection',
       icon: Brain,
       color: Colors.primary,
-      route: '/study/practice-25',
+      route: '/(tabs)/study/practice-25',
     },
     {
       id: 'practice50',
@@ -28,7 +28,7 @@ export default function StudyScreen() {
       description: 'Extended practice with comprehensive tracking',
       icon: Target,
       color: Colors.secondary,
-      route: '/study/practice-50',
+      route: '/(tabs)/study/practice-50',
     },
     {
       id: 'focused',
@@ -36,7 +36,7 @@ export default function StudyScreen() {
       description: 'Deep dive into specific anesthesia topics',
       icon: Focus,
       color: Colors.primaryDark,
-      route: '/study/focused-topic',
+      route: '/(tabs)/study/focused-topic',
     },
     {
       id: 'analytics',
@@ -44,7 +44,7 @@ export default function StudyScreen() {
       description: 'Performance insights and learning analytics',
       icon: BarChart3,
       color: Colors.accent,
-      route: '/study/analytics',
+      route: '/(tabs)/study/analytics',
     },
     {
       id: 'ta',
@@ -52,7 +52,7 @@ export default function StudyScreen() {
       description: 'Get expert help from experienced CRNAs',
       icon: MessageCircleQuestion,
       color: Colors.secondaryLight,
-      route: '/study/ask-ta',
+      route: '/(tabs)/study/ask-ta',
     },
   ];
 

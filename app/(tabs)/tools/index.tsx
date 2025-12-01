@@ -21,7 +21,7 @@ export default function ToolsScreen() {
           description: 'Hospital/clinic and cases!',
           icon: Hospital,
           color: Colors.primary,
-          route: '/tools/clinical-site',
+          route: '/(tabs)/tools/clinical-site',
         },
         {
           id: 'preceptor',
@@ -29,7 +29,7 @@ export default function ToolsScreen() {
           description: 'Maximize your learning environment!',
           icon: UserRound,
           color: Colors.secondary,
-          route: '/tools/preceptor',
+          route: '/(tabs)/tools/preceptor',
         },
         {
           id: 'anonymous',
@@ -37,7 +37,7 @@ export default function ToolsScreen() {
           description: 'Questions for the Clyvara Community',
           icon: MessageCircleQuestion,
           color: Colors.accent,
-          route: '/tools/ask-anonymously',
+          route: '/(tabs)/tools/ask-anonymously',
         },
       ],
     },
