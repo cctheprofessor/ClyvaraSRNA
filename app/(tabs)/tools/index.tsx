@@ -47,7 +47,7 @@ export default function ToolsScreen() {
     <View style={styles.container}>
       <PageHeader
         title="Clinical Tools"
-        subtitle="Community-powered clinical insights"
+        subtitle="Community-Powered Clinical Insights"
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
