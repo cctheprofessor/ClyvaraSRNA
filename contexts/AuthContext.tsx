@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/types/database';
+import { MLBackendClient } from '@/lib/ml-backend-client';
 
 interface AuthContextType {
   session: Session | null;
@@ -124,58 +125,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: role,
           specialty_interest: specialtyInterest,
           phone: phone,
-          school: institution,
           is_active: true,
         });
 
       if (profileError) return { error: profileError };
 
       try {
-        const ML_BACKEND_URL = process.env.ML_BACKEND_URL || 'https://clyvaraml.replit.app';
-        const ML_API_KEY = process.env.ML_API_KEYS || '';
+        const mlClient = new MLBackendClient();
 
-        const mlResponse = await fetch(`${ML_BACKEND_URL}/api/users/sync`, {
-          method: 'POST',
-          headers: {
-            'X-API-Key': ML_API_KEY,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            external_user_id: data.user.id,
-            email: email,
-            username: email.split('@')[0],
-            enrollment_date: enrollmentDate + '-01',
-            program_name: 'Nurse Anesthesia Program',
-            institution: institution,
-            expected_graduation: expectedGradDate + '-01',
-          }),
+        const mlData = await mlClient.syncUser({
+          external_user_id: data.user.id,
+          email: email,
+          username: email.split('@')[0],
+          enrollment_date: enrollmentDate + '-01',
+          program_name: 'Nurse Anesthesia Program',
+          institution: institution,
+          expected_graduation: expectedGradDate + '-01',
         });
 
-        if (mlResponse.ok) {
-          const mlData = await mlResponse.json();
+        await supabase
+          .from('profiles')
+          .update({
+            ml_user_id: mlData.user_id,
+            ml_last_synced_at: new Date().toISOString(),
+          })
+          .eq('id', data.user.id);
 
-          await supabase
-            .from('profiles')
-            .update({
-              ml_user_id: mlData.user_id,
-              ml_last_synced_at: new Date().toISOString(),
-            })
-            .eq('id', data.user.id);
+        await supabase.from('ml_sync_status').insert({
+          user_id: data.user.id,
+          sync_status: 'active',
+          last_sync_at: new Date().toISOString(),
+        });
 
-          await supabase.from('ml_sync_status').insert({
-            user_id: data.user.id,
-            sync_status: 'active',
-            last_sync_at: new Date().toISOString(),
-          });
-        } else {
-          await supabase.from('ml_sync_status').insert({
-            user_id: data.user.id,
-            sync_status: 'pending',
-            last_sync_error: 'Initial sync failed, will retry',
-          });
-        }
+        console.log('Successfully synced new user to ML backend:', mlData.user_id);
       } catch (mlError) {
-        console.error('ML sync failed:', mlError);
+        console.error('ML sync failed during registration:', mlError);
         await supabase.from('ml_sync_status').insert({
           user_id: data.user.id,
           sync_status: 'pending',
