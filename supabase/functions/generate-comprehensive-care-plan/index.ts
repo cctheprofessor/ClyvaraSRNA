@@ -399,11 +399,6 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         model: 'gpt-5-nano-2025-08-07',
         input: combinedInput,
-        text: {
-          format: {
-            type: 'json_object',
-          },
-        },
         tools: [
           {
             type: 'web_search',
@@ -461,10 +456,30 @@ Deno.serve(async (req: Request) => {
     console.log('Care plan JSON length:', carePlanJson.length);
     console.log('Care plan JSON preview:', carePlanJson.substring(0, 200));
 
+    // Clean the JSON string (remove markdown code blocks if present)
+    let cleanedJson = carePlanJson.trim();
+
+    // Remove markdown code blocks if present
+    if (cleanedJson.startsWith('```json')) {
+      cleanedJson = cleanedJson.replace(/^```json\s*\n/, '').replace(/\n```\s*$/, '');
+    } else if (cleanedJson.startsWith('```')) {
+      cleanedJson = cleanedJson.replace(/^```\s*\n/, '').replace(/\n```\s*$/, '');
+    }
+
+    // Extract JSON if it's wrapped in text
+    const jsonMatch = cleanedJson.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleanedJson = jsonMatch[0];
+    }
+
+    console.log('Cleaned JSON preview:', cleanedJson.substring(0, 200));
+
     let carePlan;
     try {
-      carePlan = JSON.parse(carePlanJson);
+      carePlan = JSON.parse(cleanedJson);
     } catch (parseError: any) {
+      console.error('JSON parse error:', parseError.message);
+      console.error('Attempted to parse:', cleanedJson.substring(0, 500));
       throw new Error(`Failed to parse care plan JSON: ${parseError.message}`);
     }
 
