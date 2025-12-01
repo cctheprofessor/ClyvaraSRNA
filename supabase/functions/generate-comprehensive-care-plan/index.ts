@@ -388,7 +388,9 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const combinedInput = `${ANESTHESIA_CARE_PLAN_SYSTEM_PROMPT}\n\n${buildCarePlanUserPrompt(caseDescription)}`;
+
+    const openAIResponse = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -396,18 +398,13 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify({
         model: 'gpt-5-nano-2025-08-07',
-        messages: [
+        input: combinedInput,
+        response_format: { type: 'json_object' },
+        tools: [
           {
-            role: 'system',
-            content: ANESTHESIA_CARE_PLAN_SYSTEM_PROMPT,
-          },
-          {
-            role: 'user',
-            content: buildCarePlanUserPrompt(caseDescription),
+            type: 'web_search_preview',
           },
         ],
-        max_completion_tokens: 16000,
-        response_format: { type: 'json_object' },
       }),
     });
 
@@ -417,7 +414,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const data = await openAIResponse.json();
-    const carePlanJson = data.choices[0].message.content;
+    const carePlanJson = data.output_text || data.output || data.choices?.[0]?.message?.content;
 
     let carePlan;
     try {
