@@ -1,5 +1,8 @@
-const ML_BACKEND_URL = process.env.ML_BACKEND_URL || 'https://clyvaraml.replit.app';
-const ML_API_KEY = process.env.ML_API_KEYS || '';
+import { supabase } from './supabase';
+
+const EDGE_FUNCTION_URL = process.env.EXPO_PUBLIC_SUPABASE_URL
+  ? `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ml-backend-proxy`
+  : '';
 
 interface RetryOptions {
   maxRetries: number;
@@ -14,6 +17,18 @@ interface RateLimitInfo {
 
 export class MLBackendClient {
   private rateLimitInfo: RateLimitInfo | null = null;
+
+  private async getAuthHeaders(): Promise<HeadersInit> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Not authenticated');
+    }
+
+    return {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    };
+  }
 
   private async fetchWithRetry(
     url: string,
@@ -73,13 +88,6 @@ export class MLBackendClient {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private getHeaders(): HeadersInit {
-    return {
-      'X-API-Key': ML_API_KEY,
-      'Content-Type': 'application/json',
-    };
-  }
-
   async syncUser(userData: {
     external_user_id: string;
     email: string;
@@ -89,17 +97,19 @@ export class MLBackendClient {
     institution: string;
     expected_graduation?: string;
   }): Promise<{ user_id: number }> {
+    const headers = await this.getAuthHeaders();
     const response = await this.fetchWithRetry(
-      `${ML_BACKEND_URL}/api/users/sync`,
+      `${EDGE_FUNCTION_URL}?action=sync_user`,
       {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers,
         body: JSON.stringify(userData),
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to sync user: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to sync user: ${response.statusText}`);
     }
 
     return await response.json();
@@ -110,16 +120,18 @@ export class MLBackendClient {
     performance_tier: string;
     months_since_enrollment: number;
   }> {
+    const headers = await this.getAuthHeaders();
     const response = await this.fetchWithRetry(
-      `${ML_BACKEND_URL}/api/students/${userId}/progression`,
+      `${EDGE_FUNCTION_URL}?action=get_progression&ml_user_id=${userId}`,
       {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers,
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to get user progression: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to get user progression: ${response.statusText}`);
     }
 
     return await response.json();
@@ -130,21 +142,28 @@ export class MLBackendClient {
     limit: number = 25,
     topicId?: string
   ): Promise<any[]> {
-    const params = new URLSearchParams({ limit: limit.toString() });
+    const headers = await this.getAuthHeaders();
+    const params = new URLSearchParams({
+      action: 'get_questions',
+      ml_user_id: userId.toString(),
+      limit: limit.toString(),
+    });
+
     if (topicId) {
       params.append('topic_id', topicId);
     }
 
     const response = await this.fetchWithRetry(
-      `${ML_BACKEND_URL}/api/practice/${userId}/next-questions?${params}`,
+      `${EDGE_FUNCTION_URL}?${params}`,
       {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers,
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to get questions: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to get questions: ${response.statusText}`);
     }
 
     return await response.json();
@@ -161,17 +180,19 @@ export class MLBackendClient {
     next_review_days: number;
     mastery_update: any;
   }> {
+    const headers = await this.getAuthHeaders();
     const response = await this.fetchWithRetry(
-      `${ML_BACKEND_URL}/api/practice/submit-answer`,
+      `${EDGE_FUNCTION_URL}?action=submit_answer`,
       {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers,
         body: JSON.stringify(answerData),
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to submit answer: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to submit answer: ${response.statusText}`);
     }
 
     return await response.json();
@@ -181,19 +202,7 @@ export class MLBackendClient {
     userId: number,
     count: number = 100
   ): Promise<any[]> {
-    const response = await this.fetchWithRetry(
-      `${ML_BACKEND_URL}/api/practice/${userId}/download?count=${count}`,
-      {
-        method: 'GET',
-        headers: this.getHeaders(),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to download questions: ${response.statusText}`);
-    }
-
-    return await response.json();
+    throw new Error('Offline download not yet implemented via proxy');
   }
 
   async syncOfflineResponses(responses: Array<{
@@ -204,20 +213,7 @@ export class MLBackendClient {
     is_correct: boolean;
     answered_at: string;
   }>): Promise<{ synced_count: number }> {
-    const response = await this.fetchWithRetry(
-      `${ML_BACKEND_URL}/api/practice/sync-offline`,
-      {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify({ responses }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to sync offline responses: ${response.statusText}`);
-    }
-
-    return await response.json();
+    throw new Error('Offline sync not yet implemented via proxy');
   }
 
   async getStudentInsights(userId: number): Promise<{
@@ -227,35 +223,25 @@ export class MLBackendClient {
     weak_areas: any[];
     learning_velocity: number;
   }> {
+    const headers = await this.getAuthHeaders();
     const response = await this.fetchWithRetry(
-      `${ML_BACKEND_URL}/api/student-insights/${userId}`,
+      `${EDGE_FUNCTION_URL}?action=get_insights&ml_user_id=${userId}`,
       {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers,
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to get student insights: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to get student insights: ${response.statusText}`);
     }
 
     return await response.json();
   }
 
   async getQuestionTypePerformance(userId: number): Promise<any[]> {
-    const response = await this.fetchWithRetry(
-      `${ML_BACKEND_URL}/api/student-insights/${userId}/question-types`,
-      {
-        method: 'GET',
-        headers: this.getHeaders(),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to get question type performance: ${response.statusText}`);
-    }
-
-    return await response.json();
+    throw new Error('Question type performance not yet implemented via proxy');
   }
 
   async getConceptCoverage(userId: number): Promise<{
@@ -264,19 +250,7 @@ export class MLBackendClient {
     not_started: string[];
     coverage_percentage: number;
   }> {
-    const response = await this.fetchWithRetry(
-      `${ML_BACKEND_URL}/api/students/${userId}/concept-coverage`,
-      {
-        method: 'GET',
-        headers: this.getHeaders(),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to get concept coverage: ${response.statusText}`);
-    }
-
-    return await response.json();
+    throw new Error('Concept coverage not yet implemented via proxy');
   }
 
   async predictTopicPerformance(
@@ -287,38 +261,14 @@ export class MLBackendClient {
     confidence: string;
     preparation_recommended: boolean;
   }> {
-    const response = await this.fetchWithRetry(
-      `${ML_BACKEND_URL}/api/predictions/${userId}/topic-performance?topic_id=${topicId}`,
-      {
-        method: 'GET',
-        headers: this.getHeaders(),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to predict topic performance: ${response.statusText}`);
-    }
-
-    return await response.json();
+    throw new Error('Topic performance prediction not yet implemented via proxy');
   }
 
   async getRecommendedStudyPath(
     userId: number,
     limit: number = 20
   ): Promise<any[]> {
-    const response = await this.fetchWithRetry(
-      `${ML_BACKEND_URL}/api/recommendations/${userId}/study-path?limit=${limit}`,
-      {
-        method: 'GET',
-        headers: this.getHeaders(),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to get study recommendations: ${response.statusText}`);
-    }
-
-    return await response.json();
+    throw new Error('Study path recommendations not yet implemented via proxy');
   }
 
   getRateLimitInfo(): RateLimitInfo | null {
