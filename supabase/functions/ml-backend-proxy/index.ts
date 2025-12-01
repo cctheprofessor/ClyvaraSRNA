@@ -12,9 +12,6 @@ const ML_API_KEY = Deno.env.get('ML_API_KEYS') || '0Rvm9uG9jFO37Yi1OLcEzf7eIZuMQ
 const getMLBackendHeaders = (includeContentType = false) => {
   const headers: Record<string, string> = {
     'X-API-Key': ML_API_KEY,
-    'X-Requested-With': 'XMLHttpRequest',
-    'Referer': 'https://clyvaraml.replit.app',
-    'Origin': 'https://clyvaraml.replit.app',
   };
 
   if (includeContentType) {
@@ -260,8 +257,7 @@ Deno.serve(async (req: Request) => {
 
     if (!mlResponse.ok) {
       const errorText = await mlResponse.text();
-      throw new Error(`ML Backend error (${mlResponse.status}): ${errorText}`);
-    }
+      throw new Error(`ML Backend error (${mlResponse.status}): ${errorText}`);    }
 
     const data = await mlResponse.json();
 
