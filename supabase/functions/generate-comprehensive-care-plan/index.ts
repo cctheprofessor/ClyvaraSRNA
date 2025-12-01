@@ -38,6 +38,77 @@ Required structure:
   "preoperativeRecommendations": {"recommendedConsults": [{"specialty": string, "reason": string, "urgency": "Required"|"Recommended"}], "recommendedLabs": [{"test": string, "reason": string, "urgency": "Required"|"Recommended"}], "recommendedImaging": [{"study": string, "reason": string, "urgency": "Required"|"Recommended"}], "rationale": string}
 }
 
+CRITICAL MEDICATION CONSIDERATIONS:
+You MUST analyze every medication the patient is taking and include anesthetic implications in your plan. For each medication class, consider:
+
+GLP-1 Agonists (semaglutide, tirzepatide, dulaglutide, liraglutide, etc.):
+- Daily formulations: Hold for 24 hours before surgery (increased aspiration risk)
+- Weekly formulations: Hold for 1 week before surgery (delayed gastric emptying)
+- Document in preoperativeRecommendations and riskAssessment
+- Increase aspiration precautions if not properly held
+
+Anticoagulants/Antiplatelets:
+- Warfarin: Check INR, hold per protocol
+- DOACs (apixaban, rivaroxaban): Hold 48-72 hours based on renal function
+- Clopidogrel, prasugrel: Hold 5-7 days for neuraxial
+- Aspirin: Continue for cardiac stents, consider holding for neuraxial
+
+Antihypertensives:
+- ACE-I/ARBs: Consider holding day of surgery (hypotension risk)
+- Beta-blockers: Continue (do not discontinue abruptly)
+- Diuretics: Consider holding to avoid hypovolemia
+- Alpha-2 agonists (clonidine): Continue (rebound hypertension if stopped)
+
+Psychiatric Medications:
+- SSRIs/SNRIs: Continue, note serotonin syndrome risk with certain opioids
+- MAOIs: Major drug interactions with sympathomimetics and meperidine
+- Benzodiazepines: Continue to avoid withdrawal
+- Lithium: Consider holding day of surgery (drug interactions, renal effects)
+
+Herbal Supplements:
+- Garlic, ginger, ginkgo: Bleeding risk, hold 1 week before
+- St. John's Wort: CYP450 interactions, hold 5 days before
+- Ephedra: Cardiovascular instability
+
+Corticosteroids:
+- Chronic use: Stress-dose steroids perioperatively
+- Document in medications plan
+
+CRITICAL PMH/PSH ANESTHETIC IMPLICATIONS:
+You MUST identify anesthetic considerations for each past medical and surgical history item:
+
+Cardiac History:
+- CAD/Stents: Continue aspirin, beta-blockers; consider cardiology clearance
+- CHF: Optimize fluid status, consider invasive monitoring
+- Arrhythmias: Continue antiarrhythmics, have pacing available
+- Valvular disease: Endocarditis prophylaxis, hemodynamic management
+
+Pulmonary History:
+- Asthma/COPD: Optimize bronchodilators, continue steroids if on them
+- OSA: Minimize opioids, plan monitored bed
+- Restrictive lung disease: Optimize ventilation strategy
+
+Endocrine History:
+- Diabetes: Insulin management, glucose monitoring
+- Thyroid disease: Check TSH if uncontrolled, cardiac effects
+- Adrenal insufficiency: Stress-dose steroids
+
+Neurologic History:
+- Seizures: Continue antiepileptics (avoid drugs that lower seizure threshold)
+- Myasthenia gravis: Avoid neuromuscular blocking agents or use carefully
+- Prior stroke: Blood pressure management
+
+Renal/Hepatic Disease:
+- Adjust drug dosing
+- Avoid nephrotoxic/hepatotoxic agents
+- Consider coagulation status in liver disease
+
+Past Surgical History Implications:
+- Prior difficult intubation: Have difficult airway equipment ready
+- Bariatric surgery: Altered drug absorption
+- Spine surgery: May affect neuraxial techniques
+- Prior anesthesia complications: MH history, PONV, awareness
+
 IMPORTANT GUIDELINES:
 - Use realistic clinical data based on the specific procedure and patient
 - Always prefer hydromorphone over morphine for postop analgesia
@@ -45,7 +116,9 @@ IMPORTANT GUIDELINES:
 - Consider regional anesthesia options for all appropriate cases
 - Include procedure-specific medications when relevant (antibiotics, local anesthetics, etc.)
 - Make "majorAnesthesiaConcerns" comprehensive and procedure-specific
-- Provide detailed rationales linking decisions to patient and procedural factors`;
+- Provide detailed rationales linking decisions to patient and procedural factors
+- EXPLICITLY address medication implications in riskAssessment, preoperativeRecommendations, and rationales
+- EXPLICITLY address PMH/PSH implications throughout the care plan`;
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
