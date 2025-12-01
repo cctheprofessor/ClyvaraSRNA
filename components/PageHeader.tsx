@@ -4,7 +4,7 @@ import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 
 interface PageHeaderProps {
   title: string;
-  subtitle: string;
+  subtitle?: string;
 }
 
 export default function PageHeader({ title, subtitle }: PageHeaderProps) {
@@ -18,7 +18,7 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
         />
       </View>
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
     </LinearGradient>
   );
 }

@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   header: {
     padding: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Colors.border.light,
   },
   backButton: {
     flexDirection: 'row',
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     backgroundColor: Colors.backgroundSecondary,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: Colors.border.light,
     alignItems: 'center',
   },
   typeButtonActive: {
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   textInput: {
     backgroundColor: Colors.backgroundSecondary,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.border.light,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     fontSize: 16,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     backgroundColor: Colors.backgroundSecondary,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: Colors.border.light,
     alignItems: 'center',
   },
   statusButtonActive: {

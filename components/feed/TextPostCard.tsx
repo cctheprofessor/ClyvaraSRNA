@@ -75,7 +75,7 @@ export default function TextPostCard({ post, currentUserId, onLike, onComment, o
         <View style={styles.actionButtons}>
           {!isOwnPost && onReport && (
             <Pressable onPress={() => onReport(post.id)} style={styles.reportButton}>
-              <Flag color={Colors.textSecondary} size={20} />
+              <Flag color={Colors.text.secondary} size={20} />
             </Pressable>
           )}
           {isOwnPost && onDelete && (

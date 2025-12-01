@@ -132,7 +132,7 @@ export default function AdminPromptsScreen() {
           <Switch
             value={item.is_active}
             onValueChange={() => handleToggleActive(item)}
-            trackColor={{ false: Colors.border, true: Colors.primary }}
+            trackColor={{ false: Colors.border.light, true: Colors.primary }}
             thumbColor={Colors.background}
           />
         </View>
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Colors.border.light,
   },
   backButton: {
     flexDirection: 'row',
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.border.light,
   },
   promptHeader: {
     marginBottom: Spacing.md,
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: Colors.border.light,
   },
   switchContainer: {
     flexDirection: 'row',

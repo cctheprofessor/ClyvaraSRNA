@@ -300,7 +300,7 @@ export default function PreceptorScreen() {
                   onPress={() => {
                     setSelectedState(item);
                     setSelectedHospital('');
-                    setSelectedCaseType('');
+                    setSelectedPreceptor('');
                     setShowStatePicker(false);
                   }}
                 >
@@ -329,7 +329,7 @@ export default function PreceptorScreen() {
                   style={styles.pickerItem}
                   onPress={() => {
                     setSelectedHospital(item);
-                    setSelectedCaseType('');
+                    setSelectedPreceptor('');
                     setShowHospitalPicker(false);
                   }}
                 >
