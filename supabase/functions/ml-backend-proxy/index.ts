@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const ML_BACKEND_URL = Deno.env.get('ML_BACKEND_URL') || 'https://clyvaraml.replit.app';
-const ML_API_KEY = Deno.env.get('ML_API_KEYS') || '';
+const ML_API_KEY = Deno.env.get('ML_API_KEYS') || '0Rvm9uG9jFO37Yi1OLcEzf7eIZuMQWnY';
 
 const getMLBackendHeaders = (includeContentType = false) => {
   const headers: Record<string, string> = {
