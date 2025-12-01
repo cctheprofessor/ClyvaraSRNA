@@ -9,6 +9,8 @@ import {
   Alert,
   Modal,
   FlatList,
+  Linking,
+  ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { User, Building2, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings } from 'lucide-react-native';
@@ -16,6 +18,7 @@ import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { CRNA_SCHOOLS, ROLES, PROGRAM_TRACKS } from '@/constants/crna-schools';
 import PageHeader from '@/components/PageHeader';
 import { router } from 'expo-router';
+import { supabase } from '@/lib/supabase';
 
 export default function ProfileScreen() {
   const { profile, user, signOut, updateProfile, isAdmin } = useAuth();
@@ -25,6 +28,7 @@ export default function ProfileScreen() {
   const [showRolePicker, setShowRolePicker] = useState(false);
   const [showProgramTrackPicker, setShowProgramTrackPicker] = useState(false);
   const [showStudyTimePicker, setShowStudyTimePicker] = useState(false);
+  const [donationLoading, setDonationLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
     first_name: profile?.first_name || '',
@@ -103,6 +107,69 @@ export default function ProfileScreen() {
   const handleSignOut = () => {
     if (confirm('Are you sure you want to sign out?')) {
       signOut();
+    }
+  };
+
+  const handleDonation = async (donationType: 'one_time' | 'monthly') => {
+    if (!user) {
+      Alert.alert('Error', 'You must be logged in to donate');
+      return;
+    }
+
+    setDonationLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        Alert.alert('Error', 'Authentication required');
+        setDonationLoading(false);
+        return;
+      }
+
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      const successUrl = `${baseUrl}?donation=success`;
+      const cancelUrl = `${baseUrl}?donation=cancelled`;
+
+      const amount = donationType === 'one_time' ? 10 : 5;
+
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/stripe-checkout`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount,
+            donation_type: donationType,
+            success_url: successUrl,
+            cancel_url: cancelUrl,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create checkout session');
+      }
+
+      const { url } = await response.json();
+
+      if (url) {
+        if (typeof window !== 'undefined') {
+          window.location.href = url;
+        } else {
+          await Linking.openURL(url);
+        }
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error: any) {
+      console.error('Donation error:', error);
+      Alert.alert('Error', error.message || 'Failed to process donation');
+    } finally {
+      setDonationLoading(false);
     }
   };
 
@@ -257,20 +324,26 @@ export default function ProfileScreen() {
             </Text>
             <View style={styles.donationButtons}>
               <Pressable
-                style={styles.donationButton}
-                onPress={() => {
-                  alert('Stripe integration coming soon! Thank you for your interest in supporting Clyvara.');
-                }}
+                style={[styles.donationButton, donationLoading && styles.donationButtonDisabled]}
+                onPress={() => handleDonation('one_time')}
+                disabled={donationLoading}
               >
-                <Text style={styles.donationButtonText}>One-Time Donation</Text>
+                {donationLoading ? (
+                  <ActivityIndicator size="small" color={Colors.text.light} />
+                ) : (
+                  <Text style={styles.donationButtonText}>One-Time $10</Text>
+                )}
               </Pressable>
               <Pressable
-                style={styles.donationButton}
-                onPress={() => {
-                  alert('Stripe integration coming soon! Thank you for your interest in supporting Clyvara.');
-                }}
+                style={[styles.donationButton, donationLoading && styles.donationButtonDisabled]}
+                onPress={() => handleDonation('monthly')}
+                disabled={donationLoading}
               >
-                <Text style={styles.donationButtonText}>Monthly Support</Text>
+                {donationLoading ? (
+                  <ActivityIndicator size="small" color={Colors.text.light} />
+                ) : (
+                  <Text style={styles.donationButtonText}>Monthly $5</Text>
+                )}
               </Pressable>
             </View>
             <Text style={styles.donationFooter}>
@@ -780,6 +853,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     borderRadius: BorderRadius.sm,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 50,
+  },
+  donationButtonDisabled: {
+    opacity: 0.6,
   },
   donationButtonText: {
     fontSize: 15,
