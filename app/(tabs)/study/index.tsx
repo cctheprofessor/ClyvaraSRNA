@@ -49,7 +49,7 @@ export default function StudyScreen() {
     {
       id: 'ta',
       title: 'Ask a Teaching Assistant',
-      description: 'Get expert help from experienced CRNAs',
+      description: 'Get expert help from experienced TAs',
       icon: MessageCircleQuestion,
       color: Colors.secondaryLight,
       route: '/(tabs)/study/ask-ta',
@@ -60,7 +60,7 @@ export default function StudyScreen() {
     <View style={styles.container}>
       <PageHeader
         title="Quiet Study Area"
-        subtitle="ML-Powered Practice & Analytics"
+        subtitle="Curated Practice for your Specific Needs"
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
