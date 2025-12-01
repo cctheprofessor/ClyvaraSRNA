@@ -415,33 +415,47 @@ Deno.serve(async (req: Request) => {
     }
 
     const data = await openAIResponse.json();
-    console.log('OpenAI API response structure:', JSON.stringify(data, null, 2));
+    console.log('OpenAI API full response:', JSON.stringify(data, null, 2));
 
     let carePlanJson: string | null = null;
 
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        if (item.type === 'message' && item.content) {
-          for (const contentItem of item.content) {
-            if (contentItem.type === 'text' && contentItem.text) {
-              carePlanJson = contentItem.text;
-              break;
-            }
-          }
-          if (carePlanJson) break;
+    // Responses API structure: response.output[0].content[0].text
+    if (data.output && Array.isArray(data.output) && data.output.length > 0) {
+      const firstOutput = data.output[0];
+      console.log('First output structure:', JSON.stringify(firstOutput, null, 2));
+
+      if (firstOutput.content && Array.isArray(firstOutput.content) && firstOutput.content.length > 0) {
+        const firstContent = firstOutput.content[0];
+        console.log('First content structure:', JSON.stringify(firstContent, null, 2));
+
+        if (firstContent.text) {
+          carePlanJson = firstContent.text;
+          console.log('Successfully extracted text from output[0].content[0].text');
         }
       }
-    } else if (data.output_text) {
+    }
+
+    // Fallback: check for output_text (some API versions)
+    if (!carePlanJson && data.output_text) {
       carePlanJson = data.output_text;
-    } else if (data.output) {
+      console.log('Extracted from output_text field');
+    }
+
+    // Fallback: check if output is a string directly
+    if (!carePlanJson && typeof data.output === 'string') {
       carePlanJson = data.output;
-    } else if (data.choices?.[0]?.message?.content) {
-      carePlanJson = data.choices[0].message.content;
+      console.log('Output was a string directly');
     }
 
     if (!carePlanJson) {
-      throw new Error('Could not extract care plan from API response');
+      console.error('Failed to extract text. Full response keys:', Object.keys(data));
+      console.error('Output field type:', typeof data.output);
+      console.error('Output field value:', data.output);
+      throw new Error('Could not extract care plan from API response. Check logs for response structure.');
     }
+
+    console.log('Care plan JSON length:', carePlanJson.length);
+    console.log('Care plan JSON preview:', carePlanJson.substring(0, 200));
 
     let carePlan;
     try {
