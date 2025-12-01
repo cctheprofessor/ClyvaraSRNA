@@ -246,7 +246,7 @@ export default function PreceptorScreen() {
               onPress={() => setShowAddPreceptor(true)}
             >
               <Plus color={Colors.primary} size={18} />
-              <Text style={styles.addButtonText}>Preceptor not listed? Add it!</Text>
+              <Text style={styles.addButtonText}>Preceptor not listed? Add them!</Text>
             </Pressable>
           </View>
         )}
