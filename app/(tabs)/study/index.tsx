@@ -17,7 +17,7 @@ export default function StudyScreen() {
     {
       id: 'practice25',
       title: '25 Practice Questions',
-      description: 'Quick practice session with ML-powered selection',
+      description: 'Quick practice session to strengthen your weak spots',
       icon: Brain,
       color: Colors.primary,
       route: '/(tabs)/study/practice-25',
