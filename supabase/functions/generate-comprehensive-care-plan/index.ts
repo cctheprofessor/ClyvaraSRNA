@@ -402,7 +402,7 @@ Deno.serve(async (req: Request) => {
         response_format: { type: 'json_object' },
         tools: [
           {
-            type: 'web_search_preview',
+            type: 'web_search',
           },
         ],
       }),
@@ -410,11 +410,38 @@ Deno.serve(async (req: Request) => {
 
     if (!openAIResponse.ok) {
       const error = await openAIResponse.text();
-      throw new Error(`OpenAI API error: ${error}`);
+      console.error('OpenAI API error response:', error);
+      throw new Error(`OpenAI API error (${openAIResponse.status}): ${error}`);
     }
 
     const data = await openAIResponse.json();
-    const carePlanJson = data.output_text || data.output || data.choices?.[0]?.message?.content;
+    console.log('OpenAI API response structure:', JSON.stringify(data, null, 2));
+
+    let carePlanJson: string | null = null;
+
+    if (Array.isArray(data)) {
+      for (const item of data) {
+        if (item.type === 'message' && item.content) {
+          for (const contentItem of item.content) {
+            if (contentItem.type === 'text' && contentItem.text) {
+              carePlanJson = contentItem.text;
+              break;
+            }
+          }
+          if (carePlanJson) break;
+        }
+      }
+    } else if (data.output_text) {
+      carePlanJson = data.output_text;
+    } else if (data.output) {
+      carePlanJson = data.output;
+    } else if (data.choices?.[0]?.message?.content) {
+      carePlanJson = data.choices[0].message.content;
+    }
+
+    if (!carePlanJson) {
+      throw new Error('Could not extract care plan from API response');
+    }
 
     let carePlan;
     try {
