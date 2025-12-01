@@ -241,7 +241,7 @@ export default function ProfileScreen() {
               </Pressable>
             </View>
             <Text style={styles.donationFooter}>
-              Your support helps us maintain and improve Clyvara for all SRNA students
+              Your support helps us maintain and improve Clyvara
             </Text>
           </View>
         </View>
