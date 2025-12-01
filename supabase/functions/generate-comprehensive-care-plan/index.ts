@@ -395,7 +395,7 @@ Deno.serve(async (req: Request) => {
         Authorization: `Bearer ${openAIKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5-nano-2025-08-07',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
@@ -408,20 +408,6 @@ Deno.serve(async (req: Request) => {
         ],
         max_completion_tokens: 16000,
         response_format: { type: 'json_object' },
-        tools: [
-          {
-            type: 'web_search',
-            web_search: {
-              search_context_size: 'low'
-            }
-          },
-          {
-            type: 'file_search',
-            file_search: {
-              vector_store_ids: ['vs_69123b1024148191bcf08ad702436fc9']
-            }
-          }
-        ],
       }),
     });
 
