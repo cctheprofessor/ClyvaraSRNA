@@ -13,15 +13,16 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, Building2, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings } from 'lucide-react-native';
+import { User, Building2, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings, RefreshCw } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { CRNA_SCHOOLS, ROLES, PROGRAM_TRACKS } from '@/constants/crna-schools';
 import PageHeader from '@/components/PageHeader';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { mlClient } from '@/lib/ml-backend-client';
 
 export default function ProfileScreen() {
-  const { profile, user, signOut, updateProfile, isAdmin } = useAuth();
+  const { profile, user, signOut, updateProfile, isAdmin, refreshProfile } = useAuth();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSchoolPicker, setShowSchoolPicker] = useState(false);
@@ -29,6 +30,7 @@ export default function ProfileScreen() {
   const [showProgramTrackPicker, setShowProgramTrackPicker] = useState(false);
   const [showStudyTimePicker, setShowStudyTimePicker] = useState(false);
   const [donationLoading, setDonationLoading] = useState(false);
+  const [mlSyncLoading, setMlSyncLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
     first_name: profile?.first_name || '',
@@ -193,6 +195,64 @@ export default function ProfileScreen() {
       specialty_interest: profile?.specialty_interest || '',
     });
     setEditing(false);
+  };
+
+  const handleMLSync = async () => {
+    if (!user || !profile) {
+      Alert.alert('Error', 'Profile not loaded');
+      return;
+    }
+
+    if (!profile.institution || !profile.enrollment_date) {
+      Alert.alert(
+        'Missing Information',
+        'Please complete your profile with Institution and Enrollment Date before syncing with ML backend.'
+      );
+      return;
+    }
+
+    setMlSyncLoading(true);
+
+    try {
+      const mlData = await mlClient.syncUser({
+        external_user_id: user.id,
+        email: user.email || '',
+        username: user.email?.split('@')[0] || '',
+        enrollment_date: profile.enrollment_date,
+        program_name: profile.program_name || 'Nurse Anesthesia Program',
+        institution: profile.institution,
+        expected_graduation: profile.expected_graduation || undefined,
+      });
+
+      await supabase
+        .from('profiles')
+        .update({
+          ml_user_id: mlData.user_id,
+          ml_last_synced_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      await supabase.from('ml_sync_status').upsert({
+        user_id: user.id,
+        sync_status: 'active',
+        last_sync_at: new Date().toISOString(),
+      });
+
+      await refreshProfile();
+
+      Alert.alert('Success', 'Successfully synced with ML backend! You can now access practice questions.');
+    } catch (error: any) {
+      console.error('ML sync error:', error);
+      Alert.alert('Sync Failed', error.message || 'Failed to sync with ML backend. Please try again later.');
+
+      await supabase.from('ml_sync_status').upsert({
+        user_id: user.id,
+        sync_status: 'pending',
+        last_sync_error: error.message || 'Unknown error',
+      });
+    } finally {
+      setMlSyncLoading(false);
+    }
   };
 
   return (
@@ -488,22 +548,67 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {profile?.ml_user_id && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>ML Sync Status</Text>
-            <View style={styles.form}>
-              <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-                <View style={{width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.success}} />
-                <Text style={styles.label}>Synced with ML Backend</Text>
-              </View>
-              {profile.ml_last_synced_at && (
-                <Text style={{fontSize: 12, color: Colors.text.tertiary}}>
-                  Last synced: {new Date(profile.ml_last_synced_at).toLocaleString()}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ML Backend Sync</Text>
+          <View style={styles.form}>
+            {profile?.ml_user_id ? (
+              <>
+                <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                  <View style={{width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.success}} />
+                  <Text style={styles.label}>Synced with ML Backend</Text>
+                </View>
+                {profile.ml_last_synced_at && (
+                  <Text style={{fontSize: 12, color: Colors.text.tertiary}}>
+                    Last synced: {new Date(profile.ml_last_synced_at).toLocaleString()}
+                  </Text>
+                )}
+                <Pressable
+                  style={[styles.syncButton, mlSyncLoading && styles.syncButtonDisabled]}
+                  onPress={handleMLSync}
+                  disabled={mlSyncLoading}
+                >
+                  {mlSyncLoading ? (
+                    <ActivityIndicator size="small" color={Colors.primary} />
+                  ) : (
+                    <>
+                      <RefreshCw color={Colors.primary} size={18} />
+                      <Text style={styles.syncButtonText}>Re-sync</Text>
+                    </>
+                  )}
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                  <View style={{width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.warning}} />
+                  <Text style={styles.label}>Not synced with ML Backend</Text>
+                </View>
+                <Text style={styles.syncWarning}>
+                  You need to sync with the ML backend to access personalized practice questions and analytics.
                 </Text>
-              )}
-            </View>
+                {(!profile?.institution || !profile?.enrollment_date) && (
+                  <Text style={styles.syncRequirement}>
+                    Please complete your profile with Institution and Enrollment Date first.
+                  </Text>
+                )}
+                <Pressable
+                  style={[styles.syncButton, styles.syncButtonPrimary, mlSyncLoading && styles.syncButtonDisabled]}
+                  onPress={handleMLSync}
+                  disabled={mlSyncLoading}
+                >
+                  {mlSyncLoading ? (
+                    <ActivityIndicator size="small" color={Colors.text.light} />
+                  ) : (
+                    <>
+                      <RefreshCw color={Colors.text.light} size={18} />
+                      <Text style={styles.syncButtonTextPrimary}>Sync Now</Text>
+                    </>
+                  )}
+                </Pressable>
+              </>
+            )}
           </View>
-        )}
+        </View>
 
         {isAdmin && (
           <View style={styles.section}>
@@ -869,6 +974,47 @@ const styles = StyleSheet.create({
     color: Colors.text.tertiary,
     textAlign: 'center',
     marginTop: Spacing.xs,
+    fontStyle: 'italic',
+  },
+  syncButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    backgroundColor: Colors.background,
+    marginTop: Spacing.sm,
+  },
+  syncButtonPrimary: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  syncButtonDisabled: {
+    opacity: 0.5,
+  },
+  syncButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
+  syncButtonTextPrimary: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.text.light,
+  },
+  syncWarning: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    lineHeight: 20,
+  },
+  syncRequirement: {
+    fontSize: 13,
+    color: Colors.warning,
+    lineHeight: 18,
     fontStyle: 'italic',
   },
 });
