@@ -214,7 +214,7 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>Donation</Text>
           <View style={styles.form}>
             <Text style={styles.donationText}>
-              Help keep this project going and consider donating!
+              Help us help you!
             </Text>
             <View style={styles.donationButtons}>
               <Pressable
