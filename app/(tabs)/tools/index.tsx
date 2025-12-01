@@ -31,6 +31,11 @@ export default function ToolsScreen() {
           color: Colors.secondary,
           route: '/(tabs)/tools/preceptor',
         },
+      ],
+    },
+    {
+      title: 'Clinical Questions',
+      tools: [
         {
           id: 'anonymous',
           title: 'Ask Anonymously!',
