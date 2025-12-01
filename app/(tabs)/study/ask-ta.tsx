@@ -12,7 +12,7 @@ export default function AskTAScreen() {
       <View style={styles.content}>
         <Text style={styles.comingSoon}>Coming Soon!</Text>
         <Text style={styles.description}>
-          Ask questions and get personalized help from experienced CRNAs
+          Ask questions and get personalized help from experienced Teaching Assistants!
         </Text>
       </View>
     </View>
