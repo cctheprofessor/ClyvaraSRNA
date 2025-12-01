@@ -132,7 +132,7 @@ export default function ProfileScreen() {
       const successUrl = `${baseUrl}?donation=success`;
       const cancelUrl = `${baseUrl}?donation=cancelled`;
 
-      const amount = donationType === 'one_time' ? 10 : 5;
+      const amount = donationType === 'one_time' ? 20 : 7;
 
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/stripe-checkout`,
@@ -333,7 +333,7 @@ export default function ProfileScreen() {
                 {donationLoading ? (
                   <ActivityIndicator size="small" color={Colors.text.light} />
                 ) : (
-                  <Text style={styles.donationButtonText}>One-Time $10</Text>
+                  <Text style={styles.donationButtonText}>One-Time $20</Text>
                 )}
               </Pressable>
               <Pressable
@@ -344,7 +344,7 @@ export default function ProfileScreen() {
                 {donationLoading ? (
                   <ActivityIndicator size="small" color={Colors.text.light} />
                 ) : (
-                  <Text style={styles.donationButtonText}>Monthly $5</Text>
+                  <Text style={styles.donationButtonText}>Monthly $7</Text>
                 )}
               </Pressable>
             </View>

@@ -18,7 +18,6 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  // Handle OPTIONS request for CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
@@ -34,7 +33,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get user from auth header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
@@ -53,10 +51,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Parse request body
     const { amount, donation_type, success_url, cancel_url } = await req.json();
 
-    // Validate required parameters
     if (!amount || !donation_type || !success_url || !cancel_url) {
       return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
         status: 400,
@@ -72,14 +68,13 @@ Deno.serve(async (req) => {
     }
 
     const amountInCents = Math.round(amount * 100);
-    if (amountInCents < 500) { // Minimum $5
+    if (amountInCents < 500) {
       return new Response(JSON.stringify({ error: 'Minimum donation amount is $5' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Get or create Stripe customer
     const { data: existingCustomer } = await supabase
       .from('stripe_customers')
       .select('customer_id')
@@ -92,7 +87,6 @@ Deno.serve(async (req) => {
     if (existingCustomer?.customer_id) {
       customerId = existingCustomer.customer_id;
     } else {
-      // Create new Stripe customer
       const newCustomer = await stripe.customers.create({
         email: user.email!,
         metadata: {
@@ -100,7 +94,6 @@ Deno.serve(async (req) => {
         },
       });
 
-      // Save to database
       await supabase.from('stripe_customers').insert({
         user_id: user.id,
         customer_id: newCustomer.id,
@@ -109,7 +102,6 @@ Deno.serve(async (req) => {
       customerId = newCustomer.id;
     }
 
-    // Create donation record
     const { data: donation } = await supabase
       .from('donations')
       .insert({
@@ -123,7 +115,6 @@ Deno.serve(async (req) => {
       .select()
       .single();
 
-    // Create Stripe Checkout Session
     let session: Stripe.Checkout.Session;
 
     if (donation_type === 'one_time') {
@@ -135,8 +126,8 @@ Deno.serve(async (req) => {
             price_data: {
               currency: 'usd',
               product_data: {
-                name: 'Clyvara Donation',
-                description: 'Support Clyvara SRNA education platform',
+                name: 'Clyvara Health (One-Time Donation)',
+                description: 'A one-time donation to help support the Clyvara Health Project',
               },
               unit_amount: amountInCents,
             },
@@ -153,7 +144,6 @@ Deno.serve(async (req) => {
         },
       });
     } else {
-      // Monthly subscription
       session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
@@ -162,8 +152,8 @@ Deno.serve(async (req) => {
             price_data: {
               currency: 'usd',
               product_data: {
-                name: 'Monthly Clyvara Support',
-                description: 'Monthly donation to support Clyvara',
+                name: 'Clyvara Health (Recurring Monthly)',
+                description: 'A monthly donation to help support the Clyvara Health Project',
               },
               unit_amount: amountInCents,
               recurring: {
@@ -184,7 +174,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Update donation with session ID
     await supabase
       .from('donations')
       .update({ stripe_session_id: session.id })
