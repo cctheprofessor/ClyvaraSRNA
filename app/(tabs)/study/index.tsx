@@ -59,7 +59,7 @@ export default function StudyScreen() {
   return (
     <View style={styles.container}>
       <PageHeader
-        title="Practice Question Specifically Curated for You"
+        title="Quiet Study Area"
         subtitle="Powered by Clyvara Analytica"
       />
 
