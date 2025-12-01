@@ -20,7 +20,7 @@ Required structure:
 {
   "patient": {"age": number, "sex": "Male"|"Female"|"Other", "weightKg": number, "heightCm": number, "asaClass": "I"|"II"|"III"|"IV"|"V"|"VI"|"E"},
   "procedure": {"primaryProcedure": string, "procedureDescription": string, "majorAnesthesiaConcerns": string[], "surgicalService": string, "urgency": "Elective"|"Urgent"|"Emergent", "position": string},
-  "history": {"pmh": string[], "psh": string[], "medications": string[], "allergies": string[], "familyAnestheticHistory": string, "socialHistorySummary": string},
+  "history": {"pmh": string[], "pmhAnestheticImplications": string[], "psh": string[], "pshAnestheticImplications": string[], "medications": string[], "medicationAnestheticImplications": string[], "allergies": string[], "familyAnestheticHistory": string, "socialHistorySummary": string},
   "exam": {"airway": {"mallampati": "I"|"II"|"III"|"IV", "tmDistanceCm": number, "neckMobility": "Full"|"Limited", "dentition": string, "anticipatedDifficultAirway": boolean, "airwayConcerns": string}, "cardiacSummary": string, "pulmonarySummary": string, "neuroSummary": string, "renalHepaticEndocrineSummary": string, "otherFindings": string},
   "labsAndImaging": {"relevantLabs": string[], "ekgSummary": string, "echoSummary": string, "otherImagingSummary": string},
   "riskAssessment": {"primaryRisks": string[], "mhRisk": "Low"|"Moderate"|"High", "aspirationRisk": "Low"|"Moderate"|"High", "postopNauseaVomitingRisk": "Low"|"Moderate"|"High", "obstructiveSleepApneaRisk": "Low"|"Moderate"|"High", "cardiovascularRiskSummary": string, "pulmonaryRiskSummary": string},
@@ -39,7 +39,7 @@ Required structure:
 }
 
 CRITICAL MEDICATION CONSIDERATIONS:
-You MUST analyze every medication the patient is taking and include anesthetic implications in your plan. For each medication class, consider:
+You MUST analyze every medication the patient is taking and include anesthetic implications in the "medicationAnestheticImplications" array in the history section. For EACH medication listed, provide a specific implication string. For each medication class, consider:
 
 GLP-1 Agonists (semaglutide, tirzepatide, dulaglutide, liraglutide, etc.):
 - Daily formulations: Hold for 24 hours before surgery (increased aspiration risk)
@@ -75,7 +75,7 @@ Corticosteroids:
 - Document in medications plan
 
 CRITICAL PMH/PSH ANESTHETIC IMPLICATIONS:
-You MUST identify anesthetic considerations for each past medical and surgical history item:
+You MUST identify anesthetic considerations for each past medical and surgical history item and include them in the "pmhAnestheticImplications" and "pshAnestheticImplications" arrays. For EACH PMH/PSH item listed, provide a specific implication string:
 
 Cardiac History:
 - CAD/Stents: Continue aspirin, beta-blockers; consider cardiology clearance

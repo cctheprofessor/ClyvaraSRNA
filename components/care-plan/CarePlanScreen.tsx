@@ -100,6 +100,16 @@ export function CarePlanScreen({ carePlan, caseDescription, carePlanId }: CarePl
                 • {item}
               </Text>
             ))}
+            {history.pmhAnestheticImplications && history.pmhAnestheticImplications.length > 0 && (
+              <View style={styles.implicationBox}>
+                <Text style={styles.implicationTitle}>Anesthetic Implications:</Text>
+                {history.pmhAnestheticImplications.map((implication, index) => (
+                  <Text key={index} style={styles.implicationText}>
+                    • {implication}
+                  </Text>
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -111,6 +121,16 @@ export function CarePlanScreen({ carePlan, caseDescription, carePlanId }: CarePl
                 • {item}
               </Text>
             ))}
+            {history.pshAnestheticImplications && history.pshAnestheticImplications.length > 0 && (
+              <View style={styles.implicationBox}>
+                <Text style={styles.implicationTitle}>Anesthetic Implications:</Text>
+                {history.pshAnestheticImplications.map((implication, index) => (
+                  <Text key={index} style={styles.implicationText}>
+                    • {implication}
+                  </Text>
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -122,6 +142,16 @@ export function CarePlanScreen({ carePlan, caseDescription, carePlanId }: CarePl
                 • {item}
               </Text>
             ))}
+            {history.medicationAnestheticImplications && history.medicationAnestheticImplications.length > 0 && (
+              <View style={styles.implicationBox}>
+                <Text style={styles.implicationTitle}>Anesthetic Implications:</Text>
+                {history.medicationAnestheticImplications.map((implication, index) => (
+                  <Text key={index} style={styles.implicationText}>
+                    • {implication}
+                  </Text>
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -724,6 +754,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.text.primary,
     lineHeight: 20,
+  },
+  implicationBox: {
+    backgroundColor: Colors.secondary + '15',
+    padding: Spacing.sm,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.secondary,
+    marginTop: Spacing.sm,
+  },
+  implicationTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.secondary,
+    marginBottom: 4,
+  },
+  implicationText: {
+    fontSize: 13,
+    color: Colors.text.primary,
+    lineHeight: 18,
+    marginBottom: 2,
   },
   riskTagContainer: {
     flexDirection: 'row',

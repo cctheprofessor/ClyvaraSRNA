@@ -23,8 +23,11 @@ export interface ProcedureInfo {
 
 export interface HistoryInfo {
   pmh: string[];
+  pmhAnestheticImplications?: string[];
   psh: string[];
+  pshAnestheticImplications?: string[];
   medications: string[];
+  medicationAnestheticImplications?: string[];
   allergies: string[];
   familyAnestheticHistory: string;
   socialHistorySummary: string;
