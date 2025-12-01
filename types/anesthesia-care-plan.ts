@@ -16,6 +16,8 @@ export interface ProcedureInfo {
   primaryProcedure: string;
   procedureDescription?: string;
   majorAnesthesiaConcerns?: string[];
+  procedureSpecificAnestheticConsiderations?: string[];
+  procedureSpecificMedications?: string[];
   surgicalService: string;
   urgency: "Elective" | "Urgent" | "Emergent";
   position: string;

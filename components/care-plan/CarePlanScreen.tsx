@@ -83,6 +83,28 @@ export function CarePlanScreen({ carePlan, caseDescription, carePlanId }: CarePl
           </View>
         )}
 
+        {procedure.procedureSpecificAnestheticConsiderations && procedure.procedureSpecificAnestheticConsiderations.length > 0 && (
+          <View style={styles.subsection}>
+            <Text style={styles.subsectionTitle}>Procedure-Specific Anesthetic Considerations</Text>
+            {procedure.procedureSpecificAnestheticConsiderations.map((consideration, index) => (
+              <View key={index} style={styles.implicationBox}>
+                <Text style={styles.implicationText}>• {consideration}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {procedure.procedureSpecificMedications && procedure.procedureSpecificMedications.length > 0 && (
+          <View style={styles.subsection}>
+            <Text style={styles.subsectionTitle}>Procedure-Specific Medications</Text>
+            {procedure.procedureSpecificMedications.map((medication, index) => (
+              <View key={index} style={styles.medicationBox}>
+                <Text style={styles.medicationText}>• {medication}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         <View style={styles.divider} />
 
         <KeyValueRow label="Service" value={procedure.surgicalService} />
@@ -774,6 +796,21 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     lineHeight: 18,
     marginBottom: 2,
+  },
+  medicationBox: {
+    backgroundColor: Colors.primary + '15',
+    padding: Spacing.sm,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.primary,
+    marginTop: Spacing.sm,
+  },
+  medicationText: {
+    fontSize: 13,
+    color: Colors.text.primary,
+    lineHeight: 18,
+    marginBottom: 2,
+    fontWeight: '500',
   },
   riskTagContainer: {
     flexDirection: 'row',

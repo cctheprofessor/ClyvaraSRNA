@@ -8,18 +8,40 @@ const corsHeaders = {
 
 const SYSTEM_PROMPT = `You are an expert CRNA generating comprehensive anesthesia care plans. Generate a complete JSON object matching this exact structure with ALL required fields. DO NOT include markdown or explanations - return ONLY the JSON object.
 
-CRITICAL: For the "procedure" section, you MUST include "majorAnesthesiaConcerns" - this is an array of the most important anesthesia-specific concerns for THIS specific surgical procedure. Consider procedure-specific risks like:
-- Positioning-related concerns (nerve injury risks, eye protection, etc.)
-- Surgical approach considerations (laparoscopic pneumoperitoneum, one-lung ventilation, etc.)
-- Blood loss potential and fluid shifts
-- Procedure-specific complications (air embolism, tourniquet pain, etc.)
-- Duration and intensity of surgical stimulation
-- Special equipment or techniques needed
+CRITICAL: For the "procedure" section, you MUST include THREE key arrays:
+
+1. "majorAnesthesiaConcerns" - The most critical anesthesia risks for THIS specific surgical procedure:
+   - Positioning-related concerns (nerve injury risks, eye protection, etc.)
+   - Surgical approach considerations (laparoscopic pneumoperitoneum, one-lung ventilation, etc.)
+   - Blood loss potential and fluid shifts
+   - Procedure-specific complications (air embolism, tourniquet pain, etc.)
+   - Duration and intensity of surgical stimulation
+   - Special equipment or techniques needed
+
+2. "procedureSpecificAnestheticConsiderations" - Detailed anesthetic management considerations for THIS procedure:
+   - Special airway management needs (e.g., awake fiberoptic for anterior cervical fusion)
+   - Hemodynamic goals specific to the procedure (e.g., permissive hypotension for spine, maintain perfusion pressure for neuro)
+   - Ventilation strategies (e.g., one-lung ventilation for thoracic, recruitment for laparoscopic)
+   - Positioning requirements and padding protocols
+   - Monitoring requirements beyond standard (e.g., neuromonitoring, TEE)
+   - Temperature management strategies
+   - Fluid management philosophy for the procedure
+   - Regional anesthesia considerations
+   - Emergence planning (e.g., deep extubation for certain cases)
+
+3. "procedureSpecificMedications" - Medications specifically indicated for THIS surgical procedure:
+   - Procedure-specific antibiotics with timing (e.g., "Cefazolin 2g IV within 60 min of incision")
+   - Local anesthetics for infiltration (e.g., "0.25% bupivacaine with epinephrine for scalp block")
+   - Steroids for specific indications (e.g., "Dexamethasone 8mg IV for craniotomy")
+   - Antifibrinolytics (e.g., "Tranexamic acid 1g load, 1g infusion for spine fusion")
+   - Procedure-specific paralytics or reversal agents
+   - Hemostatic agents or vasoactive drugs commonly needed
+   - Any medications to avoid for this specific procedure
 
 Required structure:
 {
   "patient": {"age": number, "sex": "Male"|"Female"|"Other", "weightKg": number, "heightCm": number, "asaClass": "I"|"II"|"III"|"IV"|"V"|"VI"|"E"},
-  "procedure": {"primaryProcedure": string, "procedureDescription": string, "majorAnesthesiaConcerns": string[], "surgicalService": string, "urgency": "Elective"|"Urgent"|"Emergent", "position": string},
+  "procedure": {"primaryProcedure": string, "procedureDescription": string, "majorAnesthesiaConcerns": string[], "procedureSpecificAnestheticConsiderations": string[], "procedureSpecificMedications": string[], "surgicalService": string, "urgency": "Elective"|"Urgent"|"Emergent", "position": string},
   "history": {"pmh": string[], "pmhAnestheticImplications": string[], "psh": string[], "pshAnestheticImplications": string[], "medications": string[], "medicationAnestheticImplications": string[], "allergies": string[], "familyAnestheticHistory": string, "socialHistorySummary": string},
   "exam": {"airway": {"mallampati": "I"|"II"|"III"|"IV", "tmDistanceCm": number, "neckMobility": "Full"|"Limited", "dentition": string, "anticipatedDifficultAirway": boolean, "airwayConcerns": string}, "cardiacSummary": string, "pulmonarySummary": string, "neuroSummary": string, "renalHepaticEndocrineSummary": string, "otherFindings": string},
   "labsAndImaging": {"relevantLabs": string[], "ekgSummary": string, "echoSummary": string, "otherImagingSummary": string},
