@@ -1,0 +1,3710 @@
+[
+  {
+    "id": 1,
+    "name": "Basic Sciences",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 0,
+    "full_path": "I",
+    "parent_id": null
+  },
+  {
+    "id": 2,
+    "name": "Anatomy and physiology",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 1,
+    "full_path": "I.A",
+    "parent_id": 1
+  },
+  {
+    "id": 3,
+    "name": "Cardiovascular",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.A.1",
+    "parent_id": 2
+  },
+  {
+    "id": 4,
+    "name": "Respiratory",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.A.2",
+    "parent_id": 2
+  },
+  {
+    "id": 5,
+    "name": "Central nervous system",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.A.3",
+    "parent_id": 2
+  },
+  {
+    "id": 6,
+    "name": "Musculoskeletal",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.A.4",
+    "parent_id": 2
+  },
+  {
+    "id": 7,
+    "name": "Endocrine",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.A.5",
+    "parent_id": 2
+  },
+  {
+    "id": 8,
+    "name": "Hepatic and renal",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.A.6",
+    "parent_id": 2
+  },
+  {
+    "id": 9,
+    "name": "Hematologic",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.A.7",
+    "parent_id": 2
+  },
+  {
+    "id": 10,
+    "name": "Gastrointestinal",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.A.8",
+    "parent_id": 2
+  },
+  {
+    "id": 11,
+    "name": "Immune",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.A.9",
+    "parent_id": 2
+  },
+  {
+    "id": 12,
+    "name": "Pathophysiology",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 1,
+    "full_path": "I.B",
+    "parent_id": 1
+  },
+  {
+    "id": 13,
+    "name": "Cardiovascular",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.B.1",
+    "parent_id": 12
+  },
+  {
+    "id": 14,
+    "name": "Ischemic heart disease",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.1.a",
+    "parent_id": 13
+  },
+  {
+    "id": 15,
+    "name": "Valvular heart disease",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.1.b",
+    "parent_id": 13
+  },
+  {
+    "id": 16,
+    "name": "Congenital heart defects",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.1.c",
+    "parent_id": 13
+  },
+  {
+    "id": 17,
+    "name": "Cardiac conduction and rhythm abnormalities",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.1.d",
+    "parent_id": 13
+  },
+  {
+    "id": 18,
+    "name": "Cardiovascular and peripheral vascular abnormalities",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.1.e",
+    "parent_id": 13
+  },
+  {
+    "id": 19,
+    "name": "Infectious diseases",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.1.f",
+    "parent_id": 13
+  },
+  {
+    "id": 20,
+    "name": "Pericardial diseases",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.1.g",
+    "parent_id": 13
+  },
+  {
+    "id": 21,
+    "name": "Cardiomyopathy and heart failure",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.1.h",
+    "parent_id": 13
+  },
+  {
+    "id": 22,
+    "name": "Respiratory",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.B.2",
+    "parent_id": 12
+  },
+  {
+    "id": 23,
+    "name": "Obstructive diseases",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.2.a",
+    "parent_id": 22
+  },
+  {
+    "id": 24,
+    "name": "Restrictive diseases",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.2.b",
+    "parent_id": 22
+  },
+  {
+    "id": 25,
+    "name": "Infectious diseases",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.2.c",
+    "parent_id": 22
+  },
+  {
+    "id": 26,
+    "name": "Pulmonary vascular abnormalities",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.2.d",
+    "parent_id": 22
+  },
+  {
+    "id": 27,
+    "name": "Altered airway anatomy",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.2.e",
+    "parent_id": 22
+  },
+  {
+    "id": 28,
+    "name": "Central nervous system",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.B.3",
+    "parent_id": 12
+  },
+  {
+    "id": 29,
+    "name": "Neurodegenerative diseases",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.3.a",
+    "parent_id": 28
+  },
+  {
+    "id": 30,
+    "name": "Myelin diseases",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.3.b",
+    "parent_id": 28
+  },
+  {
+    "id": 31,
+    "name": "Cerebrovascular diseases",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.3.c",
+    "parent_id": 28
+  },
+  {
+    "id": 32,
+    "name": "Neuropathies",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.3.d",
+    "parent_id": 28
+  },
+  {
+    "id": 33,
+    "name": "Psychiatric disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.3.e",
+    "parent_id": 28
+  },
+  {
+    "id": 34,
+    "name": "Spinal cord disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.3.f",
+    "parent_id": 28
+  },
+  {
+    "id": 35,
+    "name": "Intracranial tumor",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.3.g",
+    "parent_id": 28
+  },
+  {
+    "id": 36,
+    "name": "Congenital abnormalities (e.g., cerebral palsy)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.3.h",
+    "parent_id": 28
+  },
+  {
+    "id": 37,
+    "name": "Seizure disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.3.i",
+    "parent_id": 28
+  },
+  {
+    "id": 38,
+    "name": "Intracranial hypertension",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.3.j",
+    "parent_id": 28
+  },
+  {
+    "id": 39,
+    "name": "Thermoregulation",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.3.k",
+    "parent_id": 28
+  },
+  {
+    "id": 40,
+    "name": "Musculoskeletal",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.B.4",
+    "parent_id": 12
+  },
+  {
+    "id": 41,
+    "name": "Myopathies/metabolic abnormalities (e.g., malignant hyperthermia)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.4.a",
+    "parent_id": 40
+  },
+  {
+    "id": 42,
+    "name": "Neuromuscular diseases",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.4.b",
+    "parent_id": 40
+  },
+  {
+    "id": 43,
+    "name": "Skeletal diseases",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.4.c",
+    "parent_id": 40
+  },
+  {
+    "id": 44,
+    "name": "Musculoskeletal disorders (genetic and acquired)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.4.d",
+    "parent_id": 40
+  },
+  {
+    "id": 45,
+    "name": "Endocrine",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.B.5",
+    "parent_id": 12
+  },
+  {
+    "id": 46,
+    "name": "Thyroid and parathyroid disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.5.a",
+    "parent_id": 45
+  },
+  {
+    "id": 47,
+    "name": "Pituitary disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.5.b",
+    "parent_id": 45
+  },
+  {
+    "id": 48,
+    "name": "Adrenal disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.5.c",
+    "parent_id": 45
+  },
+  {
+    "id": 49,
+    "name": "Pancreatic disorders (endocrine disorders)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.5.d",
+    "parent_id": 45
+  },
+  {
+    "id": 50,
+    "name": "Other endocrine disorders (thymus-, hypothalamus-, androgen-, and metabolic-related disorders)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.5.e",
+    "parent_id": 45
+  },
+  {
+    "id": 51,
+    "name": "Hepatic",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.B.6",
+    "parent_id": 12
+  },
+  {
+    "id": 52,
+    "name": "Infectious diseases",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.6.a",
+    "parent_id": 51
+  },
+  {
+    "id": 53,
+    "name": "Biliary tract and bilirubin disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.6.b",
+    "parent_id": 51
+  },
+  {
+    "id": 54,
+    "name": "Cirrhotic disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.6.c",
+    "parent_id": 51
+  },
+  {
+    "id": 55,
+    "name": "Hepatovascular abnormalities",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.6.d",
+    "parent_id": 51
+  },
+  {
+    "id": 56,
+    "name": "Renal",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.B.7",
+    "parent_id": 12
+  },
+  {
+    "id": 57,
+    "name": "Intrinsic kidney disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.7.a",
+    "parent_id": 56
+  },
+  {
+    "id": 58,
+    "name": "Acute kidney injury",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.7.b",
+    "parent_id": 56
+  },
+  {
+    "id": 59,
+    "name": "Chronic kidney disease",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.7.c",
+    "parent_id": 56
+  },
+  {
+    "id": 60,
+    "name": "Hematologic",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.B.8",
+    "parent_id": 12
+  },
+  {
+    "id": 61,
+    "name": "Anemias",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.8.a",
+    "parent_id": 60
+  },
+  {
+    "id": 62,
+    "name": "Hemoglobin disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.8.b",
+    "parent_id": 60
+  },
+  {
+    "id": 63,
+    "name": "Coagulation disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.8.c",
+    "parent_id": 60
+  },
+  {
+    "id": 64,
+    "name": "Gastrointestinal",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.B.9",
+    "parent_id": 12
+  },
+  {
+    "id": 65,
+    "name": "Esophageal disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.9.a",
+    "parent_id": 64
+  },
+  {
+    "id": 66,
+    "name": "Gastric disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.9.b",
+    "parent_id": 64
+  },
+  {
+    "id": 67,
+    "name": "Pancreatic disorders (exocrine disorders)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.9.c",
+    "parent_id": 64
+  },
+  {
+    "id": 68,
+    "name": "Intestinal disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.9.d",
+    "parent_id": 64
+  },
+  {
+    "id": 69,
+    "name": "Tumors/secreting lesions",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.9.e",
+    "parent_id": 64
+  },
+  {
+    "id": 70,
+    "name": "Malabsorption disorders",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.9.f",
+    "parent_id": 64
+  },
+  {
+    "id": 71,
+    "name": "Immune",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.B.10",
+    "parent_id": 12
+  },
+  {
+    "id": 72,
+    "name": "Infectious disorders (e.g., HIV, AIDS)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.10.a",
+    "parent_id": 71
+  },
+  {
+    "id": 73,
+    "name": "Hypersensitivity disorders (Type I-IV)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.10.b",
+    "parent_id": 71
+  },
+  {
+    "id": 74,
+    "name": "Autoimmune diseases",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.10.c",
+    "parent_id": 71
+  },
+  {
+    "id": 75,
+    "name": "Other conditions",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.B.11",
+    "parent_id": 12
+  },
+  {
+    "id": 76,
+    "name": "Cancer",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.11.a",
+    "parent_id": 75
+  },
+  {
+    "id": 77,
+    "name": "Burns (inhalational, cutaneous)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.11.b",
+    "parent_id": 75
+  },
+  {
+    "id": 78,
+    "name": "Trauma",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.11.c",
+    "parent_id": 75
+  },
+  {
+    "id": 79,
+    "name": "Substance use disorder (alcohol, nicotine, other)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.11.d",
+    "parent_id": 75
+  },
+  {
+    "id": 80,
+    "name": "Sepsis",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.B.11.e",
+    "parent_id": 75
+  },
+  {
+    "id": 81,
+    "name": "Pharmacology",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 1,
+    "full_path": "I.C",
+    "parent_id": 1
+  },
+  {
+    "id": 82,
+    "name": "General principles",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.1",
+    "parent_id": 81
+  },
+  {
+    "id": 83,
+    "name": "Pharmacodynamics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.1.a",
+    "parent_id": 82
+  },
+  {
+    "id": 84,
+    "name": "Pharmacokinetics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.1.b",
+    "parent_id": 82
+  },
+  {
+    "id": 85,
+    "name": "Pharmacology-related mathematics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.1.c",
+    "parent_id": 82
+  },
+  {
+    "id": 86,
+    "name": "Inhalation anesthetics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.2",
+    "parent_id": 81
+  },
+  {
+    "id": 87,
+    "name": "Intravenous anesthetics and antagonists",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.3",
+    "parent_id": 81
+  },
+  {
+    "id": 88,
+    "name": "Barbiturates",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.3.a",
+    "parent_id": 87
+  },
+  {
+    "id": 89,
+    "name": "Sedative/hypnotics (e.g., propofol, etomidate, ketamine, dexmedetomidine)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.3.b",
+    "parent_id": 87
+  },
+  {
+    "id": 90,
+    "name": "Benzodiazepines and benzodiazepine antagonists",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.3.c",
+    "parent_id": 87
+  },
+  {
+    "id": 91,
+    "name": "Opioid agonists, agonist-antagonists, and antagonists",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.4",
+    "parent_id": 81
+  },
+  {
+    "id": 92,
+    "name": "Depolarizing and nondepolarizing neuromuscular relaxants and antagonists",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.5",
+    "parent_id": 81
+  },
+  {
+    "id": 93,
+    "name": "Local anesthetics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.6",
+    "parent_id": 81
+  },
+  {
+    "id": 94,
+    "name": "Lipid emulsion",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.7",
+    "parent_id": 81
+  },
+  {
+    "id": 95,
+    "name": "Regional anesthesia adjuncts (neuraxial and peripheral)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.8",
+    "parent_id": 81
+  },
+  {
+    "id": 96,
+    "name": "Anticholinergics/cholinergic agonists",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.9",
+    "parent_id": 81
+  },
+  {
+    "id": 97,
+    "name": "Non-opioid analgesics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.10",
+    "parent_id": 81
+  },
+  {
+    "id": 98,
+    "name": "Cardiovascular medications",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.11",
+    "parent_id": 81
+  },
+  {
+    "id": 99,
+    "name": "Inotropes",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.11.a",
+    "parent_id": 98
+  },
+  {
+    "id": 100,
+    "name": "Phosphodiesterase inhibitors",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.11.b",
+    "parent_id": 98
+  },
+  {
+    "id": 101,
+    "name": "Cardiac glycosides (e.g., digitalis)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.11.c",
+    "parent_id": 98
+  },
+  {
+    "id": 102,
+    "name": "Alpha- and beta-receptor agonists and antagonists",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.11.d",
+    "parent_id": 98
+  },
+  {
+    "id": 103,
+    "name": "Centrally acting alpha2-adrenergic agonists",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.11.e",
+    "parent_id": 98
+  },
+  {
+    "id": 104,
+    "name": "ACE inhibitors",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.11.f",
+    "parent_id": 98
+  },
+  {
+    "id": 105,
+    "name": "Angiotensin II receptor inhibitors",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.11.g",
+    "parent_id": 98
+  },
+  {
+    "id": 106,
+    "name": "Vasodilators",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.11.h",
+    "parent_id": 98
+  },
+  {
+    "id": 107,
+    "name": "Nitric oxide",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.11.i",
+    "parent_id": 98
+  },
+  {
+    "id": 108,
+    "name": "Antidysrhythmics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.11.j",
+    "parent_id": 98
+  },
+  {
+    "id": 109,
+    "name": "Calcium channel blockers",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.11.k",
+    "parent_id": 98
+  },
+  {
+    "id": 110,
+    "name": "Bronchodilators",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.12",
+    "parent_id": 81
+  },
+  {
+    "id": 111,
+    "name": "Psychopharmacologic therapy",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.13",
+    "parent_id": 81
+  },
+  {
+    "id": 112,
+    "name": "Antidepressants",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.13.a",
+    "parent_id": 111
+  },
+  {
+    "id": 113,
+    "name": "Antipsychotics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.13.b",
+    "parent_id": 111
+  },
+  {
+    "id": 114,
+    "name": "Antiparkinsonian drugs",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.13.c",
+    "parent_id": 111
+  },
+  {
+    "id": 115,
+    "name": "Others",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.13.d",
+    "parent_id": 111
+  },
+  {
+    "id": 116,
+    "name": "Prostaglandins",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.14",
+    "parent_id": 81
+  },
+  {
+    "id": 117,
+    "name": "Histamine receptor antagonists",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.15",
+    "parent_id": 81
+  },
+  {
+    "id": 118,
+    "name": "Antiemetics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.16",
+    "parent_id": 81
+  },
+  {
+    "id": 119,
+    "name": "5-HT3 receptor antagonists",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.16.a",
+    "parent_id": 118
+  },
+  {
+    "id": 120,
+    "name": "Gastrointestinal prokinetic medications (metoclopramide)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.16.b",
+    "parent_id": 118
+  },
+  {
+    "id": 121,
+    "name": "Antacids",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.16.c",
+    "parent_id": 118
+  },
+  {
+    "id": 122,
+    "name": "Other",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.16.d",
+    "parent_id": 118
+  },
+  {
+    "id": 123,
+    "name": "Insulin",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.17",
+    "parent_id": 81
+  },
+  {
+    "id": 124,
+    "name": "Hypoglycemics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.18",
+    "parent_id": 81
+  },
+  {
+    "id": 125,
+    "name": "Diuretics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.19",
+    "parent_id": 81
+  },
+  {
+    "id": 126,
+    "name": "Anticoagulants and antagonists",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.20",
+    "parent_id": 81
+  },
+  {
+    "id": 127,
+    "name": "Heparin and low-molecular-weight heparins",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.20.a",
+    "parent_id": 126
+  },
+  {
+    "id": 128,
+    "name": "Heparin reversal\u2014protamine",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.20.b",
+    "parent_id": 126
+  },
+  {
+    "id": 129,
+    "name": "Antiplatelet medications",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.20.c",
+    "parent_id": 126
+  },
+  {
+    "id": 130,
+    "name": "Oral anticoagulants",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.20.d",
+    "parent_id": 126
+  },
+  {
+    "id": 131,
+    "name": "Oral anticoagulant reversal",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.20.e",
+    "parent_id": 126
+  },
+  {
+    "id": 132,
+    "name": "Thrombolytics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.20.f",
+    "parent_id": 126
+  },
+  {
+    "id": 133,
+    "name": "Thrombin inhibitors",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.20.g",
+    "parent_id": 126
+  },
+  {
+    "id": 134,
+    "name": "Procoagulants (e.g., antifibrinolytics, DDAVP)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.C.20.h",
+    "parent_id": 126
+  },
+  {
+    "id": 135,
+    "name": "Antimicrobials and antivirals",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.21",
+    "parent_id": 81
+  },
+  {
+    "id": 136,
+    "name": "Antiepileptics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.22",
+    "parent_id": 81
+  },
+  {
+    "id": 137,
+    "name": "Lipid-lowering agents",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.23",
+    "parent_id": 81
+  },
+  {
+    "id": 138,
+    "name": "Herbal remedies and dietary supplements",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.24",
+    "parent_id": 81
+  },
+  {
+    "id": 139,
+    "name": "Minerals and electrolytes",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.25",
+    "parent_id": 81
+  },
+  {
+    "id": 140,
+    "name": "Dantrolene",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.26",
+    "parent_id": 81
+  },
+  {
+    "id": 141,
+    "name": "Steroids (e.g., dexamethasone, hydrocortisone)",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.27",
+    "parent_id": 81
+  },
+  {
+    "id": 142,
+    "name": "Tocolytics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.28",
+    "parent_id": 81
+  },
+  {
+    "id": 143,
+    "name": "Uterotonics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.29",
+    "parent_id": 81
+  },
+  {
+    "id": 144,
+    "name": "Intravenous dyes",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.30",
+    "parent_id": 81
+  },
+  {
+    "id": 145,
+    "name": "Cannabinoids",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.C.31",
+    "parent_id": 81
+  },
+  {
+    "id": 146,
+    "name": "Applied chemistry, biochemistry, physics, and mathematics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 1,
+    "full_path": "I.D",
+    "parent_id": 1
+  },
+  {
+    "id": 147,
+    "name": "Chemistry and biochemistry",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.D.1",
+    "parent_id": 146
+  },
+  {
+    "id": 148,
+    "name": "Aqueous solutions and concentrations",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.1.a",
+    "parent_id": 147
+  },
+  {
+    "id": 149,
+    "name": "Acids, bases, and salts",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.1.b",
+    "parent_id": 147
+  },
+  {
+    "id": 150,
+    "name": "Chemical reactions: oxidation, reduction, hydrolysis, and conjugation",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.1.c",
+    "parent_id": 147
+  },
+  {
+    "id": 151,
+    "name": "Metabolism",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.1.d",
+    "parent_id": 147
+  },
+  {
+    "id": 152,
+    "name": "Cellular mechanisms of action",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.1.e",
+    "parent_id": 147
+  },
+  {
+    "id": 153,
+    "name": "Drug receptor interaction",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.1.f",
+    "parent_id": 147
+  },
+  {
+    "id": 154,
+    "name": "Physics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.D.2",
+    "parent_id": 146
+  },
+  {
+    "id": 155,
+    "name": "Units of measurement",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.2.a",
+    "parent_id": 154
+  },
+  {
+    "id": 156,
+    "name": "Gases and gas laws",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.2.b",
+    "parent_id": 154
+  },
+  {
+    "id": 157,
+    "name": "Solubility, diffusion, and osmosis",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.2.c",
+    "parent_id": 154
+  },
+  {
+    "id": 158,
+    "name": "Pressure and fluid flow",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.2.d",
+    "parent_id": 154
+  },
+  {
+    "id": 159,
+    "name": "Electricity and electrical safety",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.2.e",
+    "parent_id": 154
+  },
+  {
+    "id": 160,
+    "name": "Vaporization and humidification",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.2.f",
+    "parent_id": 154
+  },
+  {
+    "id": 161,
+    "name": "Measurement of oxygen, carbon dioxide, and hydrogen ions",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "I.D.2.g",
+    "parent_id": 154
+  },
+  {
+    "id": 162,
+    "name": "Nonpharmacology-related mathematics",
+    "nce_section": "I",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "I.D.3",
+    "parent_id": 146
+  },
+  {
+    "id": 163,
+    "name": "Equipment, Instrumentation and Technology",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 0,
+    "full_path": "II",
+    "parent_id": null
+  },
+  {
+    "id": 164,
+    "name": "Anesthetic delivery systems",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 1,
+    "full_path": "II.A",
+    "parent_id": 163
+  },
+  {
+    "id": 165,
+    "name": "High/low pressure gas sources",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.A.1",
+    "parent_id": 164
+  },
+  {
+    "id": 166,
+    "name": "Regulators/manifolds",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.A.2",
+    "parent_id": 164
+  },
+  {
+    "id": 167,
+    "name": "Flowmeters, valves, floats",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.A.3",
+    "parent_id": 164
+  },
+  {
+    "id": 168,
+    "name": "Vaporizers",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.A.4",
+    "parent_id": 164
+  },
+  {
+    "id": 169,
+    "name": "Proportioning systems",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.A.5",
+    "parent_id": 164
+  },
+  {
+    "id": 170,
+    "name": "Pressure failure safety devices",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.A.6",
+    "parent_id": 164
+  },
+  {
+    "id": 171,
+    "name": "Failsafe devices",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.A.7",
+    "parent_id": 164
+  },
+  {
+    "id": 172,
+    "name": "Ventilator",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.A.8",
+    "parent_id": 164
+  },
+  {
+    "id": 173,
+    "name": "Carbon dioxide absorbents",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.A.9",
+    "parent_id": 164
+  },
+  {
+    "id": 174,
+    "name": "Anesthetic circuits",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.A.10",
+    "parent_id": 164
+  },
+  {
+    "id": 175,
+    "name": "Rebreathing, circle system",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.A.10.a",
+    "parent_id": 174
+  },
+  {
+    "id": 176,
+    "name": "Nonrebreathing",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.A.10.b",
+    "parent_id": 174
+  },
+  {
+    "id": 177,
+    "name": "Modified nonrebreathing",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.A.10.c",
+    "parent_id": 174
+  },
+  {
+    "id": 178,
+    "name": "Pneumatic and electronic alarm devices",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.A.11",
+    "parent_id": 164
+  },
+  {
+    "id": 179,
+    "name": "Airway equipment",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 1,
+    "full_path": "II.B",
+    "parent_id": 163
+  },
+  {
+    "id": 180,
+    "name": "Face masks",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.B.1",
+    "parent_id": 179
+  },
+  {
+    "id": 181,
+    "name": "Laryngoscope",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.B.2",
+    "parent_id": 179
+  },
+  {
+    "id": 182,
+    "name": "Rigid",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.B.2.a",
+    "parent_id": 181
+  },
+  {
+    "id": 183,
+    "name": "Video laryngoscope",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.B.2.b",
+    "parent_id": 181
+  },
+  {
+    "id": 184,
+    "name": "Optically enhanced scopes",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.B.2.c",
+    "parent_id": 181
+  },
+  {
+    "id": 185,
+    "name": "Flexible fiberoptic bronchoscope",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.B.3",
+    "parent_id": 179
+  },
+  {
+    "id": 186,
+    "name": "Endotracheal tube",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.B.4",
+    "parent_id": 179
+  },
+  {
+    "id": 187,
+    "name": "Endobronchial tube",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.B.5",
+    "parent_id": 179
+  },
+  {
+    "id": 188,
+    "name": "Double-lumen tubes",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.B.5.a",
+    "parent_id": 187
+  },
+  {
+    "id": 189,
+    "name": "Bronchial blockers",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.B.5.b",
+    "parent_id": 187
+  },
+  {
+    "id": 190,
+    "name": "Airways",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.B.6",
+    "parent_id": 179
+  },
+  {
+    "id": 191,
+    "name": "Oral",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.B.6.a",
+    "parent_id": 190
+  },
+  {
+    "id": 192,
+    "name": "Nasal",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.B.6.b",
+    "parent_id": 190
+  },
+  {
+    "id": 193,
+    "name": "Tracheostomy tubes",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.B.7",
+    "parent_id": 179
+  },
+  {
+    "id": 194,
+    "name": "Supraglottic airways (e.g., LMA)",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.B.8",
+    "parent_id": 179
+  },
+  {
+    "id": 195,
+    "name": "Intubating supraglottic airways",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.B.8.a",
+    "parent_id": 194
+  },
+  {
+    "id": 196,
+    "name": "Jet ventilation",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.B.9",
+    "parent_id": 179
+  },
+  {
+    "id": 197,
+    "name": "Intubating stylets",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.B.10",
+    "parent_id": 179
+  },
+  {
+    "id": 198,
+    "name": "Cricothyrotomy (needle and surgical)",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.B.11",
+    "parent_id": 179
+  },
+  {
+    "id": 199,
+    "name": "Intubation aids (e.g., bougie, exchange catheter)",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.B.12",
+    "parent_id": 179
+  },
+  {
+    "id": 200,
+    "name": "Monitoring devices",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 1,
+    "full_path": "II.C",
+    "parent_id": 163
+  },
+  {
+    "id": 201,
+    "name": "Central nervous system",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.C.1",
+    "parent_id": 200
+  },
+  {
+    "id": 202,
+    "name": "Evoked potential",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.1.a",
+    "parent_id": 201
+  },
+  {
+    "id": 203,
+    "name": "Intracranial pressure",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.1.b",
+    "parent_id": 201
+  },
+  {
+    "id": 204,
+    "name": "Modified EEG monitor",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.1.c",
+    "parent_id": 201
+  },
+  {
+    "id": 205,
+    "name": "Cerebral oximetry",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.1.d",
+    "parent_id": 201
+  },
+  {
+    "id": 206,
+    "name": "Cardiovascular",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.C.2",
+    "parent_id": 200
+  },
+  {
+    "id": 207,
+    "name": "Electrocardiogram (3-lead and 5-lead)",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.2.a",
+    "parent_id": 206
+  },
+  {
+    "id": 208,
+    "name": "Arterial pressure monitoring",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.2.b",
+    "parent_id": 206
+  },
+  {
+    "id": 209,
+    "name": "Noninvasive blood pressure monitoring",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.2.c",
+    "parent_id": 206
+  },
+  {
+    "id": 210,
+    "name": "Central venous pressure monitoring",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.2.d",
+    "parent_id": 206
+  },
+  {
+    "id": 211,
+    "name": "Pulmonary artery pressure monitoring/SvO2",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.2.e",
+    "parent_id": 206
+  },
+  {
+    "id": 212,
+    "name": "Hemodynamic monitoring",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.2.f",
+    "parent_id": 206
+  },
+  {
+    "id": 213,
+    "name": "Precordial/esophageal stethoscope",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.2.g",
+    "parent_id": 206
+  },
+  {
+    "id": 214,
+    "name": "Transesophageal echocardiogram",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.2.h",
+    "parent_id": 206
+  },
+  {
+    "id": 215,
+    "name": "Respiratory",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.C.3",
+    "parent_id": 200
+  },
+  {
+    "id": 216,
+    "name": "Capnography",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.3.a",
+    "parent_id": 215
+  },
+  {
+    "id": 217,
+    "name": "Airway gas analysis",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.3.b",
+    "parent_id": 215
+  },
+  {
+    "id": 218,
+    "name": "Pulse oximetry",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.3.c",
+    "parent_id": 215
+  },
+  {
+    "id": 219,
+    "name": "Airway pressure",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.3.d",
+    "parent_id": 215
+  },
+  {
+    "id": 220,
+    "name": "Blood gas analysis",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.3.e",
+    "parent_id": 215
+  },
+  {
+    "id": 221,
+    "name": "Others",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.C.4",
+    "parent_id": 200
+  },
+  {
+    "id": 222,
+    "name": "Peripheral nerve stimulator (qualitative and quantitative)",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.4.a",
+    "parent_id": 221
+  },
+  {
+    "id": 223,
+    "name": "Temperature monitoring",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.4.b",
+    "parent_id": 221
+  },
+  {
+    "id": 224,
+    "name": "Maternal/fetal monitoring",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 3,
+    "full_path": "II.C.4.c",
+    "parent_id": 221
+  },
+  {
+    "id": 225,
+    "name": "Patient warming equipment",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 1,
+    "full_path": "II.D",
+    "parent_id": 163
+  },
+  {
+    "id": 226,
+    "name": "Fluid/blood warmers",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.D.1",
+    "parent_id": 225
+  },
+  {
+    "id": 227,
+    "name": "Forced air warming devices",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.D.2",
+    "parent_id": 225
+  },
+  {
+    "id": 228,
+    "name": "Heat and moisture exchanger (HME)",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.D.3",
+    "parent_id": 225
+  },
+  {
+    "id": 229,
+    "name": "Radiant warmers",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.D.4",
+    "parent_id": 225
+  },
+  {
+    "id": 230,
+    "name": "Infusion devices (e.g., rapid infusers)",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 1,
+    "full_path": "II.E",
+    "parent_id": 163
+  },
+  {
+    "id": 231,
+    "name": "Imaging and imaging safety",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 1,
+    "full_path": "II.F",
+    "parent_id": 163
+  },
+  {
+    "id": 232,
+    "name": "Ultrasound",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.F.1",
+    "parent_id": 231
+  },
+  {
+    "id": 233,
+    "name": "Fluoroscopy",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.F.2",
+    "parent_id": 231
+  },
+  {
+    "id": 234,
+    "name": "Radiography",
+    "nce_section": "II",
+    "nce_weight": 0.2,
+    "depth_level": 2,
+    "full_path": "II.F.3",
+    "parent_id": 231
+  },
+  {
+    "id": 235,
+    "name": "General Principles of Anesthesia",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 0,
+    "full_path": "III",
+    "parent_id": null
+  },
+  {
+    "id": 236,
+    "name": "Ethical considerations",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.A",
+    "parent_id": 235
+  },
+  {
+    "id": 237,
+    "name": "Autonomy, beneficence, nonmalfeasance",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.A.1",
+    "parent_id": 236
+  },
+  {
+    "id": 238,
+    "name": "Research ethics",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.A.2",
+    "parent_id": 236
+  },
+  {
+    "id": 239,
+    "name": "Legal issues",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.B",
+    "parent_id": 235
+  },
+  {
+    "id": 240,
+    "name": "Advance healthcare directives",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.B.1",
+    "parent_id": 239
+  },
+  {
+    "id": 241,
+    "name": "Informed consent",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.B.2",
+    "parent_id": 239
+  },
+  {
+    "id": 242,
+    "name": "Disclosure of errors/injuries",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.B.3",
+    "parent_id": 239
+  },
+  {
+    "id": 243,
+    "name": "Legal doctrines",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.B.4",
+    "parent_id": 239
+  },
+  {
+    "id": 244,
+    "name": "Torts",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.B.5",
+    "parent_id": 239
+  },
+  {
+    "id": 245,
+    "name": "Scope of practice",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.B.6",
+    "parent_id": 239
+  },
+  {
+    "id": 246,
+    "name": "Standards of practice",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.B.7",
+    "parent_id": 239
+  },
+  {
+    "id": 247,
+    "name": "Billing",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.B.8",
+    "parent_id": 239
+  },
+  {
+    "id": 248,
+    "name": "Safety and wellness",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.C",
+    "parent_id": 235
+  },
+  {
+    "id": 249,
+    "name": "Provider substance abuse disorder",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.C.1",
+    "parent_id": 248
+  },
+  {
+    "id": 250,
+    "name": "Issues surrounding patient safety",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.C.2",
+    "parent_id": 248
+  },
+  {
+    "id": 251,
+    "name": "Impaired provider",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.C.3",
+    "parent_id": 248
+  },
+  {
+    "id": 252,
+    "name": "Wellness initiatives and peer assistance",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.C.4",
+    "parent_id": 248
+  },
+  {
+    "id": 253,
+    "name": "Preoperative assessment and preparation of patient",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.D",
+    "parent_id": 235
+  },
+  {
+    "id": 254,
+    "name": "Fluid volume assessment and management",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.E",
+    "parent_id": 235
+  },
+  {
+    "id": 255,
+    "name": "Fluid/blood component therapy replacement (including plasma expanders)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.E.1",
+    "parent_id": 254
+  },
+  {
+    "id": 256,
+    "name": "Bloodless medicine (including blood salvage devices and hemodilution techniques)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.E.2",
+    "parent_id": 254
+  },
+  {
+    "id": 257,
+    "name": "Goal-directed fluid management (crossover with equipment)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.E.3",
+    "parent_id": 254
+  },
+  {
+    "id": 258,
+    "name": "Massive transfusion protocol",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.E.4",
+    "parent_id": 254
+  },
+  {
+    "id": 259,
+    "name": "Thromboelastography",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.E.5",
+    "parent_id": 254
+  },
+  {
+    "id": 260,
+    "name": "Positioning",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.F",
+    "parent_id": 235
+  },
+  {
+    "id": 261,
+    "name": "Techniques",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.F.1",
+    "parent_id": 260
+  },
+  {
+    "id": 262,
+    "name": "Physiologic alterations",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.F.2",
+    "parent_id": 260
+  },
+  {
+    "id": 263,
+    "name": "Complications",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.F.3",
+    "parent_id": 260
+  },
+  {
+    "id": 264,
+    "name": "Utilization and interpretation of testing data",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.G",
+    "parent_id": 235
+  },
+  {
+    "id": 265,
+    "name": "Lab tests (blood gases, activated clotting time)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.G.1",
+    "parent_id": 264
+  },
+  {
+    "id": 266,
+    "name": "Diagnostic exams (including basic 12-lead ECG interpretation)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.G.2",
+    "parent_id": 264
+  },
+  {
+    "id": 267,
+    "name": "Airway management",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.H",
+    "parent_id": 235
+  },
+  {
+    "id": 268,
+    "name": "Assessment",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.H.1",
+    "parent_id": 267
+  },
+  {
+    "id": 269,
+    "name": "Techniques, procedures, and devices",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.H.2",
+    "parent_id": 267
+  },
+  {
+    "id": 270,
+    "name": "Complications",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.H.3",
+    "parent_id": 267
+  },
+  {
+    "id": 271,
+    "name": "Difficult airway management (difficult airway algorithm)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.H.4",
+    "parent_id": 267
+  },
+  {
+    "id": 272,
+    "name": "Local/regional anesthetics (technique, physiologic alterations, complications)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.I",
+    "parent_id": 235
+  },
+  {
+    "id": 273,
+    "name": "Anatomy",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.I.1",
+    "parent_id": 272
+  },
+  {
+    "id": 274,
+    "name": "Infiltration",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.I.2",
+    "parent_id": 272
+  },
+  {
+    "id": 275,
+    "name": "Topical",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.I.3",
+    "parent_id": 272
+  },
+  {
+    "id": 276,
+    "name": "Neuraxial blocks",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.I.4",
+    "parent_id": 272
+  },
+  {
+    "id": 277,
+    "name": "Peripheral blocks",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.I.5",
+    "parent_id": 272
+  },
+  {
+    "id": 278,
+    "name": "Other blocks (airway, retrobulbar)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.I.6",
+    "parent_id": 272
+  },
+  {
+    "id": 279,
+    "name": "Ultrasound and/or nerve stimulator guided concepts and techniques",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.I.7",
+    "parent_id": 272
+  },
+  {
+    "id": 280,
+    "name": "Management of complications (e.g., local anesthetic systemic toxicity)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.I.8",
+    "parent_id": 272
+  },
+  {
+    "id": 281,
+    "name": "Light, moderate, and deep sedation (monitored anesthesia care)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.J",
+    "parent_id": 235
+  },
+  {
+    "id": 282,
+    "name": "Total intravenous anesthesia",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.K",
+    "parent_id": 235
+  },
+  {
+    "id": 283,
+    "name": "Pain",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.L",
+    "parent_id": 235
+  },
+  {
+    "id": 284,
+    "name": "Pain theory (anatomy, physiology, pathology, and psychodynamics)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.L.1",
+    "parent_id": 283
+  },
+  {
+    "id": 285,
+    "name": "Acute",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.L.2",
+    "parent_id": 283
+  },
+  {
+    "id": 286,
+    "name": "Chronic",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.L.3",
+    "parent_id": 283
+  },
+  {
+    "id": 287,
+    "name": "Pain management",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.L.4",
+    "parent_id": 283
+  },
+  {
+    "id": 288,
+    "name": "Acute",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 3,
+    "full_path": "III.L.4.a",
+    "parent_id": 287
+  },
+  {
+    "id": 289,
+    "name": "Chronic",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 3,
+    "full_path": "III.L.4.b",
+    "parent_id": 287
+  },
+  {
+    "id": 290,
+    "name": "Multimodal pain therapy",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 3,
+    "full_path": "III.L.4.c",
+    "parent_id": 287
+  },
+  {
+    "id": 291,
+    "name": "Enhanced recovery after surgery (ERAS)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.M",
+    "parent_id": 235
+  },
+  {
+    "id": 292,
+    "name": "Hypotensive technique and risks",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.N",
+    "parent_id": 235
+  },
+  {
+    "id": 293,
+    "name": "Postanesthesia care/respiratory therapy",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.O",
+    "parent_id": 235
+  },
+  {
+    "id": 294,
+    "name": "Infection control",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.P",
+    "parent_id": 235
+  },
+  {
+    "id": 295,
+    "name": "Provider (e.g., personal protective equipment, room air handling, ultraviolet sanitizers)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.P.1",
+    "parent_id": 294
+  },
+  {
+    "id": 296,
+    "name": "Patient (e.g., aseptic technique, workstation cleanliness, needle safety)",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 2,
+    "full_path": "III.P.2",
+    "parent_id": 294
+  },
+  {
+    "id": 297,
+    "name": "Intraoperative fire safety",
+    "nce_section": "III",
+    "nce_weight": 0.35,
+    "depth_level": 1,
+    "full_path": "III.Q",
+    "parent_id": 235
+  },
+  {
+    "id": 298,
+    "name": "Anesthesia for Surgical Procedures and Special Populations",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 0,
+    "full_path": "IV",
+    "parent_id": null
+  },
+  {
+    "id": 299,
+    "name": "Surgical and diagnostic anesthesia, including management of complications",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 1,
+    "full_path": "IV.A",
+    "parent_id": 298
+  },
+  {
+    "id": 300,
+    "name": "Intra-abdominal",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.1",
+    "parent_id": 299
+  },
+  {
+    "id": 301,
+    "name": "Hepatobiliary system",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.1.a",
+    "parent_id": 300
+  },
+  {
+    "id": 302,
+    "name": "Gastrointestinal tract procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.1.b",
+    "parent_id": 300
+  },
+  {
+    "id": 303,
+    "name": "Endocrine organ procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.1.c",
+    "parent_id": 300
+  },
+  {
+    "id": 304,
+    "name": "Renal/genitourinary",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.1.d",
+    "parent_id": 300
+  },
+  {
+    "id": 305,
+    "name": "Gynecologic procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.1.e",
+    "parent_id": 300
+  },
+  {
+    "id": 306,
+    "name": "Peritoneal procedures (including hernia repair)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.1.f",
+    "parent_id": 300
+  },
+  {
+    "id": 307,
+    "name": "Extrathoracic",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.2",
+    "parent_id": 299
+  },
+  {
+    "id": 308,
+    "name": "Breast",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.2.a",
+    "parent_id": 307
+  },
+  {
+    "id": 309,
+    "name": "Plastics and/or reconstructive",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.2.b",
+    "parent_id": 307
+  },
+  {
+    "id": 310,
+    "name": "Head",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.3",
+    "parent_id": 299
+  },
+  {
+    "id": 311,
+    "name": "Extracranial",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.3.a",
+    "parent_id": 310
+  },
+  {
+    "id": 312,
+    "name": "Otolaryngological",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.A.3.a.1",
+    "parent_id": 311
+  },
+  {
+    "id": 313,
+    "name": "Ophthalmologic",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.A.3.a.2",
+    "parent_id": 311
+  },
+  {
+    "id": 314,
+    "name": "Nasal",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.A.3.a.3",
+    "parent_id": 311
+  },
+  {
+    "id": 315,
+    "name": "Craniofacial",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.A.3.a.4",
+    "parent_id": 311
+  },
+  {
+    "id": 316,
+    "name": "Plastics and/or reconstructive",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.A.3.a.5",
+    "parent_id": 311
+  },
+  {
+    "id": 317,
+    "name": "Orthodontic/dental",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.A.3.a.6",
+    "parent_id": 311
+  },
+  {
+    "id": 318,
+    "name": "Intracranial",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.3.b",
+    "parent_id": 310
+  },
+  {
+    "id": 319,
+    "name": "Decompression (burr holes, ventriculoperitoneal shunt)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.A.3.b.1",
+    "parent_id": 318
+  },
+  {
+    "id": 320,
+    "name": "Space-occupying lesion",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.A.3.b.2",
+    "parent_id": 318
+  },
+  {
+    "id": 321,
+    "name": "Vascular",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.A.3.b.3",
+    "parent_id": 318
+  },
+  {
+    "id": 322,
+    "name": "Transsphenoidal hypophysectomy",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.A.3.b.4",
+    "parent_id": 318
+  },
+  {
+    "id": 323,
+    "name": "Stereotactic procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.A.3.b.5",
+    "parent_id": 318
+  },
+  {
+    "id": 324,
+    "name": "Cardiac anesthesia",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.4",
+    "parent_id": 299
+  },
+  {
+    "id": 325,
+    "name": "Open procedures (e.g., coronary artery bypass grafting)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.4.a",
+    "parent_id": 324
+  },
+  {
+    "id": 326,
+    "name": "Minimally invasive procedures (e.g., transcatheter aortic valve replacement/implantation [TAVR/TAVI], left atrial appendage closure implant, mitral clips)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.4.b",
+    "parent_id": 324
+  },
+  {
+    "id": 327,
+    "name": "Interventional cardiology (e.g., pacemakers, automated internal cardiac defibrillator devices, electrophysiology cases)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.4.c",
+    "parent_id": 324
+  },
+  {
+    "id": 328,
+    "name": "Management of patients with cardiac devices (e.g., ventricular assist device, extracorporeal membrane oxygenation, intraarterial balloon pump)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.4.d",
+    "parent_id": 324
+  },
+  {
+    "id": 329,
+    "name": "Noncardiac intrathoracic (including open and thoracoscopic approach)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.5",
+    "parent_id": 299
+  },
+  {
+    "id": 330,
+    "name": "Diaphragm",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.5.a",
+    "parent_id": 329
+  },
+  {
+    "id": 331,
+    "name": "Endoscopic procedures (bronchoscopy, mediastinoscopy)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.5.b",
+    "parent_id": 329
+  },
+  {
+    "id": 332,
+    "name": "Esophagus",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.5.c",
+    "parent_id": 329
+  },
+  {
+    "id": 333,
+    "name": "Lung",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.5.d",
+    "parent_id": 329
+  },
+  {
+    "id": 334,
+    "name": "Mediastinum",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.5.e",
+    "parent_id": 329
+  },
+  {
+    "id": 335,
+    "name": "Neck",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.6",
+    "parent_id": 299
+  },
+  {
+    "id": 336,
+    "name": "Larynx/trachea",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.6.a",
+    "parent_id": 335
+  },
+  {
+    "id": 337,
+    "name": "Lymph node biopsies",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.6.b",
+    "parent_id": 335
+  },
+  {
+    "id": 338,
+    "name": "Parathyroid/thyroid",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.6.c",
+    "parent_id": 335
+  },
+  {
+    "id": 339,
+    "name": "Neck tumors",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.6.d",
+    "parent_id": 335
+  },
+  {
+    "id": 340,
+    "name": "Neuroskeletal",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.7",
+    "parent_id": 299
+  },
+  {
+    "id": 341,
+    "name": "Cervical spine (anterior and posterior approach)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.7.a",
+    "parent_id": 340
+  },
+  {
+    "id": 342,
+    "name": "Laminectomy/discectomy fusions at all levels",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.7.b",
+    "parent_id": 340
+  },
+  {
+    "id": 343,
+    "name": "Pain management procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.7.c",
+    "parent_id": 340
+  },
+  {
+    "id": 344,
+    "name": "Other",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.7.d",
+    "parent_id": 340
+  },
+  {
+    "id": 345,
+    "name": "Orthopedic",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.8",
+    "parent_id": 299
+  },
+  {
+    "id": 346,
+    "name": "Arthroscopic procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.8.a",
+    "parent_id": 345
+  },
+  {
+    "id": 347,
+    "name": "Closed reduction",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.8.b",
+    "parent_id": 345
+  },
+  {
+    "id": 348,
+    "name": "Fractures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.8.c",
+    "parent_id": 345
+  },
+  {
+    "id": 349,
+    "name": "Total joint replacements/arthroplasty",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.8.d",
+    "parent_id": 345
+  },
+  {
+    "id": 350,
+    "name": "Procedures of the hand and foot",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.8.e",
+    "parent_id": 345
+  },
+  {
+    "id": 351,
+    "name": "Perineal and pelvic procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.9",
+    "parent_id": 299
+  },
+  {
+    "id": 352,
+    "name": "Gynecologic",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.9.a",
+    "parent_id": 351
+  },
+  {
+    "id": 353,
+    "name": "Genitourinary",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.9.b",
+    "parent_id": 351
+  },
+  {
+    "id": 354,
+    "name": "Anal/rectal",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.9.c",
+    "parent_id": 351
+  },
+  {
+    "id": 355,
+    "name": "Vascular (open versus endovascular)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.10",
+    "parent_id": 299
+  },
+  {
+    "id": 356,
+    "name": "Carotid",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.10.a",
+    "parent_id": 355
+  },
+  {
+    "id": 357,
+    "name": "Thoracic",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.10.b",
+    "parent_id": 355
+  },
+  {
+    "id": 358,
+    "name": "Abdominal (including renal)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.10.c",
+    "parent_id": 355
+  },
+  {
+    "id": 359,
+    "name": "Extremity",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.10.d",
+    "parent_id": 355
+  },
+  {
+    "id": 360,
+    "name": "Occlusive disease",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.10.e",
+    "parent_id": 355
+  },
+  {
+    "id": 361,
+    "name": "Vascular access",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.10.f",
+    "parent_id": 355
+  },
+  {
+    "id": 362,
+    "name": "Thromboembolic prevention",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.10.g",
+    "parent_id": 355
+  },
+  {
+    "id": 363,
+    "name": "Surgical management of portal hypertension",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.10.h",
+    "parent_id": 355
+  },
+  {
+    "id": 364,
+    "name": "Non-operating-room anesthesia (NORA)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.11",
+    "parent_id": 299
+  },
+  {
+    "id": 365,
+    "name": "Diagnostic imaging and radiology",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.11.a",
+    "parent_id": 364
+  },
+  {
+    "id": 366,
+    "name": "Electroconvulsive therapy",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.11.b",
+    "parent_id": 364
+  },
+  {
+    "id": 367,
+    "name": "Interventional radiology",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.11.c",
+    "parent_id": 364
+  },
+  {
+    "id": 368,
+    "name": "Radiation therapy",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.11.d",
+    "parent_id": 364
+  },
+  {
+    "id": 369,
+    "name": "Endoscopy",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.11.e",
+    "parent_id": 364
+  },
+  {
+    "id": 370,
+    "name": "Robotic/laparoscopic surgery",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.12",
+    "parent_id": 299
+  },
+  {
+    "id": 371,
+    "name": "Other surgical procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.A.13",
+    "parent_id": 299
+  },
+  {
+    "id": 372,
+    "name": "Trauma",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.13.a",
+    "parent_id": 371
+  },
+  {
+    "id": 373,
+    "name": "Burns",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.13.b",
+    "parent_id": 371
+  },
+  {
+    "id": 374,
+    "name": "Organ transplants (including management of posttransplant patient for nontransplant surgery)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.13.c",
+    "parent_id": 371
+  },
+  {
+    "id": 375,
+    "name": "Organ procurement",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.13.d",
+    "parent_id": 371
+  },
+  {
+    "id": 376,
+    "name": "Laser procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.A.13.e",
+    "parent_id": 371
+  },
+  {
+    "id": 377,
+    "name": "Anesthesia for special populations",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 1,
+    "full_path": "IV.B",
+    "parent_id": 298
+  },
+  {
+    "id": 378,
+    "name": "Pediatrics",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.B.1",
+    "parent_id": 377
+  },
+  {
+    "id": 379,
+    "name": "Anatomy, physiology, and pathophysiology",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.1.a",
+    "parent_id": 378
+  },
+  {
+    "id": 380,
+    "name": "Normal",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.B.1.a.1",
+    "parent_id": 379
+  },
+  {
+    "id": 381,
+    "name": "Prematurity",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.B.1.a.2",
+    "parent_id": 379
+  },
+  {
+    "id": 382,
+    "name": "Congenital abnormalities",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 4,
+    "full_path": "IV.B.1.a.3",
+    "parent_id": 379
+  },
+  {
+    "id": 383,
+    "name": "Pharmacology",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.1.b",
+    "parent_id": 378
+  },
+  {
+    "id": 384,
+    "name": "Anesthesia techniques/procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.1.c",
+    "parent_id": 378
+  },
+  {
+    "id": 385,
+    "name": "Management of complications",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.1.d",
+    "parent_id": 378
+  },
+  {
+    "id": 386,
+    "name": "Obstetrics",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.B.2",
+    "parent_id": 377
+  },
+  {
+    "id": 387,
+    "name": "Anatomy, physiology, and pathophysiology",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.2.a",
+    "parent_id": 386
+  },
+  {
+    "id": 388,
+    "name": "Pharmacology",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.2.b",
+    "parent_id": 386
+  },
+  {
+    "id": 389,
+    "name": "Anesthesia techniques/procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.2.c",
+    "parent_id": 386
+  },
+  {
+    "id": 390,
+    "name": "High-risk parturients",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.2.d",
+    "parent_id": 386
+  },
+  {
+    "id": 391,
+    "name": "Nonobstetric surgery in the parturient",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.2.e",
+    "parent_id": 386
+  },
+  {
+    "id": 392,
+    "name": "Management of complications (e.g., amniotic fluid embolism, HELLP syndrome)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.2.f",
+    "parent_id": 386
+  },
+  {
+    "id": 393,
+    "name": "Postpartum hemorrhage",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.2.g",
+    "parent_id": 386
+  },
+  {
+    "id": 394,
+    "name": "Geriatrics",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.B.3",
+    "parent_id": 377
+  },
+  {
+    "id": 395,
+    "name": "Anatomy, physiology, and pathophysiology",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.3.a",
+    "parent_id": 394
+  },
+  {
+    "id": 396,
+    "name": "Pharmacology",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.3.b",
+    "parent_id": 394
+  },
+  {
+    "id": 397,
+    "name": "Anesthesia techniques/procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.3.c",
+    "parent_id": 394
+  },
+  {
+    "id": 398,
+    "name": "Management of complications (e.g., postoperative cognitive dysfunction)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.3.d",
+    "parent_id": 394
+  },
+  {
+    "id": 399,
+    "name": "Obesity",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.B.4",
+    "parent_id": 377
+  },
+  {
+    "id": 400,
+    "name": "Anatomy, physiology, and pathophysiology",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.4.a",
+    "parent_id": 399
+  },
+  {
+    "id": 401,
+    "name": "Pharmacology",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.4.b",
+    "parent_id": 399
+  },
+  {
+    "id": 402,
+    "name": "Anesthesia techniques/procedures (including bariatric)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.4.c",
+    "parent_id": 399
+  },
+  {
+    "id": 403,
+    "name": "Management of complications",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.4.d",
+    "parent_id": 399
+  },
+  {
+    "id": 404,
+    "name": "Substance use disorder population",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.B.5",
+    "parent_id": 377
+  },
+  {
+    "id": 405,
+    "name": "Medication-assisted therapy (MAT) (e.g., methadone, buprenorphine)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.5.a",
+    "parent_id": 404
+  },
+  {
+    "id": 406,
+    "name": "Pharmacologic interactions (e.g., acute intoxication)",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.5.b",
+    "parent_id": 404
+  },
+  {
+    "id": 407,
+    "name": "Pain management",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.5.c",
+    "parent_id": 404
+  },
+  {
+    "id": 408,
+    "name": "Management of complications",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.5.d",
+    "parent_id": 404
+  },
+  {
+    "id": 409,
+    "name": "Immune compromised and oncology patients",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 2,
+    "full_path": "IV.B.6",
+    "parent_id": 377
+  },
+  {
+    "id": 410,
+    "name": "Pharmacology",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.6.a",
+    "parent_id": 409
+  },
+  {
+    "id": 411,
+    "name": "Anesthesia techniques/procedures",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.6.b",
+    "parent_id": 409
+  },
+  {
+    "id": 412,
+    "name": "Management",
+    "nce_section": "IV",
+    "nce_weight": 0.25,
+    "depth_level": 3,
+    "full_path": "IV.B.6.c",
+    "parent_id": 409
+  }
+]
