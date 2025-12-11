@@ -9,33 +9,47 @@ const corsHeaders = {
 const ML_BACKEND_URL = Deno.env.get('ML_BACKEND_URL') || 'https://clyvaraml.replit.app';
 const ML_API_KEY = Deno.env.get('ML_API_KEYS') || '0Rvm9uG9jFO37Yi1OLcEzf7eIZuMQWnY';
 
-const ALLOWED_REFERRERS = [
-  'localhost',
-  '127.0.0.1',
-  'replit.dev',
-  'webcontainer-api.io',
-  'webcontainer.io',
-  'stackblitz.io',
-  'local-credentialless',
-  'supabase.co',
-  'bolt.new',
-  'expo.dev',
-  'expo.io',
+const ALLOWED_PATTERNS = [
+  /^https:\/\/.*\.webcontainer-api\.io$/,
+  /^https:\/\/.*\.local-credentialless\.webcontainer-api\.io$/,
+  /^https:\/\/.*\.replit\.dev$/,
+  /^https:\/\/.*\.repl\.co$/,
+  /^http:\/\/localhost:\d+$/,
+  /^https:\/\/.*\.bolt\.new$/,
+  /^https:\/\/.*\.expo\.dev$/,
+  /^https:\/\/.*\.supabase\.co$/,
 ];
 
-const DISABLE_REFERRER_CHECK = true;
+const isOriginAllowed = (req: Request): boolean => {
+  const referrer = req.headers.get('referer') || req.headers.get('referrer');
+  const origin = req.headers.get('origin');
 
-const isReferrerAllowed = (req: Request): boolean => {
-  return true;
+  const isAllowedOrigin = origin && ALLOWED_PATTERNS.some(pattern => pattern.test(origin));
+  const isWebContainer = !referrer && !origin;
+
+  return isAllowedOrigin || isWebContainer;
 };
 
 const getMLBackendHeaders = (req: Request, includeContentType = false) => {
+  const origin = req.headers.get('origin');
+  const referrer = req.headers.get('referer') || req.headers.get('referrer');
+
   const headers: Record<string, string> = {
     'X-API-Key': ML_API_KEY,
     'X-Requested-With': 'XMLHttpRequest',
-    'Referer': 'https://replit.dev',
-    'Origin': 'https://replit.dev',
   };
+
+  if (origin) {
+    headers['Origin'] = origin;
+  } else {
+    headers['Origin'] = 'https://replit.dev';
+  }
+
+  if (referrer) {
+    headers['Referer'] = referrer;
+  } else {
+    headers['Referer'] = 'https://replit.dev';
+  }
 
   if (includeContentType) {
     headers['Content-Type'] = 'application/json';
