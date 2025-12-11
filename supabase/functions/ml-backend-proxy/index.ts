@@ -9,6 +9,56 @@ const corsHeaders = {
 const ML_BACKEND_URL = Deno.env.get('ML_BACKEND_URL') || 'https://clyvaraml.replit.app';
 const ML_API_KEY = Deno.env.get('ML_API_KEYS') || '0Rvm9uG9jFO37Yi1OLcEzf7eIZuMQWnY';
 
+const ALLOWED_REFERRERS = [
+  'localhost',
+  '127.0.0.1',
+  'replit.dev',
+  'webcontainer-api.io',
+  'webcontainer.io',
+  'stackblitz.io',
+  'local-credentialless',
+  'supabase.co',
+  'bolt.new',
+];
+
+const DISABLE_REFERRER_CHECK = Deno.env.get('DISABLE_REFERRER_CHECK') === 'true';
+
+const isReferrerAllowed = (req: Request): boolean => {
+  if (DISABLE_REFERRER_CHECK) {
+    return true;
+  }
+
+  const referer = req.headers.get('Referer') || req.headers.get('referer');
+  const origin = req.headers.get('Origin') || req.headers.get('origin');
+
+  const sourceUrl = referer || origin;
+
+  if (!sourceUrl) {
+    console.log('No referer or origin header found');
+    return false;
+  }
+
+  try {
+    const url = new URL(sourceUrl);
+    const hostname = url.hostname;
+
+    const isAllowed = ALLOWED_REFERRERS.some(allowedDomain =>
+      hostname === allowedDomain ||
+      hostname.endsWith(`.${allowedDomain}`) ||
+      hostname.includes(allowedDomain)
+    );
+
+    if (!isAllowed) {
+      console.log(`Referrer not allowed: ${hostname}`);
+    }
+
+    return isAllowed;
+  } catch (error) {
+    console.error('Error parsing referrer URL:', error);
+    return false;
+  }
+};
+
 const getMLBackendHeaders = (req: Request, includeContentType = false) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const headers: Record<string, string> = {
@@ -33,6 +83,28 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    if (!isReferrerAllowed(req)) {
+      const referer = req.headers.get('Referer') || req.headers.get('referer');
+      const origin = req.headers.get('Origin') || req.headers.get('origin');
+      const sourceUrl = referer || origin || 'unknown';
+
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid referrer',
+          message: 'Requests must come from an allowed domain',
+          referrer: sourceUrl,
+          hint: 'If you are testing locally, set DISABLE_REFERRER_CHECK=true in environment variables',
+        }),
+        {
+          status: 403,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
+
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Missing authorization header');
