@@ -27,6 +27,7 @@ export class MLBackendClient {
     return {
       'Authorization': `Bearer ${session.access_token}`,
       'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
     };
   }
 

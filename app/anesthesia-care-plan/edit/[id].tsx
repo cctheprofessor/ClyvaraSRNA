@@ -47,6 +47,7 @@ export default function EditCarePlanScreen() {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
+          'X-Requested-With': 'XMLHttpRequest',
         },
         body: JSON.stringify({
           caseDescription: caseDescription.trim(),

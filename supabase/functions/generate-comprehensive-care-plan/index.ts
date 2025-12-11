@@ -3,7 +3,7 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey, X-Requested-With',
 };
 
 const SYSTEM_PROMPT = `You are an expert CRNA generating comprehensive anesthesia care plans. Generate a complete JSON object matching this exact structure with ALL required fields. DO NOT include markdown or explanations - return ONLY the JSON object.
