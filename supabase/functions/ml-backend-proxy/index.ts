@@ -33,6 +33,8 @@ const getMLBackendHeaders = (req: Request, includeContentType = false) => {
   const headers: Record<string, string> = {
     'X-API-Key': ML_API_KEY,
     'X-Requested-With': 'XMLHttpRequest',
+    'Referer': 'https://replit.dev',
+    'Origin': 'https://replit.dev',
   };
 
   if (includeContentType) {
