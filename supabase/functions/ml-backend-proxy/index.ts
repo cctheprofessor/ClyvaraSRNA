@@ -65,13 +65,8 @@ const getMLBackendHeaders = (req: Request, includeContentType = false) => {
   const headers: Record<string, string> = {
     'X-API-Key': ML_API_KEY,
     'X-Requested-With': 'XMLHttpRequest',
+    'Referer': 'https://clyvaraml.replit.app',
   };
-
-  // Pass through the original referrer from the client to the ML Backend
-  const clientReferer = req.headers.get('Referer') || req.headers.get('referer');
-  if (clientReferer) {
-    headers['Referer'] = clientReferer;
-  }
 
   if (includeContentType) {
     headers['Content-Type'] = 'application/json';
