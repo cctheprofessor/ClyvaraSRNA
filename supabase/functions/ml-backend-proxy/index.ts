@@ -13,17 +13,8 @@ const getMLBackendHeaders = (req: Request, includeContentType = false) => {
   const headers: Record<string, string> = {
     'X-API-Key': ML_API_KEY,
     'X-Requested-With': 'XMLHttpRequest',
+    'Origin': ML_BACKEND_URL,
   };
-
-  // Forward origin or referer header for CSRF protection
-  const origin = req.headers.get('origin');
-  const referer = req.headers.get('referer');
-
-  if (origin) {
-    headers['Origin'] = origin;
-  } else if (referer) {
-    headers['Referer'] = referer;
-  }
 
   if (includeContentType) {
     headers['Content-Type'] = 'application/json';
