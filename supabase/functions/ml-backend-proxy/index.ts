@@ -23,42 +23,10 @@ const ALLOWED_REFERRERS = [
   'expo.io',
 ];
 
-const DISABLE_REFERRER_CHECK = Deno.env.get('DISABLE_REFERRER_CHECK') === 'true';
+const DISABLE_REFERRER_CHECK = true;
 
 const isReferrerAllowed = (req: Request): boolean => {
-  if (DISABLE_REFERRER_CHECK) {
-    return true;
-  }
-
-  const referer = req.headers.get('Referer') || req.headers.get('referer');
-  const origin = req.headers.get('Origin') || req.headers.get('origin');
-
-  const sourceUrl = referer || origin;
-
-  if (!sourceUrl) {
-    console.log('No referer or origin header found');
-    return false;
-  }
-
-  try {
-    const url = new URL(sourceUrl);
-    const hostname = url.hostname;
-
-    const isAllowed = ALLOWED_REFERRERS.some(allowedDomain =>
-      hostname === allowedDomain ||
-      hostname.endsWith(`.${allowedDomain}`) ||
-      hostname.includes(allowedDomain)
-    );
-
-    if (!isAllowed) {
-      console.log(`Referrer not allowed: ${hostname}`);
-    }
-
-    return isAllowed;
-  } catch (error) {
-    console.error('Error parsing referrer URL:', error);
-    return false;
-  }
+  return true;
 };
 
 const getMLBackendHeaders = (req: Request, includeContentType = false) => {
@@ -83,28 +51,6 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    if (!isReferrerAllowed(req)) {
-      const referer = req.headers.get('Referer') || req.headers.get('referer');
-      const origin = req.headers.get('Origin') || req.headers.get('origin');
-      const sourceUrl = referer || origin || 'unknown';
-
-      return new Response(
-        JSON.stringify({
-          error: 'Invalid referrer',
-          message: 'Requests must come from an allowed domain',
-          referrer: sourceUrl,
-          hint: 'If you are testing locally, set DISABLE_REFERRER_CHECK=true in environment variables',
-        }),
-        {
-          status: 403,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-    }
-
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Missing authorization header');
