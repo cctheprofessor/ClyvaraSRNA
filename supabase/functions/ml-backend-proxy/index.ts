@@ -19,6 +19,8 @@ const ALLOWED_REFERRERS = [
   'local-credentialless',
   'supabase.co',
   'bolt.new',
+  'expo.dev',
+  'expo.io',
 ];
 
 const DISABLE_REFERRER_CHECK = Deno.env.get('DISABLE_REFERRER_CHECK') === 'true';
@@ -60,12 +62,16 @@ const isReferrerAllowed = (req: Request): boolean => {
 };
 
 const getMLBackendHeaders = (req: Request, includeContentType = false) => {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const headers: Record<string, string> = {
     'X-API-Key': ML_API_KEY,
     'X-Requested-With': 'XMLHttpRequest',
-    'Referer': `${supabaseUrl}/functions/v1/ml-backend-proxy`,
   };
+
+  // Pass through the original referrer from the client to the ML Backend
+  const clientReferer = req.headers.get('Referer') || req.headers.get('referer');
+  if (clientReferer) {
+    headers['Referer'] = clientReferer;
+  }
 
   if (includeContentType) {
     headers['Content-Type'] = 'application/json';
