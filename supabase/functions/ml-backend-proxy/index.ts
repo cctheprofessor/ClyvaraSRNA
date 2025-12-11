@@ -12,6 +12,7 @@ const ML_API_KEY = Deno.env.get('ML_API_KEYS') || '0Rvm9uG9jFO37Yi1OLcEzf7eIZuMQ
 const getMLBackendHeaders = (includeContentType = false) => {
   const headers: Record<string, string> = {
     'X-API-Key': ML_API_KEY,
+    'X-Requested-With': 'XMLHttpRequest',
   };
 
   if (includeContentType) {
