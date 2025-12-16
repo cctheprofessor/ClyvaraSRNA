@@ -30,26 +30,10 @@ const isOriginAllowed = (req: Request): boolean => {
   return isAllowedOrigin || isWebContainer;
 };
 
-const getMLBackendHeaders = (req: Request, includeContentType = false) => {
-  const origin = req.headers.get('origin');
-  const referrer = req.headers.get('referer') || req.headers.get('referrer');
-
+const getMLBackendHeaders = (includeContentType = false) => {
   const headers: Record<string, string> = {
     'X-API-Key': ML_API_KEY,
-    'X-Requested-With': 'XMLHttpRequest',
   };
-
-  if (origin) {
-    headers['Origin'] = origin;
-  } else {
-    headers['Origin'] = 'https://replit.dev';
-  }
-
-  if (referrer) {
-    headers['Referer'] = referrer;
-  } else {
-    headers['Referer'] = 'https://replit.dev';
-  }
 
   if (includeContentType) {
     headers['Content-Type'] = 'application/json';
@@ -97,7 +81,7 @@ Deno.serve(async (req: Request) => {
         const body = await req.json();
         mlResponse = await fetch(`${ML_BACKEND_URL}/api/users/sync`, {
           method: 'POST',
-          headers: getMLBackendHeaders(req, true),
+          headers: getMLBackendHeaders(true),
           body: JSON.stringify(body),
         });
         break;
@@ -119,7 +103,7 @@ Deno.serve(async (req: Request) => {
           `${ML_BACKEND_URL}/api/practice/${mlUserId}/next-questions?${params}`,
           {
             method: 'GET',
-            headers: getMLBackendHeaders(req),
+            headers: getMLBackendHeaders(),
           }
         );
         break;
@@ -129,7 +113,7 @@ Deno.serve(async (req: Request) => {
         const body = await req.json();
         mlResponse = await fetch(`${ML_BACKEND_URL}/api/practice/submit-answer`, {
           method: 'POST',
-          headers: getMLBackendHeaders(req, true),
+          headers: getMLBackendHeaders(true),
           body: JSON.stringify(body),
         });
         break;
@@ -145,7 +129,7 @@ Deno.serve(async (req: Request) => {
           `${ML_BACKEND_URL}/api/student-insights/${mlUserId}`,
           {
             method: 'GET',
-            headers: getMLBackendHeaders(req),
+            headers: getMLBackendHeaders(),
           }
         );
         break;
@@ -161,7 +145,7 @@ Deno.serve(async (req: Request) => {
           `${ML_BACKEND_URL}/api/students/${mlUserId}/progression`,
           {
             method: 'GET',
-            headers: getMLBackendHeaders(req),
+            headers: getMLBackendHeaders(),
           }
         );
         break;
@@ -184,7 +168,7 @@ Deno.serve(async (req: Request) => {
           `${ML_BACKEND_URL}/api/questions/download-batch?${params}`,
           {
             method: 'GET',
-            headers: getMLBackendHeaders(req),
+            headers: getMLBackendHeaders(),
           }
         );
         break;
@@ -196,7 +180,7 @@ Deno.serve(async (req: Request) => {
           `${ML_BACKEND_URL}/api/responses/sync-batch`,
           {
             method: 'POST',
-            headers: getMLBackendHeaders(req, true),
+            headers: getMLBackendHeaders(true),
             body: JSON.stringify(body),
           }
         );
@@ -213,7 +197,7 @@ Deno.serve(async (req: Request) => {
           `${ML_BACKEND_URL}/api/student-insights/${mlUserId}/question-types`,
           {
             method: 'GET',
-            headers: getMLBackendHeaders(req),
+            headers: getMLBackendHeaders(),
           }
         );
         break;
@@ -232,7 +216,7 @@ Deno.serve(async (req: Request) => {
           `${ML_BACKEND_URL}/api/students/${mlUserId}/concept-coverage${params}`,
           {
             method: 'GET',
-            headers: getMLBackendHeaders(req),
+            headers: getMLBackendHeaders(),
           }
         );
         break;
@@ -250,7 +234,7 @@ Deno.serve(async (req: Request) => {
           `${ML_BACKEND_URL}/api/students/${mlUserId}/predict-topic/${topicId}`,
           {
             method: 'GET',
-            headers: getMLBackendHeaders(req),
+            headers: getMLBackendHeaders(),
           }
         );
         break;
@@ -268,7 +252,7 @@ Deno.serve(async (req: Request) => {
           `${ML_BACKEND_URL}/api/students/${mlUserId}/generate-study-path`,
           {
             method: 'POST',
-            headers: getMLBackendHeaders(req, true),
+            headers: getMLBackendHeaders(true),
             body: JSON.stringify({ path_length: parseInt(pathLength) }),
           }
         );
@@ -281,7 +265,7 @@ Deno.serve(async (req: Request) => {
           `${ML_BACKEND_URL}/api/users/batch-sync`,
           {
             method: 'POST',
-            headers: getMLBackendHeaders(req, true),
+            headers: getMLBackendHeaders(true),
             body: JSON.stringify(body),
           }
         );
