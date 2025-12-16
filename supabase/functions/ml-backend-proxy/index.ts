@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const ML_BACKEND_URL = Deno.env.get('ML_BACKEND_URL') || 'https://clyvaraml.replit.app';
-const ML_API_KEY = Deno.env.get('ML_API_KEYS') || '0Rvm9uG9jFO37Yi1OLcEzf7eIZuMQWnY';
+const ML_API_KEY = Deno.env.get('ML_API_KEY') || '0Rvm9uG9jFO37Yi1OLcEzf7eIZuMQWnY';
 
 const ALLOWED_PATTERNS = [
   /^https:\/\/.*\.webcontainer-api\.io$/,
