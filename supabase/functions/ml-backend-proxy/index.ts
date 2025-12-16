@@ -34,6 +34,7 @@ const getMLBackendHeaders = (includeContentType = false) => {
   const headers: Record<string, string> = {
     'X-API-Key': ML_API_KEY,
     'X-Requested-With': 'XMLHttpRequest',
+    'Referer': 'https://rddpacqtmtsehbmcyxfa.supabase.co',
   };
 
   if (includeContentType) {
