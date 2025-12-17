@@ -45,7 +45,7 @@ export default function Practice25Screen() {
       setError(null);
 
       if (!profile?.ml_user_id) {
-        setError('ML sync required. Please complete your profile.');
+        setError('Your account is not synced with the ML backend. Please contact support or visit /admin/sync-user if you have admin access.');
         setLoading(false);
         return;
       }
@@ -126,7 +126,14 @@ export default function Practice25Screen() {
     const currentQuestion = questions[questionIndex];
     const serializedAnswer = answers[questionIndex];
 
-    if (!serializedAnswer || !profile?.ml_user_id) return;
+    if (!serializedAnswer || !profile?.ml_user_id) {
+      console.warn('[Practice25] Cannot submit: missing answer or ml_user_id', {
+        hasAnswer: !!serializedAnswer,
+        hasMlUserId: !!profile?.ml_user_id,
+        mlUserId: profile?.ml_user_id,
+      });
+      return;
+    }
 
     const studentId = profile.ml_user_id;
     const responseTime = Math.floor((Date.now() - questionStartTime) / 1000);
