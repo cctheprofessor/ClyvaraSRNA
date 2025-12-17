@@ -230,7 +230,7 @@ export class MLBackendClient {
 
     // Base question properties
     const baseProps = {
-      id: q.question_id || q.id,
+      id: String(q.question_id || q.id || ''),
       question_text: this.formatQuestionText(q.question_text, q.question),
       explanation: q.explanation,
       topic_id: q.topic_id,
@@ -244,7 +244,7 @@ export class MLBackendClient {
           ...baseProps,
           question_type: 'multiple_choice',
           options: this.transformSimpleOptions(q.options),
-          correct_answer: q.correct_answer,
+          correct_answer: String(q.correct_answer || ''),
         };
 
       case 'multi_select':
@@ -252,7 +252,9 @@ export class MLBackendClient {
           ...baseProps,
           question_type: 'multi_select',
           options: this.transformSimpleOptions(q.options),
-          correct_answers: q.correct_answers || [],
+          correct_answers: Array.isArray(q.correct_answers)
+            ? q.correct_answers.map((a: any) => String(a))
+            : [],
           min_selections: q.min_selections,
           max_selections: q.max_selections,
         };
@@ -264,7 +266,7 @@ export class MLBackendClient {
           options: {
             column_a: this.transformSimpleOptions(q.options?.column_a || []),
             column_b: this.transformSimpleOptions(q.options?.column_b || []),
-            correct_pairs: q.options?.correct_pairs || {},
+            correct_pairs: this.transformCorrectPairs(q.options?.correct_pairs || {}),
           },
         };
 
@@ -274,7 +276,9 @@ export class MLBackendClient {
           question_type: 'drag_drop_ordering',
           options: {
             steps: this.transformSimpleOptions(q.options?.steps || q.options || []),
-            correct_order: q.options?.correct_order || [],
+            correct_order: Array.isArray(q.options?.correct_order)
+              ? q.options.correct_order.map((id: any) => String(id))
+              : [],
           },
         };
 
@@ -356,6 +360,18 @@ export class MLBackendClient {
     }
 
     return [];
+  }
+
+  private transformCorrectPairs(pairs: any): Record<string, string> {
+    if (typeof pairs !== 'object' || pairs === null) {
+      return {};
+    }
+
+    const result: Record<string, string> = {};
+    for (const [key, value] of Object.entries(pairs)) {
+      result[String(key)] = String(value);
+    }
+    return result;
   }
 
   async submitAnswer(answerData: {
