@@ -8,7 +8,7 @@ import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
-import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, CheckCircle, Send } from 'lucide-react-native';
 import { Question } from '@/types/question';
 import { filterValidQuestions } from '@/lib/question-validator';
 
@@ -28,6 +28,7 @@ export default function Practice25Screen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [answerResults, setAnswerResults] = useState<Record<number, AnswerResult>>({});
+  const [currentAnswerSubmitted, setCurrentAnswerSubmitted] = useState(false);
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [showResults, setShowResults] = useState(false);
@@ -106,11 +107,16 @@ export default function Practice25Screen() {
     setAnswers({ ...answers, [currentIndex]: serializedAnswer });
   };
 
+  const handleSubmitAnswer = () => {
+    submitCurrentAnswer();
+    setCurrentAnswerSubmitted(true);
+  };
+
   const handleNext = () => {
     if (currentIndex < questions.length - 1) {
-      submitCurrentAnswer();
       setCurrentIndex(currentIndex + 1);
       setQuestionStartTime(Date.now());
+      setCurrentAnswerSubmitted(false);
     }
   };
 
@@ -118,6 +124,7 @@ export default function Practice25Screen() {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       setQuestionStartTime(Date.now());
+      setCurrentAnswerSubmitted(!!answerResults[currentIndex - 1]);
     }
   };
 
@@ -179,9 +186,12 @@ export default function Practice25Screen() {
     })();
   };
 
-  const handleFinish = async () => {
+  const handleSubmitAndFinish = () => {
     submitCurrentAnswer();
+    setCurrentAnswerSubmitted(true);
+  };
 
+  const handleFinish = async () => {
     const maxWaitTime = 10000;
     const startWait = Date.now();
 
@@ -306,25 +316,30 @@ export default function Practice25Screen() {
             </Text>
           </Pressable>
 
-          {currentIndex === questions.length - 1 ? (
+          {!currentAnswerSubmitted ? (
             <Pressable
-              style={[styles.finishButton, !answers[currentIndex] && styles.finishButtonDisabled]}
-              onPress={handleFinish}
+              style={[styles.submitButton, !answers[currentIndex] && styles.submitButtonDisabled]}
+              onPress={currentIndex === questions.length - 1 ? handleSubmitAndFinish : handleSubmitAnswer}
               disabled={!answers[currentIndex]}
             >
+              <Send color={Colors.text.light} size={20} />
+              <Text style={styles.submitButtonText}>Submit Answer</Text>
+            </Pressable>
+          ) : currentIndex === questions.length - 1 ? (
+            <Pressable
+              style={styles.finishButton}
+              onPress={handleFinish}
+            >
               <CheckCircle color={Colors.text.light} size={20} />
-              <Text style={styles.finishButtonText}>Finish</Text>
+              <Text style={styles.finishButtonText}>Finish Session</Text>
             </Pressable>
           ) : (
             <Pressable
-              style={[styles.navButton, !answers[currentIndex] && styles.navButtonDisabled]}
+              style={styles.navButton}
               onPress={handleNext}
-              disabled={!answers[currentIndex]}
             >
-              <Text style={[styles.navButtonText, !answers[currentIndex] && styles.navButtonTextDisabled]}>
-                Next
-              </Text>
-              <ArrowRight color={!answers[currentIndex] ? Colors.text.tertiary : Colors.primary} size={20} />
+              <Text style={styles.navButtonText}>Next Question</Text>
+              <ArrowRight color={Colors.primary} size={20} />
             </Pressable>
           )}
         </View>
@@ -432,6 +447,24 @@ const styles = StyleSheet.create({
   navButtonTextDisabled: {
     color: Colors.text.tertiary,
   },
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  submitButtonDisabled: {
+    opacity: 0.5,
+  },
+  submitButtonText: {
+    ...Typography.bodyBold,
+    color: Colors.text.light,
+  },
   finishButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -442,9 +475,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     flex: 1,
     justifyContent: 'center',
-  },
-  finishButtonDisabled: {
-    opacity: 0.5,
   },
   finishButtonText: {
     ...Typography.bodyBold,
