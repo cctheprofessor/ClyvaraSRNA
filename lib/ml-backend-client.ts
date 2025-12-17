@@ -218,12 +218,21 @@ export class MLBackendClient {
     mastery_update: any;
   }> {
     const headers = await this.getAuthHeaders();
+
+    // Transform student_id to user_id as per API guide
+    const apiPayload = {
+      user_id: answerData.student_id,
+      question_id: answerData.question_id,
+      student_answer: answerData.student_answer,
+      response_time_seconds: answerData.response_time_seconds,
+    };
+
     const response = await this.fetchWithRetry(
       `${EDGE_FUNCTION_URL}?action=submit_answer`,
       {
         method: 'POST',
         headers,
-        body: JSON.stringify(answerData),
+        body: JSON.stringify(apiPayload),
       }
     );
 
@@ -263,21 +272,29 @@ export class MLBackendClient {
     return data.questions || [];
   }
 
-  async syncOfflineResponses(responses: Array<{
-    student_id: number;
-    question_id: string;
-    student_answer: string;
-    response_time_seconds: number;
-    is_correct: boolean;
-    answered_at: string;
-  }>): Promise<{ synced_count: number }> {
+  async syncOfflineResponses(
+    userId: number,
+    responses: Array<{
+      question_id: string;
+      student_answer: string;
+      response_time_seconds: number;
+      answered_at: string;
+    }>
+  ): Promise<{ synced_count: number }> {
     const headers = await this.getAuthHeaders();
+
+    // Transform payload to match API guide format
+    const apiPayload = {
+      user_id: userId,
+      responses: responses,
+    };
+
     const response = await this.fetchWithRetry(
       `${EDGE_FUNCTION_URL}?action=sync_offline_responses`,
       {
         method: 'POST',
         headers,
-        body: JSON.stringify({ responses }),
+        body: JSON.stringify(apiPayload),
       }
     );
 

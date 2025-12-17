@@ -102,7 +102,7 @@ Deno.serve(async (req: Request) => {
         if (topicId) params.append('topic_id', topicId);
 
         mlResponse = await fetch(
-          `${ML_BACKEND_URL}/api/practice/${mlUserId}/next-questions?${params}`,
+          `${ML_BACKEND_URL}/api/get-next-questions/${mlUserId}?${params}`,
           {
             method: 'GET',
             headers: getMLBackendHeaders(),
@@ -113,7 +113,7 @@ Deno.serve(async (req: Request) => {
 
       case 'submit_answer': {
         const body = await req.json();
-        mlResponse = await fetch(`${ML_BACKEND_URL}/api/practice/submit-answer`, {
+        mlResponse = await fetch(`${ML_BACKEND_URL}/api/submit-answer`, {
           method: 'POST',
           headers: getMLBackendHeaders(true),
           body: JSON.stringify(body),
@@ -280,10 +280,21 @@ Deno.serve(async (req: Request) => {
 
     if (!mlResponse.ok) {
       const errorText = await mlResponse.text();
+      console.error('ML Backend API Error:', {
+        status: mlResponse.status,
+        action,
+        url: mlResponse.url,
+        error: errorText,
+      });
       throw new Error(`ML Backend error (${mlResponse.status}): ${errorText}`);
     }
 
     const data = await mlResponse.json();
+    console.log('ML Backend Success:', {
+      action,
+      url: mlResponse.url,
+      hasData: !!data,
+    });
 
     return new Response(JSON.stringify(data), {
       headers: {
@@ -292,9 +303,17 @@ Deno.serve(async (req: Request) => {
       },
     });
   } catch (error: any) {
-    console.error('ML Backend Proxy error:', error);
+    console.error('ML Backend Proxy error:', {
+      message: error.message,
+      action,
+      stack: error.stack,
+    });
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({
+        error: error.message || 'Internal server error',
+        action,
+        details: 'Check edge function logs for more information'
+      }),
       {
         status: error.message === 'Unauthorized' ? 401 : 500,
         headers: {

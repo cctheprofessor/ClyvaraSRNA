@@ -97,7 +97,15 @@ export class OfflinePracticeManager {
         return { success: true, syncedCount: 0 };
       }
 
-      const result = await mlClient.syncOfflineResponses(queue);
+      // Transform queue items to match API format (remove student_id and is_correct from responses)
+      const responses = queue.map(item => ({
+        question_id: item.question_id,
+        student_answer: item.student_answer,
+        response_time_seconds: item.response_time_seconds,
+        answered_at: item.answered_at,
+      }));
+
+      const result = await mlClient.syncOfflineResponses(userId, responses);
 
       await this.clearQueue();
 
