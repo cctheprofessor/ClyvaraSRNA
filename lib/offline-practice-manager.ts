@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import { mlClient } from './ml-backend-client';
+import { filterValidQuestions } from './question-validator';
 
 const storage = {
   async getItem(key: string): Promise<string | null> {
@@ -226,6 +227,12 @@ export class OfflinePracticeManager {
         return null;
       }
 
+      const { validQuestions, rejectedQuestions } = filterValidQuestions(parsed.questions);
+
+      if (rejectedQuestions.length > 0) {
+        console.warn(`[OfflinePracticeManager] Filtered ${rejectedQuestions.length} invalid cached questions`);
+      }
+
       const isStale = this.isCacheStale(parsed.downloadedAt);
       if (isStale) {
         console.warn('Cached questions are stale');
@@ -233,18 +240,18 @@ export class OfflinePracticeManager {
           status: 'stale',
           userId,
           lastUpdated: parsed.downloadedAt,
-          questionCount: parsed.count,
+          questionCount: validQuestions.length,
         });
       } else {
         await this.setCacheStatus({
           status: 'ready',
           userId,
           lastUpdated: parsed.downloadedAt,
-          questionCount: parsed.count,
+          questionCount: validQuestions.length,
         });
       }
 
-      return parsed.questions;
+      return validQuestions;
     } catch (error) {
       console.error('Failed to get cached questions:', error);
       return null;

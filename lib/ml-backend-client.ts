@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { Question, QuestionType } from '../types/question';
+import { validateQuestion, filterValidQuestions } from './question-validator';
 
 const EDGE_FUNCTION_URL = process.env.EXPO_PUBLIC_SUPABASE_URL
   ? `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ml-backend-proxy`
@@ -207,7 +208,21 @@ export class MLBackendClient {
     const data = await response.json();
     const questions = data.questions || [];
 
-    return questions.map((q: any) => this.transformQuestion(q));
+    const transformedQuestions = questions.map((q: any) => this.transformQuestion(q));
+
+    const { validQuestions, rejectedQuestions } = filterValidQuestions(transformedQuestions);
+
+    if (rejectedQuestions.length > 0) {
+      console.warn(`[MLBackendClient] Filtered out ${rejectedQuestions.length} invalid questions`);
+
+      rejectedQuestions.forEach(({ question, errors }) => {
+        console.warn(`[MLBackendClient] Rejected question ${question.id}: ${errors.join(', ')}`);
+      });
+
+      await this.logRejectedQuestions(rejectedQuestions, userId);
+    }
+
+    return validQuestions;
   }
 
   private transformQuestion(q: any): Question {
@@ -412,8 +427,21 @@ export class MLBackendClient {
     const data = await response.json();
     const questions = data.questions || [];
 
-    // Use same transformation as getNextQuestions
-    return questions.map((q: any) => this.transformQuestion(q));
+    const transformedQuestions = questions.map((q: any) => this.transformQuestion(q));
+
+    const { validQuestions, rejectedQuestions } = filterValidQuestions(transformedQuestions);
+
+    if (rejectedQuestions.length > 0) {
+      console.warn(`[MLBackendClient] Filtered ${rejectedQuestions.length} invalid questions from offline download`);
+
+      rejectedQuestions.forEach(({ question, errors }) => {
+        console.warn(`[MLBackendClient] Rejected offline question ${question.id}: ${errors.join(', ')}`);
+      });
+
+      await this.logRejectedQuestions(rejectedQuestions, userId);
+    }
+
+    return validQuestions;
   }
 
   async syncOfflineResponses(
@@ -595,6 +623,29 @@ export class MLBackendClient {
     }
 
     return await response.json();
+  }
+
+  private async logRejectedQuestions(
+    rejectedQuestions: Array<{ question: any; errors: string[] }>,
+    userId: number
+  ): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const records = rejectedQuestions.map(({ question, errors }) => ({
+        question_id: question.id || 'unknown',
+        question_type: question.question_type || 'unknown',
+        ml_user_id: userId,
+        supabase_user_id: user.id,
+        validation_errors: errors,
+        question_data: question,
+      }));
+
+      await supabase.from('rejected_questions_log').insert(records);
+    } catch (error) {
+      console.error('[MLBackendClient] Failed to log rejected questions:', error);
+    }
   }
 
   getRateLimitInfo(): RateLimitInfo | null {

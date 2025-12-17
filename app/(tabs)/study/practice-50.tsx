@@ -10,6 +10,7 @@ import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react-native';
 import { Question } from '@/types/question';
+import { filterValidQuestions } from '@/lib/question-validator';
 
 interface AnswerResult {
   is_correct: boolean;
@@ -48,7 +49,15 @@ export default function Practice50Screen() {
         return;
       }
 
-      const cachedQuestions = await offlinePracticeManager.getRandomCachedQuestions(profile.ml_user_id, 50);
+      let cachedQuestions = await offlinePracticeManager.getRandomCachedQuestions(profile.ml_user_id, 50);
+
+      const { validQuestions: validCachedQuestions, rejectedQuestions: rejectedCachedQuestions } = filterValidQuestions(cachedQuestions);
+
+      if (rejectedCachedQuestions.length > 0) {
+        console.warn(`[Practice50] Filtered ${rejectedCachedQuestions.length} invalid cached questions`);
+      }
+
+      cachedQuestions = validCachedQuestions;
 
       if (cachedQuestions.length >= 50) {
         console.log('Loading questions from cache (fast path)');
@@ -61,8 +70,19 @@ export default function Practice50Screen() {
 
       console.log('Cache insufficient, fetching from API...');
       try {
-        const fetchedQuestions = await mlClient.getNextQuestions(profile.ml_user_id, 50);
-        setQuestions(fetchedQuestions);
+        let fetchedQuestions = await mlClient.getNextQuestions(profile.ml_user_id, 50);
+
+        const { validQuestions, rejectedQuestions } = filterValidQuestions(fetchedQuestions);
+
+        if (rejectedQuestions.length > 0) {
+          console.warn(`[Practice50] Filtered ${rejectedQuestions.length} invalid API questions`);
+        }
+
+        if (validQuestions.length === 0) {
+          throw new Error('No valid questions received. Please try again later.');
+        }
+
+        setQuestions(validQuestions);
       } catch (apiError) {
         console.log('API failed, using available cache...');
         if (cachedQuestions.length > 0) {
