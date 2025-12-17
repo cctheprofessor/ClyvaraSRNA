@@ -345,18 +345,41 @@ export class MLBackendClient {
 
   private transformSimpleOptions(options: any): Array<{ id: string; text: string }> {
     if (Array.isArray(options)) {
-      return options.map((opt: any) => ({
-        id: String(opt.id || opt.option_id || ''),
-        text: String(opt.text || opt.option_text || ''),
-      }));
+      return options.map((opt: any) => {
+        const textValue = opt.text || opt.option_text || '';
+
+        // Handle case where text is an object
+        if (typeof textValue === 'object' && textValue !== null) {
+          // Try to extract text from common nested structures
+          const extractedText = textValue.text || textValue.value || textValue.content || JSON.stringify(textValue);
+          return {
+            id: String(opt.id || opt.option_id || ''),
+            text: String(extractedText),
+          };
+        }
+
+        return {
+          id: String(opt.id || opt.option_id || ''),
+          text: String(textValue),
+        };
+      });
     }
 
     if (typeof options === 'object' && options !== null) {
       // Object format: {A: "text", B: "text"}
-      return Object.entries(options).map(([key, value]) => ({
-        id: String(key),
-        text: typeof value === 'string' ? value : String(value),
-      }));
+      return Object.entries(options).map(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          const extractedText = (value as any).text || (value as any).value || (value as any).content || JSON.stringify(value);
+          return {
+            id: String(key),
+            text: String(extractedText),
+          };
+        }
+        return {
+          id: String(key),
+          text: typeof value === 'string' ? value : String(value),
+        };
+      });
     }
 
     return [];
