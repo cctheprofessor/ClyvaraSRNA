@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { Question, QuestionType } from '../types/question';
 
 const EDGE_FUNCTION_URL = process.env.EXPO_PUBLIC_SUPABASE_URL
   ? `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ml-backend-proxy`
@@ -178,7 +179,7 @@ export class MLBackendClient {
     userId: number,
     limit: number = 25,
     topicId?: string
-  ): Promise<any[]> {
+  ): Promise<Question[]> {
     const headers = await this.getAuthHeaders();
     const params = new URLSearchParams({
       action: 'get_questions',
@@ -206,59 +207,144 @@ export class MLBackendClient {
     const data = await response.json();
     const questions = data.questions || [];
 
-    // Transform options from object to array format for QuestionCard component
-    return questions.map((q: any) => {
-      // If question_text is an object (scenario-based question), format it as a string
-      let questionText = q.question_text;
-      if (typeof questionText === 'object' && questionText !== null) {
-        const scenario = questionText;
-        questionText = `Patient: ${scenario.patient || 'N/A'}\n\n`;
-        questionText += `Chief Complaint: ${scenario.chief_complaint || 'N/A'}\n\n`;
-        if (scenario.history) questionText += `History: ${scenario.history}\n\n`;
-        if (scenario.medications) questionText += `Medications: ${scenario.medications}\n\n`;
-        if (scenario.physical_exam) questionText += `Physical Exam: ${scenario.physical_exam}\n\n`;
-        if (scenario.vitals) questionText += `Vitals: ${scenario.vitals}\n\n`;
-        if (scenario.labs) questionText += `Labs: ${scenario.labs}\n\n`;
-        questionText += q.question || 'What is the most appropriate anesthesia plan?';
-      }
+    return questions.map((q: any) => this.transformQuestion(q));
+  }
 
-      // Transform options: handle both array and object formats
-      let options = [];
-      if (Array.isArray(q.options)) {
-        // Options already in array format: [{id, text, order}, ...]
-        options = q.options.map((opt: any) => {
-          // Ensure we extract string values, not nested objects
-          const optionId = String(opt.id || opt.option_id || '');
-          const optionText = String(opt.text || opt.option_text || '');
-          return {
-            id: optionId,
-            text: optionText,
-          };
-        });
-      } else if (typeof q.options === 'object' && q.options !== null) {
-        // Options in object format: {A: "text", B: "text", ...}
-        options = Object.entries(q.options).map(([key, value]) => ({
-          id: String(key),
-          text: typeof value === 'string' ? value : String(value),
-        }));
-      }
+  private transformQuestion(q: any): Question {
+    const questionType: QuestionType = q.question_type || 'multiple_choice';
 
-      return {
-        ...q,
-        id: q.question_id,
-        question_text: questionText,
-        options,
-      };
-    });
+    // Base question properties
+    const baseProps = {
+      id: q.question_id || q.id,
+      question_text: this.formatQuestionText(q.question_text, q.question),
+      explanation: q.explanation,
+      topic_id: q.topic_id,
+      difficulty: q.difficulty,
+    };
+
+    // Transform based on question type
+    switch (questionType) {
+      case 'multiple_choice':
+        return {
+          ...baseProps,
+          question_type: 'multiple_choice',
+          options: this.transformSimpleOptions(q.options),
+          correct_answer: q.correct_answer,
+        };
+
+      case 'multi_select':
+        return {
+          ...baseProps,
+          question_type: 'multi_select',
+          options: this.transformSimpleOptions(q.options),
+          correct_answers: q.correct_answers || [],
+          min_selections: q.min_selections,
+          max_selections: q.max_selections,
+        };
+
+      case 'drag_drop_matching':
+        return {
+          ...baseProps,
+          question_type: 'drag_drop_matching',
+          options: {
+            column_a: this.transformSimpleOptions(q.options?.column_a || []),
+            column_b: this.transformSimpleOptions(q.options?.column_b || []),
+            correct_pairs: q.options?.correct_pairs || {},
+          },
+        };
+
+      case 'drag_drop_ordering':
+        return {
+          ...baseProps,
+          question_type: 'drag_drop_ordering',
+          options: {
+            steps: this.transformSimpleOptions(q.options?.steps || q.options || []),
+            correct_order: q.options?.correct_order || [],
+          },
+        };
+
+      case 'clinical_scenario':
+        return {
+          ...baseProps,
+          question_type: 'clinical_scenario',
+          options: {
+            vignette: q.options?.vignette || '',
+            sub_questions: q.options?.sub_questions || [],
+          },
+        };
+
+      case 'hotspot':
+        return {
+          ...baseProps,
+          question_type: 'hotspot',
+          options: {
+            image_url: q.options?.image_url || '',
+            hotspot_zones: q.options?.hotspot_zones || [],
+          },
+        };
+
+      default:
+        // Fallback to multiple choice
+        return {
+          ...baseProps,
+          question_type: 'multiple_choice',
+          options: this.transformSimpleOptions(q.options),
+          correct_answer: q.correct_answer || '',
+        };
+    }
+  }
+
+  private formatQuestionText(questionText: any, fallbackQuestion?: string): string {
+    if (typeof questionText === 'string') {
+      return questionText;
+    }
+
+    if (typeof questionText === 'object' && questionText !== null) {
+      // Clinical scenario format
+      const scenario = questionText;
+      let formatted = '';
+
+      if (scenario.patient) formatted += `Patient: ${scenario.patient}\n\n`;
+      if (scenario.chief_complaint) formatted += `Chief Complaint: ${scenario.chief_complaint}\n\n`;
+      if (scenario.history) formatted += `History: ${scenario.history}\n\n`;
+      if (scenario.medications) formatted += `Medications: ${scenario.medications}\n\n`;
+      if (scenario.physical_exam) formatted += `Physical Exam: ${scenario.physical_exam}\n\n`;
+      if (scenario.vitals) formatted += `Vitals: ${scenario.vitals}\n\n`;
+      if (scenario.labs) formatted += `Labs: ${scenario.labs}\n\n`;
+
+      formatted += fallbackQuestion || 'What is the most appropriate action?';
+      return formatted;
+    }
+
+    return fallbackQuestion || 'Question text not available';
+  }
+
+  private transformSimpleOptions(options: any): Array<{ id: string; text: string }> {
+    if (Array.isArray(options)) {
+      return options.map((opt: any) => ({
+        id: String(opt.id || opt.option_id || ''),
+        text: String(opt.text || opt.option_text || ''),
+      }));
+    }
+
+    if (typeof options === 'object' && options !== null) {
+      // Object format: {A: "text", B: "text"}
+      return Object.entries(options).map(([key, value]) => ({
+        id: String(key),
+        text: typeof value === 'string' ? value : String(value),
+      }));
+    }
+
+    return [];
   }
 
   async submitAnswer(answerData: {
     student_id: number;
     question_id: string;
-    student_answer: string;
+    student_answer: string; // Serialized answer (string, JSON string, or simple value)
     response_time_seconds: number;
-    is_correct: boolean;
   }): Promise<{
+    is_correct: boolean;
     recall_probability: number;
     next_review_days: number;
     mastery_update: any;
@@ -266,6 +352,7 @@ export class MLBackendClient {
     const headers = await this.getAuthHeaders();
 
     // Transform student_id to user_id as per API guide
+    // Note: Backend calculates is_correct, we don't send it
     const apiPayload = {
       user_id: answerData.student_id,
       question_id: answerData.question_id,
@@ -293,7 +380,7 @@ export class MLBackendClient {
   async downloadQuestionsForOffline(
     userId: number,
     count: number = 100
-  ): Promise<any[]> {
+  ): Promise<Question[]> {
     const headers = await this.getAuthHeaders();
     const params = new URLSearchParams({
       action: 'download_questions',
@@ -317,47 +404,8 @@ export class MLBackendClient {
     const data = await response.json();
     const questions = data.questions || [];
 
-    // Transform questions same way as getNextQuestions
-    return questions.map((q: any) => {
-      let questionText = q.question_text;
-      if (typeof questionText === 'object' && questionText !== null) {
-        const scenario = questionText;
-        questionText = `Patient: ${scenario.patient || 'N/A'}\n\n`;
-        questionText += `Chief Complaint: ${scenario.chief_complaint || 'N/A'}\n\n`;
-        if (scenario.history) questionText += `History: ${scenario.history}\n\n`;
-        if (scenario.medications) questionText += `Medications: ${scenario.medications}\n\n`;
-        if (scenario.physical_exam) questionText += `Physical Exam: ${scenario.physical_exam}\n\n`;
-        if (scenario.vitals) questionText += `Vitals: ${scenario.vitals}\n\n`;
-        if (scenario.labs) questionText += `Labs: ${scenario.labs}\n\n`;
-        questionText += q.question || 'What is the most appropriate anesthesia plan?';
-      }
-
-      // Transform options: handle both array and object formats
-      let options = [];
-      if (Array.isArray(q.options)) {
-        options = q.options.map((opt: any) => {
-          // Ensure we extract string values, not nested objects
-          const optionId = String(opt.id || opt.option_id || '');
-          const optionText = String(opt.text || opt.option_text || '');
-          return {
-            id: optionId,
-            text: optionText,
-          };
-        });
-      } else if (typeof q.options === 'object' && q.options !== null) {
-        options = Object.entries(q.options).map(([key, value]) => ({
-          id: String(key),
-          text: typeof value === 'string' ? value : String(value),
-        }));
-      }
-
-      return {
-        ...q,
-        id: q.question_id,
-        question_text: questionText,
-        options,
-      };
-    });
+    // Use same transformation as getNextQuestions
+    return questions.map((q: any) => this.transformQuestion(q));
   }
 
   async syncOfflineResponses(

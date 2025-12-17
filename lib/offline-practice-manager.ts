@@ -29,7 +29,6 @@ interface QueuedResponse {
   question_id: string;
   student_answer: string;
   response_time_seconds: number;
-  is_correct: boolean;
   answered_at: string;
 }
 

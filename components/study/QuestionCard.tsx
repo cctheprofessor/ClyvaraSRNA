@@ -1,17 +1,13 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { Question, MultipleChoiceQuestion, MultiSelectQuestion } from '@/types/question';
 
 interface QuestionCardProps {
-  question: {
-    id: string;
-    question_text: string;
-    options: Array<{ id: string; text: string }>;
-    question_type?: string;
-  };
-  selectedAnswer: string | null;
-  onSelectAnswer: (answerId: string) => void;
-  showCorrect?: boolean;
-  correctAnswer?: string;
+  question: Question;
+  selectedAnswer: string | string[] | null;
+  onSelectAnswer: (answerId: string | string[]) => void;
+  showResult?: boolean;
+  isCorrect?: boolean;
   disabled?: boolean;
 }
 
@@ -19,59 +15,95 @@ export default function QuestionCard({
   question,
   selectedAnswer,
   onSelectAnswer,
-  showCorrect = false,
-  correctAnswer,
+  showResult = false,
+  isCorrect,
   disabled = false,
 }: QuestionCardProps) {
+  const isMultiSelect = question.question_type === 'multi_select';
+  const selectedAnswers = Array.isArray(selectedAnswer) ? selectedAnswer : selectedAnswer ? [selectedAnswer] : [];
+
+  const handleOptionPress = (optionId: string) => {
+    if (disabled) return;
+
+    if (isMultiSelect) {
+      const newSelection = selectedAnswers.includes(optionId)
+        ? selectedAnswers.filter((id) => id !== optionId)
+        : [...selectedAnswers, optionId];
+      onSelectAnswer(newSelection);
+    } else {
+      onSelectAnswer(optionId);
+    }
+  };
+
+  const isOptionSelected = (optionId: string) => selectedAnswers.includes(optionId);
+
   const getOptionStyle = (optionId: string) => {
-    if (showCorrect) {
-      if (optionId === correctAnswer) {
+    const selected = isOptionSelected(optionId);
+
+    if (showResult) {
+      if (isCorrect && selected) {
         return [styles.option, styles.optionCorrect];
       }
-      if (optionId === selectedAnswer && optionId !== correctAnswer) {
+      if (!isCorrect && selected) {
         return [styles.option, styles.optionIncorrect];
       }
-    } else if (optionId === selectedAnswer) {
+    } else if (selected) {
       return [styles.option, styles.optionSelected];
     }
     return styles.option;
   };
 
   const getOptionTextStyle = (optionId: string) => {
-    if (showCorrect && optionId === correctAnswer) {
-      return [styles.optionText, styles.optionTextCorrect];
+    const selected = isOptionSelected(optionId);
+
+    if (showResult && selected) {
+      return [
+        styles.optionText,
+        isCorrect ? styles.optionTextCorrect : styles.optionTextIncorrect,
+      ];
     }
-    if (showCorrect && optionId === selectedAnswer && optionId !== correctAnswer) {
-      return [styles.optionText, styles.optionTextIncorrect];
-    }
-    if (optionId === selectedAnswer) {
+    if (selected) {
       return [styles.optionText, styles.optionTextSelected];
     }
     return styles.optionText;
   };
 
+  const renderOptions = () => {
+    if (question.question_type === 'multiple_choice' || question.question_type === 'multi_select') {
+      return question.options.map((option) => (
+        <Pressable
+          key={option.id}
+          style={getOptionStyle(option.id)}
+          onPress={() => handleOptionPress(option.id)}
+          disabled={disabled}
+        >
+          <View style={styles.optionContent}>
+            <View style={isMultiSelect ? styles.checkboxOuter : styles.radioOuter}>
+              {isOptionSelected(option.id) && (
+                <View style={isMultiSelect ? styles.checkboxInner : styles.radioInner} />
+              )}
+            </View>
+            <Text style={getOptionTextStyle(option.id)}>{option.text}</Text>
+          </View>
+        </Pressable>
+      ));
+    }
+
+    // Placeholder for other question types
+    return <Text style={styles.unsupportedText}>This question type is not yet supported</Text>;
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.questionText}>{question.question_text}</Text>
+      <View style={styles.questionHeader}>
+        <Text style={styles.questionText}>{question.question_text}</Text>
+        {isMultiSelect && (
+          <Text style={styles.multiSelectHint}>Select all that apply</Text>
+        )}
+      </View>
 
       <View style={styles.optionsContainer}>
-        {question.options.map((option) => (
-          <Pressable
-            key={option.id}
-            style={getOptionStyle(option.id)}
-            onPress={() => !disabled && onSelectAnswer(option.id)}
-            disabled={disabled}
-          >
-            <View style={styles.optionContent}>
-              <View style={styles.radioOuter}>
-                {selectedAnswer === option.id && (
-                  <View style={styles.radioInner} />
-                )}
-              </View>
-              <Text style={getOptionTextStyle(option.id)}>{option.text}</Text>
-            </View>
-          </Pressable>
-        ))}
+        {renderOptions()}
       </View>
     </View>
   );
@@ -84,11 +116,19 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.md,
   },
+  questionHeader: {
+    gap: Spacing.xs,
+  },
   questionText: {
     fontSize: 16,
     fontWeight: '500',
     color: Colors.text.primary,
     lineHeight: 24,
+  },
+  multiSelectHint: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    fontStyle: 'italic',
   },
   optionsContainer: {
     gap: Spacing.sm,
@@ -132,6 +172,21 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: Colors.primary,
   },
+  checkboxOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: Colors.border.dark,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 2,
+    backgroundColor: Colors.primary,
+  },
   optionText: {
     ...Typography.body,
     color: Colors.text.primary,
@@ -148,5 +203,11 @@ const styles = StyleSheet.create({
   optionTextIncorrect: {
     color: Colors.error,
     fontWeight: '600',
+  },
+  unsupportedText: {
+    ...Typography.body,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    padding: Spacing.lg,
   },
 });
