@@ -390,13 +390,12 @@ export class MLBackendClient {
   }> {
     const headers = await this.getAuthHeaders();
 
-    // Transform student_id to user_id as per API guide
-    // Note: Backend calculates is_correct, we don't send it
+    // Transform to match ML backend API parameter names
     const apiPayload = {
       user_id: answerData.student_id,
       question_id: answerData.question_id,
-      student_answer: answerData.student_answer,
-      response_time_seconds: answerData.response_time_seconds,
+      user_answer: answerData.student_answer,
+      elapsed_time: answerData.response_time_seconds,
     };
 
     const response = await this.fetchWithRetry(
