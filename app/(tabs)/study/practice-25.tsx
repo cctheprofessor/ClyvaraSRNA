@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { mlClient } from '@/lib/ml-backend-client';
 import { offlinePracticeManager } from '@/lib/offline-practice-manager';
+import { questionSessionTracker } from '@/lib/question-session-tracker';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
@@ -39,6 +40,11 @@ export default function Practice25Screen() {
 
   useEffect(() => {
     loadQuestions();
+    return () => {
+      if (profile?.ml_user_id) {
+        questionSessionTracker.endSession(profile.ml_user_id);
+      }
+    };
   }, []);
 
   const loadQuestions = async () => {
@@ -61,6 +67,8 @@ export default function Practice25Screen() {
       }
 
       cachedQuestions = validCachedQuestions;
+
+      await questionSessionTracker.startNewSession(profile.ml_user_id);
 
       if (cachedQuestions.length >= 25) {
         console.log('Loading questions from cache (fast path)');
@@ -188,6 +196,8 @@ export default function Practice25Screen() {
       },
     }));
 
+    questionSessionTracker.markQuestionAnswered(studentId, currentQuestion.id, validationResult.is_correct);
+
     setPendingSubmissions(prev => new Set(prev).add(questionIndex));
 
     (async () => {
@@ -269,6 +279,14 @@ export default function Practice25Screen() {
         correctAnswers: correctCount,
         totalTime,
       });
+    }
+
+    if (profile?.ml_user_id) {
+      offlinePracticeManager.refreshCacheAfterSession(profile.ml_user_id, 50).catch(error => {
+        console.warn('[Practice25] Failed to refresh cache:', error);
+      });
+
+      await questionSessionTracker.endSession(profile.ml_user_id);
     }
 
     setShowResults(true);

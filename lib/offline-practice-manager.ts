@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import { mlClient } from './ml-backend-client';
 import { filterValidQuestions } from './question-validator';
+import { questionSessionTracker } from './question-session-tracker';
 
 const storage = {
   async getItem(key: string): Promise<string | null> {
@@ -299,15 +300,127 @@ export class OfflinePracticeManager {
     }
   }
 
-  async getRandomCachedQuestions(userId: number, count: number): Promise<any[]> {
+  async getRandomCachedQuestions(
+    userId: number,
+    count: number,
+    excludeRecentlyAnswered: boolean = true
+  ): Promise<any[]> {
     const cached = await this.getCachedQuestions(userId);
 
     if (!cached || cached.length === 0) {
       return [];
     }
 
-    const shuffled = [...cached].sort(() => Math.random() - 0.5);
+    let availableQuestions = cached;
+
+    if (excludeRecentlyAnswered) {
+      const excludedIds = await questionSessionTracker.getExcludedQuestionIds(userId);
+
+      if (excludedIds.length > 0) {
+        availableQuestions = cached.filter(q => !excludedIds.includes(q.id));
+        console.log(`[OfflinePracticeManager] Filtered out ${cached.length - availableQuestions.length} recently answered questions`);
+      }
+
+      if (availableQuestions.length < count && cached.length >= count) {
+        console.warn('[OfflinePracticeManager] Not enough fresh questions, including some recent ones');
+        availableQuestions = cached;
+      }
+    }
+
+    const shuffled = [...availableQuestions].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, Math.min(count, shuffled.length));
+  }
+
+  async getSmartCachedQuestions(
+    userId: number,
+    count: number,
+    options?: {
+      excludeRecentlyAnswered?: boolean;
+      priorityDifficulty?: string;
+    }
+  ): Promise<any[]> {
+    const cached = await this.getCachedQuestions(userId);
+
+    if (!cached || cached.length === 0) {
+      return [];
+    }
+
+    let availableQuestions = cached;
+
+    if (options?.excludeRecentlyAnswered !== false) {
+      const excludedIds = await questionSessionTracker.getExcludedQuestionIds(userId);
+
+      if (excludedIds.length > 0) {
+        const filtered = cached.filter(q => !excludedIds.includes(q.id));
+
+        if (filtered.length >= count * 0.7) {
+          availableQuestions = filtered;
+          console.log(`[OfflinePracticeManager] Using ${availableQuestions.length} fresh questions (excluded ${excludedIds.length})`);
+        } else {
+          console.warn('[OfflinePracticeManager] Not enough fresh questions, using all available');
+        }
+      }
+    }
+
+    let sortedQuestions = availableQuestions;
+
+    if (options?.priorityDifficulty) {
+      const priorityQuestions = availableQuestions.filter(
+        q => q.difficulty === options.priorityDifficulty
+      );
+      const otherQuestions = availableQuestions.filter(
+        q => q.difficulty !== options.priorityDifficulty
+      );
+
+      const shuffledPriority = [...priorityQuestions].sort(() => Math.random() - 0.5);
+      const shuffledOthers = [...otherQuestions].sort(() => Math.random() - 0.5);
+
+      sortedQuestions = [...shuffledPriority, ...shuffledOthers];
+    } else {
+      sortedQuestions = [...availableQuestions].sort(() => Math.random() - 0.5);
+    }
+
+    return sortedQuestions.slice(0, Math.min(count, sortedQuestions.length));
+  }
+
+  async refreshCacheAfterSession(userId: number, count: number = 50): Promise<void> {
+    try {
+      console.log('[OfflinePracticeManager] Refreshing cache after session...');
+
+      const freshQuestions = await mlClient.getNextQuestions(userId, count);
+
+      if (freshQuestions.length === 0) {
+        console.warn('[OfflinePracticeManager] No fresh questions received from ML backend');
+        return;
+      }
+
+      const cachedData: CachedQuestions = {
+        questions: freshQuestions,
+        downloadedAt: new Date().toISOString(),
+        userId,
+        count: freshQuestions.length,
+      };
+
+      await storage.setItem(CACHED_QUESTIONS_KEY, JSON.stringify(cachedData));
+
+      const metadata: CacheMetadata = {
+        downloadedAt: cachedData.downloadedAt,
+        questionCount: cachedData.count,
+        userId,
+      };
+      await storage.setItem(CACHE_METADATA_KEY, JSON.stringify(metadata));
+
+      await this.setCacheStatus({
+        status: 'ready',
+        userId,
+        lastUpdated: cachedData.downloadedAt,
+        questionCount: freshQuestions.length,
+      });
+
+      console.log(`[OfflinePracticeManager] Cache refreshed with ${freshQuestions.length} new questions`);
+    } catch (error) {
+      console.error('[OfflinePracticeManager] Failed to refresh cache:', error);
+    }
   }
 }
 
