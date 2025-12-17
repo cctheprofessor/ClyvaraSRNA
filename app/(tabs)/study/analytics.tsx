@@ -213,8 +213,13 @@ export default function AnalyticsScreen() {
     }
 
     const sortedTopics = [...insights.topic_performance]
+      .filter(topic => typeof topic.mastery_level === 'number' && !isNaN(topic.mastery_level))
       .sort((a, b) => b.mastery_level - a.mastery_level)
       .slice(0, 8);
+
+    if (sortedTopics.length === 0) {
+      return null;
+    }
 
     return (
       <View style={styles.chartContainer}>
@@ -222,9 +227,10 @@ export default function AnalyticsScreen() {
         <Text style={styles.chartSubtitle}>Your progress across different topics</Text>
         <View style={styles.topicBars}>
           {sortedTopics.map((topic, index) => {
-            const masteryColor = topic.mastery_level >= 80 ? Colors.success :
-                                topic.mastery_level >= 60 ? Colors.accent :
-                                topic.mastery_level >= 40 ? Colors.warning : Colors.error;
+            const masteryLevel = topic.mastery_level ?? 0;
+            const masteryColor = masteryLevel >= 80 ? Colors.success :
+                                masteryLevel >= 60 ? Colors.accent :
+                                masteryLevel >= 40 ? Colors.warning : Colors.error;
 
             return (
               <View key={index} style={styles.topicBarRow}>
@@ -236,12 +242,12 @@ export default function AnalyticsScreen() {
                     style={[
                       styles.topicBar,
                       {
-                        width: `${topic.mastery_level}%`,
+                        width: `${masteryLevel}%`,
                         backgroundColor: masteryColor
                       }
                     ]}
                   />
-                  <Text style={styles.topicValue}>{topic.mastery_level.toFixed(0)}%</Text>
+                  <Text style={styles.topicValue}>{masteryLevel.toFixed(0)}%</Text>
                 </View>
               </View>
             );
