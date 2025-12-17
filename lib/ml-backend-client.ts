@@ -207,14 +207,31 @@ export class MLBackendClient {
     const questions = data.questions || [];
 
     // Transform options from object to array format for QuestionCard component
-    return questions.map((q: any) => ({
-      ...q,
-      id: q.question_id,
-      options: Object.entries(q.options || {}).map(([key, value]) => ({
-        id: key,
-        text: value as string,
-      })),
-    }));
+    return questions.map((q: any) => {
+      // If question_text is an object (scenario-based question), format it as a string
+      let questionText = q.question_text;
+      if (typeof questionText === 'object' && questionText !== null) {
+        const scenario = questionText;
+        questionText = `Patient: ${scenario.patient || 'N/A'}\n\n`;
+        questionText += `Chief Complaint: ${scenario.chief_complaint || 'N/A'}\n\n`;
+        if (scenario.history) questionText += `History: ${scenario.history}\n\n`;
+        if (scenario.medications) questionText += `Medications: ${scenario.medications}\n\n`;
+        if (scenario.physical_exam) questionText += `Physical Exam: ${scenario.physical_exam}\n\n`;
+        if (scenario.vitals) questionText += `Vitals: ${scenario.vitals}\n\n`;
+        if (scenario.labs) questionText += `Labs: ${scenario.labs}\n\n`;
+        questionText += q.question || 'What is the most appropriate anesthesia plan?';
+      }
+
+      return {
+        ...q,
+        id: q.question_id,
+        question_text: questionText,
+        options: Object.entries(q.options || {}).map(([key, value]) => ({
+          id: key,
+          text: value as string,
+        })),
+      };
+    });
   }
 
   async submitAnswer(answerData: {
@@ -280,7 +297,33 @@ export class MLBackendClient {
     }
 
     const data = await response.json();
-    return data.questions || [];
+    const questions = data.questions || [];
+
+    // Transform questions same way as getNextQuestions
+    return questions.map((q: any) => {
+      let questionText = q.question_text;
+      if (typeof questionText === 'object' && questionText !== null) {
+        const scenario = questionText;
+        questionText = `Patient: ${scenario.patient || 'N/A'}\n\n`;
+        questionText += `Chief Complaint: ${scenario.chief_complaint || 'N/A'}\n\n`;
+        if (scenario.history) questionText += `History: ${scenario.history}\n\n`;
+        if (scenario.medications) questionText += `Medications: ${scenario.medications}\n\n`;
+        if (scenario.physical_exam) questionText += `Physical Exam: ${scenario.physical_exam}\n\n`;
+        if (scenario.vitals) questionText += `Vitals: ${scenario.vitals}\n\n`;
+        if (scenario.labs) questionText += `Labs: ${scenario.labs}\n\n`;
+        questionText += q.question || 'What is the most appropriate anesthesia plan?';
+      }
+
+      return {
+        ...q,
+        id: q.question_id,
+        question_text: questionText,
+        options: Object.entries(q.options || {}).map(([key, value]) => ({
+          id: key,
+          text: value as string,
+        })),
+      };
+    });
   }
 
   async syncOfflineResponses(
