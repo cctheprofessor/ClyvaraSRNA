@@ -52,6 +52,8 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  let action: string | null = null;
+
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -70,7 +72,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    action = url.searchParams.get('action');
 
     if (!action) {
       throw new Error('Missing action parameter');
@@ -113,11 +115,20 @@ Deno.serve(async (req: Request) => {
 
       case 'submit_answer': {
         const body = await req.json();
-        mlResponse = await fetch(`${ML_BACKEND_URL}/api/submit-answer`, {
-          method: 'POST',
-          headers: getMLBackendHeaders(true),
-          body: JSON.stringify(body),
+        console.log('[ml-backend-proxy] Submitting answer:', {
+          ml_backend_url: ML_BACKEND_URL,
+          payload: body,
         });
+        try {
+          mlResponse = await fetch(`${ML_BACKEND_URL}/api/submit-answer`, {
+            method: 'POST',
+            headers: getMLBackendHeaders(true),
+            body: JSON.stringify(body),
+          });
+        } catch (fetchError) {
+          console.error('[ml-backend-proxy] Network error when submitting answer:', fetchError);
+          throw new Error('Failed to connect to ML Backend. The service may be offline or unreachable.');
+        }
         break;
       }
 
@@ -286,7 +297,20 @@ Deno.serve(async (req: Request) => {
         url: mlResponse.url,
         error: errorText,
       });
-      throw new Error(`ML Backend error (${mlResponse.status}): ${errorText}`);
+
+      let errorMessage = `ML Backend returned ${mlResponse.status}`;
+
+      if (mlResponse.status === 503 || mlResponse.status === 502) {
+        errorMessage = 'ML Backend is currently unavailable. It may be starting up or experiencing downtime.';
+      } else if (mlResponse.status === 404) {
+        errorMessage = `ML Backend endpoint not found: ${action}`;
+      } else if (mlResponse.status === 400) {
+        errorMessage = `Invalid request to ML Backend: ${errorText}`;
+      } else {
+        errorMessage = `ML Backend error: ${errorText}`;
+      }
+
+      throw new Error(errorMessage);
     }
 
     const data = await mlResponse.json();
