@@ -226,15 +226,20 @@ export class MLBackendClient {
       let options = [];
       if (Array.isArray(q.options)) {
         // Options already in array format: [{id, text, order}, ...]
-        options = q.options.map((opt: any) => ({
-          id: opt.id,
-          text: opt.text,
-        }));
+        options = q.options.map((opt: any) => {
+          // Ensure we extract string values, not nested objects
+          const optionId = String(opt.id || opt.option_id || '');
+          const optionText = String(opt.text || opt.option_text || '');
+          return {
+            id: optionId,
+            text: optionText,
+          };
+        });
       } else if (typeof q.options === 'object' && q.options !== null) {
         // Options in object format: {A: "text", B: "text", ...}
         options = Object.entries(q.options).map(([key, value]) => ({
-          id: key,
-          text: value as string,
+          id: String(key),
+          text: typeof value === 'string' ? value : String(value),
         }));
       }
 
@@ -330,14 +335,19 @@ export class MLBackendClient {
       // Transform options: handle both array and object formats
       let options = [];
       if (Array.isArray(q.options)) {
-        options = q.options.map((opt: any) => ({
-          id: opt.id,
-          text: opt.text,
-        }));
+        options = q.options.map((opt: any) => {
+          // Ensure we extract string values, not nested objects
+          const optionId = String(opt.id || opt.option_id || '');
+          const optionText = String(opt.text || opt.option_text || '');
+          return {
+            id: optionId,
+            text: optionText,
+          };
+        });
       } else if (typeof q.options === 'object' && q.options !== null) {
         options = Object.entries(q.options).map(([key, value]) => ({
-          id: key,
-          text: value as string,
+          id: String(key),
+          text: typeof value === 'string' ? value : String(value),
         }));
       }
 
