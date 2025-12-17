@@ -222,14 +222,27 @@ export class MLBackendClient {
         questionText += q.question || 'What is the most appropriate anesthesia plan?';
       }
 
+      // Transform options: handle both array and object formats
+      let options = [];
+      if (Array.isArray(q.options)) {
+        // Options already in array format: [{id, text, order}, ...]
+        options = q.options.map((opt: any) => ({
+          id: opt.id,
+          text: opt.text,
+        }));
+      } else if (typeof q.options === 'object' && q.options !== null) {
+        // Options in object format: {A: "text", B: "text", ...}
+        options = Object.entries(q.options).map(([key, value]) => ({
+          id: key,
+          text: value as string,
+        }));
+      }
+
       return {
         ...q,
         id: q.question_id,
         question_text: questionText,
-        options: Object.entries(q.options || {}).map(([key, value]) => ({
-          id: key,
-          text: value as string,
-        })),
+        options,
       };
     });
   }
@@ -314,14 +327,25 @@ export class MLBackendClient {
         questionText += q.question || 'What is the most appropriate anesthesia plan?';
       }
 
+      // Transform options: handle both array and object formats
+      let options = [];
+      if (Array.isArray(q.options)) {
+        options = q.options.map((opt: any) => ({
+          id: opt.id,
+          text: opt.text,
+        }));
+      } else if (typeof q.options === 'object' && q.options !== null) {
+        options = Object.entries(q.options).map(([key, value]) => ({
+          id: key,
+          text: value as string,
+        }));
+      }
+
       return {
         ...q,
         id: q.question_id,
         question_text: questionText,
-        options: Object.entries(q.options || {}).map(([key, value]) => ({
-          id: key,
-          text: value as string,
-        })),
+        options,
       };
     });
   }
