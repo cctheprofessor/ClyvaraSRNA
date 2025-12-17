@@ -615,7 +615,7 @@ export default function ProfileScreen() {
                       Last synced: {new Date(profile.ml_last_synced_at).toLocaleString()}
                     </Text>
                     <Text style={{fontSize: 10, color: Colors.text.tertiary, fontStyle: 'italic'}}>
-                      ML User ID: {profile.ml_user_id}
+                      User ID: {profile.ml_user_id}
                     </Text>
                   </>
                 )}
