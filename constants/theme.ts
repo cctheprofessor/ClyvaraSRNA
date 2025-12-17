@@ -8,10 +8,15 @@ export const Colors = {
   secondaryDark: '#20359A',
 
   accent: '#34A853',
+  accentLight: '#D4F0DC',
   success: '#34A853',
+  successLight: '#D4F0DC',
   warning: '#FBBC05',
+  warningLight: '#FEF3CD',
   error: '#EB4335',
+  errorLight: '#FCDCDA',
 
+  white: '#FFFFFF',
   background: '#FFFFFF',
   backgroundSecondary: '#F9F9F9',
   backgroundTertiary: '#E8EEF3',
@@ -21,6 +26,7 @@ export const Colors = {
     secondary: '#333333',
     tertiary: '#64748b',
     light: '#FFFFFF',
+    disabled: '#9CA3AF',
   },
 
   border: {

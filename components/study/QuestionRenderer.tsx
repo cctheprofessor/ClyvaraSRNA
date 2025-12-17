@@ -4,7 +4,10 @@ import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { Question, AnswerFormat, serializeAnswer } from '@/types/question';
 import MultipleChoiceQuestion from './MultipleChoiceQuestion';
 import MultiSelectQuestion from './MultiSelectQuestion';
-import UnsupportedQuestion from './UnsupportedQuestion';
+import DragDropMatchingQuestion from './DragDropMatchingQuestion';
+import DragDropOrderingQuestion from './DragDropOrderingQuestion';
+import ClinicalScenarioQuestion from './ClinicalScenarioQuestion';
+import HotspotQuestion from './HotspotQuestion';
 
 interface QuestionRendererProps {
   question: Question;
@@ -23,10 +26,18 @@ export default function QuestionRenderer({
 }: QuestionRendererProps) {
   const [multipleChoiceValue, setMultipleChoiceValue] = useState<string | null>(null);
   const [multiSelectValue, setMultiSelectValue] = useState<string[]>([]);
+  const [dragDropMatchingValue, setDragDropMatchingValue] = useState<Record<string, string>>({});
+  const [dragDropOrderingValue, setDragDropOrderingValue] = useState<string[]>([]);
+  const [clinicalScenarioValue, setClinicalScenarioValue] = useState<Record<string, AnswerFormat>>({});
+  const [hotspotValue, setHotspotValue] = useState<string | null>(null);
 
   useEffect(() => {
     setMultipleChoiceValue(null);
     setMultiSelectValue([]);
+    setDragDropMatchingValue({});
+    setDragDropOrderingValue([]);
+    setClinicalScenarioValue({});
+    setHotspotValue(null);
   }, [question.id]);
 
   const handleMultipleChoiceChange = (value: string) => {
@@ -38,6 +49,30 @@ export default function QuestionRenderer({
   const handleMultiSelectChange = (value: string[]) => {
     setMultiSelectValue(value);
     const answer: AnswerFormat = { type: 'multi_select', answers: value };
+    onAnswerChange(serializeAnswer(answer));
+  };
+
+  const handleDragDropMatchingChange = (pairs: Record<string, string>) => {
+    setDragDropMatchingValue(pairs);
+    const answer: AnswerFormat = { type: 'drag_drop_matching', pairs };
+    onAnswerChange(serializeAnswer(answer));
+  };
+
+  const handleDragDropOrderingChange = (order: string[]) => {
+    setDragDropOrderingValue(order);
+    const answer: AnswerFormat = { type: 'drag_drop_ordering', order };
+    onAnswerChange(serializeAnswer(answer));
+  };
+
+  const handleClinicalScenarioChange = (subAnswers: Record<string, AnswerFormat>) => {
+    setClinicalScenarioValue(subAnswers);
+    const answer: AnswerFormat = { type: 'clinical_scenario', sub_answers: subAnswers };
+    onAnswerChange(serializeAnswer(answer));
+  };
+
+  const handleHotspotChange = (zoneId: string) => {
+    setHotspotValue(zoneId);
+    const answer: AnswerFormat = { type: 'hotspot', zone_id: zoneId };
     onAnswerChange(serializeAnswer(answer));
   };
 
@@ -68,19 +103,59 @@ export default function QuestionRenderer({
         );
 
       case 'drag_drop_matching':
-        return <UnsupportedQuestion questionType="drag & drop matching" />;
+        return (
+          <DragDropMatchingQuestion
+            question={question}
+            value={dragDropMatchingValue}
+            onChange={handleDragDropMatchingChange}
+            showResult={showResult}
+            isCorrect={isCorrect}
+            disabled={disabled}
+          />
+        );
 
       case 'drag_drop_ordering':
-        return <UnsupportedQuestion questionType="drag & drop ordering" />;
+        return (
+          <DragDropOrderingQuestion
+            question={question}
+            value={dragDropOrderingValue}
+            onChange={handleDragDropOrderingChange}
+            showResult={showResult}
+            isCorrect={isCorrect}
+            disabled={disabled}
+          />
+        );
 
       case 'clinical_scenario':
-        return <UnsupportedQuestion questionType="clinical scenario" />;
+        return (
+          <ClinicalScenarioQuestion
+            question={question}
+            value={clinicalScenarioValue}
+            onChange={handleClinicalScenarioChange}
+            showResult={showResult}
+            isCorrect={isCorrect}
+            disabled={disabled}
+          />
+        );
 
       case 'hotspot':
-        return <UnsupportedQuestion questionType="hotspot" />;
+        return (
+          <HotspotQuestion
+            question={question}
+            value={hotspotValue}
+            onChange={handleHotspotChange}
+            showResult={showResult}
+            isCorrect={isCorrect}
+            disabled={disabled}
+          />
+        );
 
       default:
-        return <UnsupportedQuestion questionType="unknown" />;
+        return (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Unknown question type</Text>
+          </View>
+        );
     }
   };
 
@@ -107,5 +182,15 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     gap: Spacing.md,
+  },
+  errorContainer: {
+    backgroundColor: Colors.errorLight,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    alignItems: 'center',
+  },
+  errorText: {
+    ...Typography.body,
+    color: Colors.error,
   },
 });
