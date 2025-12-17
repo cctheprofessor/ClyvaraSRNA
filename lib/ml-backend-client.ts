@@ -356,34 +356,62 @@ export class MLBackendClient {
 
   private transformSimpleOptions(options: any): Array<{ id: string; text: string }> {
     if (Array.isArray(options)) {
-      return options.map((opt: any) => {
-        const textValue = opt.text || opt.option_text || '';
+      return options
+        .map((opt: any, index: number) => {
+          // Handle string options directly
+          if (typeof opt === 'string') {
+            return {
+              id: String(index),
+              text: this.cleanQuestionText(opt),
+            };
+          }
 
-        // Handle case where text is an object
-        if (typeof textValue === 'object' && textValue !== null) {
-          // Try to extract text from common nested structures
-          const extractedText = textValue.text || textValue.value || textValue.content || JSON.stringify(textValue);
-          return {
-            id: String(opt.id || opt.option_id || ''),
-            text: this.cleanQuestionText(String(extractedText)),
-          };
-        }
+          // Handle object options
+          if (typeof opt === 'object' && opt !== null) {
+            const textValue = opt.text || opt.option_text || opt.content || opt.value || '';
 
-        return {
-          id: String(opt.id || opt.option_id || ''),
-          text: this.cleanQuestionText(String(textValue)),
-        };
-      });
+            // If text value is an object, try to extract meaningful text
+            if (typeof textValue === 'object' && textValue !== null) {
+              const extractedText = textValue.text || textValue.value || textValue.content || '';
+              if (extractedText) {
+                return {
+                  id: String(opt.id || opt.option_id || index),
+                  text: this.cleanQuestionText(String(extractedText)),
+                };
+              }
+              // If we can't extract text, skip this option
+              console.warn('[MLBackendClient] Skipping malformed option:', opt);
+              return null;
+            }
+
+            // Valid text value
+            if (textValue) {
+              return {
+                id: String(opt.id || opt.option_id || index),
+                text: this.cleanQuestionText(String(textValue)),
+              };
+            }
+
+            // No text found, skip option
+            console.warn('[MLBackendClient] Skipping option without text:', opt);
+            return null;
+          }
+
+          // Unknown format, skip
+          console.warn('[MLBackendClient] Skipping unknown option format:', opt);
+          return null;
+        })
+        .filter((opt): opt is { id: string; text: string } => opt !== null);
     }
 
     if (typeof options === 'object' && options !== null) {
       // Object format: {A: "text", B: "text"}
       return Object.entries(options).map(([key, value]) => {
         if (typeof value === 'object' && value !== null) {
-          const extractedText = (value as any).text || (value as any).value || (value as any).content || JSON.stringify(value);
+          const extractedText = (value as any).text || (value as any).value || (value as any).content || '';
           return {
             id: String(key),
-            text: this.cleanQuestionText(String(extractedText)),
+            text: this.cleanQuestionText(String(extractedText || key)),
           };
         }
         return {
