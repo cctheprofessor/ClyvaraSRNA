@@ -144,6 +144,23 @@ export default function DragDropMatchingQuestion({
           <Text style={[styles.resultText, isCorrect ? styles.correctText : styles.incorrectText]}>
             {isCorrect ? 'Correct!' : 'Incorrect'}
           </Text>
+          {!isCorrect && (
+            <View style={styles.correctPairsContainer}>
+              <Text style={styles.correctPairsTitle}>Correct Pairs:</Text>
+              {Object.entries(question.options.correct_pairs).map(([aId, bId]) => {
+                const aItem = question.options.column_a.find(item => item.id === aId);
+                const bItem = question.options.column_b.find(item => item.id === bId);
+                if (!aItem || !bItem) return null;
+                return (
+                  <View key={aId} style={styles.correctPairRow}>
+                    <Text style={styles.correctPairText}>
+                      {aItem.text} → {bItem.text}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
       )}
     </ScrollView>
@@ -226,5 +243,26 @@ const styles = StyleSheet.create({
   },
   incorrectText: {
     color: Colors.error,
+  },
+  correctPairsContainer: {
+    marginTop: Spacing.md,
+    padding: Spacing.md,
+    backgroundColor: Colors.successLight,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.success,
+    width: '100%',
+  },
+  correctPairsTitle: {
+    ...Typography.bodyBold,
+    color: Colors.success,
+    marginBottom: Spacing.sm,
+  },
+  correctPairRow: {
+    paddingVertical: Spacing.xs,
+  },
+  correctPairText: {
+    ...Typography.body,
+    color: Colors.text.primary,
   },
 });

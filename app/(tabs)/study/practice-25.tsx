@@ -9,8 +9,9 @@ import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
 import { ArrowLeft, ArrowRight, CheckCircle, Send } from 'lucide-react-native';
-import { Question } from '@/types/question';
+import { Question, AnswerFormat } from '@/types/question';
 import { filterValidQuestions } from '@/lib/question-validator';
+import { validateAnswer } from '@/lib/answer-validator';
 
 interface AnswerResult {
   is_correct: boolean;
@@ -103,6 +104,30 @@ export default function Practice25Screen() {
     }
   };
 
+  const parseAnswer = (question: Question, serializedAnswer: string): AnswerFormat | null => {
+    try {
+      switch (question.question_type) {
+        case 'multiple_choice':
+          return { type: 'multiple_choice', answer: serializedAnswer };
+        case 'multi_select':
+          return { type: 'multi_select', answers: JSON.parse(serializedAnswer) };
+        case 'drag_drop_matching':
+          return { type: 'drag_drop_matching', pairs: JSON.parse(serializedAnswer) };
+        case 'drag_drop_ordering':
+          return { type: 'drag_drop_ordering', order: JSON.parse(serializedAnswer) };
+        case 'clinical_scenario':
+          return { type: 'clinical_scenario', sub_answers: JSON.parse(serializedAnswer) };
+        case 'hotspot':
+          return { type: 'hotspot', zone_id: serializedAnswer };
+        default:
+          return null;
+      }
+    } catch (error) {
+      console.error('[Practice25] Failed to parse answer:', error);
+      return null;
+    }
+  };
+
   const handleAnswerChange = (serializedAnswer: string) => {
     setAnswers({ ...answers, [currentIndex]: serializedAnswer });
   };
@@ -145,6 +170,24 @@ export default function Practice25Screen() {
     const studentId = profile.ml_user_id;
     const responseTime = Math.floor((Date.now() - questionStartTime) / 1000);
 
+    const parsedAnswer = parseAnswer(currentQuestion, serializedAnswer);
+    if (!parsedAnswer) {
+      console.error('[Practice25] Failed to parse answer');
+      return;
+    }
+
+    const validationResult = validateAnswer(currentQuestion, parsedAnswer);
+
+    setAnswerResults(prev => ({
+      ...prev,
+      [questionIndex]: {
+        is_correct: validationResult.is_correct,
+        response_time: responseTime,
+        rationale: validationResult.explanation || validationResult.rationale,
+        correct_answers: validationResult.correct_answers,
+      },
+    }));
+
     setPendingSubmissions(prev => new Set(prev).add(questionIndex));
 
     (async () => {
@@ -163,12 +206,13 @@ export default function Practice25Screen() {
           [questionIndex]: {
             is_correct: result.is_correct,
             response_time: responseTime,
-            rationale: result.rationale || currentQuestion.explanation || currentQuestion.rationale,
+            rationale: result.rationale || validationResult.explanation || validationResult.rationale,
             option_rationales: result.option_rationales,
-            correct_answers: result.correct_answers,
+            correct_answers: result.correct_answers || validationResult.correct_answers,
           },
         }));
       } catch (error) {
+        console.warn('[Practice25] API submission failed, using cached validation', error);
         await offlinePracticeManager.queueResponse({
           student_id: studentId,
           question_id: currentQuestion.id,
