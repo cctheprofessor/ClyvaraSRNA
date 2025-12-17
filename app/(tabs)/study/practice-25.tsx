@@ -6,10 +6,10 @@ import { mlClient } from '@/lib/ml-backend-client';
 import { offlinePracticeManager } from '@/lib/offline-practice-manager';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
-import QuestionCard from '@/components/study/QuestionCard';
+import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react-native';
-import { Question, serializeAnswer } from '@/types/question';
+import { Question } from '@/types/question';
 
 interface AnswerResult {
   is_correct: boolean;
@@ -22,7 +22,7 @@ export default function Practice25Screen() {
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string | string[]>>({});
+  const [answers, setAnswers] = useState<Record<number, string>>({});
   const [answerResults, setAnswerResults] = useState<Record<number, AnswerResult>>({});
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
@@ -68,8 +68,8 @@ export default function Practice25Screen() {
     }
   };
 
-  const handleSelectAnswer = (answerId: string | string[]) => {
-    setAnswers({ ...answers, [currentIndex]: answerId });
+  const handleAnswerChange = (serializedAnswer: string) => {
+    setAnswers({ ...answers, [currentIndex]: serializedAnswer });
   };
 
   const handleNext = async () => {
@@ -89,24 +89,13 @@ export default function Practice25Screen() {
 
   const submitCurrentAnswer = async () => {
     const currentQuestion = questions[currentIndex];
-    const userAnswer = answers[currentIndex];
+    const serializedAnswer = answers[currentIndex];
 
-    if (!userAnswer || !profile?.ml_user_id) return;
+    if (!serializedAnswer || !profile?.ml_user_id) return;
 
     const responseTime = Math.floor((Date.now() - questionStartTime) / 1000);
 
-    // Serialize answer based on question type
-    let serializedAnswer: string;
-    if (currentQuestion.question_type === 'multiple_choice') {
-      serializedAnswer = userAnswer as string;
-    } else if (currentQuestion.question_type === 'multi_select') {
-      serializedAnswer = JSON.stringify(userAnswer);
-    } else {
-      serializedAnswer = Array.isArray(userAnswer) ? JSON.stringify(userAnswer) : String(userAnswer);
-    }
-
     try {
-      // Backend calculates is_correct and returns it
       const result = await mlClient.submitAnswer({
         student_id: profile.ml_user_id,
         question_id: currentQuestion.id,
@@ -114,7 +103,6 @@ export default function Practice25Screen() {
         response_time_seconds: responseTime,
       });
 
-      // Store the result
       setAnswerResults({
         ...answerResults,
         [currentIndex]: {
@@ -123,7 +111,6 @@ export default function Practice25Screen() {
         },
       });
     } catch (error) {
-      // Queue for offline sync
       await offlinePracticeManager.queueResponse({
         student_id: profile.ml_user_id,
         question_id: currentQuestion.id,
@@ -232,10 +219,9 @@ export default function Practice25Screen() {
           </Text>
         </View>
 
-        <QuestionCard
+        <QuestionRenderer
           question={currentQuestion}
-          selectedAnswer={answers[currentIndex] || null}
-          onSelectAnswer={handleSelectAnswer}
+          onAnswerChange={handleAnswerChange}
         />
 
         <View style={styles.navigation}>

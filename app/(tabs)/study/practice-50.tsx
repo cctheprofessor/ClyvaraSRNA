@@ -6,16 +6,14 @@ import { mlClient } from '@/lib/ml-backend-client';
 import { offlinePracticeManager } from '@/lib/offline-practice-manager';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
-import QuestionCard from '@/components/study/QuestionCard';
+import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react-native';
+import { Question } from '@/types/question';
 
-interface Question {
-  id: string;
-  question_text: string;
-  options: Array<{ id: string; text: string }>;
-  correct_answer: string;
-  explanation?: string;
+interface AnswerResult {
+  is_correct: boolean;
+  response_time: number;
 }
 
 export default function Practice50Screen() {
@@ -25,6 +23,7 @@ export default function Practice50Screen() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answerResults, setAnswerResults] = useState<Record<number, AnswerResult>>({});
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [showResults, setShowResults] = useState(false);
@@ -69,8 +68,8 @@ export default function Practice50Screen() {
     }
   };
 
-  const handleSelectAnswer = (answerId: string) => {
-    setAnswers({ ...answers, [currentIndex]: answerId });
+  const handleAnswerChange = (serializedAnswer: string) => {
+    setAnswers({ ...answers, [currentIndex]: serializedAnswer });
   };
 
   const handleNext = async () => {
@@ -90,28 +89,33 @@ export default function Practice50Screen() {
 
   const submitCurrentAnswer = async () => {
     const currentQuestion = questions[currentIndex];
-    const userAnswer = answers[currentIndex];
+    const serializedAnswer = answers[currentIndex];
 
-    if (!userAnswer || !profile?.ml_user_id) return;
+    if (!serializedAnswer || !profile?.ml_user_id) return;
 
     const responseTime = Math.floor((Date.now() - questionStartTime) / 1000);
-    const isCorrect = userAnswer === currentQuestion.correct_answer;
 
     try {
-      await mlClient.submitAnswer({
+      const result = await mlClient.submitAnswer({
         student_id: profile.ml_user_id,
         question_id: currentQuestion.id,
-        student_answer: userAnswer,
+        student_answer: serializedAnswer,
         response_time_seconds: responseTime,
-        is_correct: isCorrect,
+      });
+
+      setAnswerResults({
+        ...answerResults,
+        [currentIndex]: {
+          is_correct: result.is_correct,
+          response_time: responseTime,
+        },
       });
     } catch (error) {
       await offlinePracticeManager.queueResponse({
         student_id: profile.ml_user_id,
         question_id: currentQuestion.id,
-        student_answer: userAnswer,
+        student_answer: serializedAnswer,
         response_time_seconds: responseTime,
-        is_correct: isCorrect,
         answered_at: new Date().toISOString(),
       });
     }
@@ -121,7 +125,7 @@ export default function Practice50Screen() {
     await submitCurrentAnswer();
 
     const totalTime = Math.floor((Date.now() - startTime) / 1000);
-    const correctCount = questions.filter((q, i) => answers[i] === q.correct_answer).length;
+    const correctCount = Object.values(answerResults).filter((result) => result.is_correct).length;
 
     try {
       if (profile?.ml_user_id) {
@@ -213,10 +217,9 @@ export default function Practice50Screen() {
           </Text>
         </View>
 
-        <QuestionCard
+        <QuestionRenderer
           question={currentQuestion}
-          selectedAnswer={answers[currentIndex] || null}
-          onSelectAnswer={handleSelectAnswer}
+          onAnswerChange={handleAnswerChange}
         />
 
         <View style={styles.navigation}>
