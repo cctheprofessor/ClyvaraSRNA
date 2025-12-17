@@ -11,28 +11,28 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CHART_WIDTH = SCREEN_WIDTH - (Spacing.md * 4);
 
 interface StudentInsights {
-  overall_performance: {
+  overall_performance?: {
     total_questions: number;
     correct_answers: number;
     accuracy: number;
     average_response_time: number;
   };
-  forgetting_curve: Array<{
+  forgetting_curve?: Array<{
     days_since: number;
     retention_rate: number;
   }>;
-  topic_performance: Array<{
+  topic_performance?: Array<{
     topic_name: string;
     mastery_level: number;
     questions_attempted: number;
     accuracy: number;
   }>;
-  weak_areas: Array<{
+  weak_areas?: Array<{
     topic: string;
     accuracy: number;
     priority: string;
   }>;
-  learning_velocity: number;
+  learning_velocity?: number;
 }
 
 export default function AnalyticsScreen() {
@@ -66,7 +66,7 @@ export default function AnalyticsScreen() {
   };
 
   const renderPerformanceCards = () => {
-    if (!insights) return null;
+    if (!insights || !insights.overall_performance) return null;
 
     const { overall_performance } = insights;
     const accuracyColor = overall_performance.accuracy >= 70 ? Colors.success :
@@ -101,22 +101,24 @@ export default function AnalyticsScreen() {
           </Text>
         </View>
 
-        <View style={[styles.card, styles.cardFull]}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardIcon}>
-              <TrendingUp color={Colors.accent} size={24} />
+        {insights.learning_velocity !== undefined && (
+          <View style={[styles.card, styles.cardFull]}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardIcon}>
+                <TrendingUp color={Colors.accent} size={24} />
+              </View>
+              <Text style={styles.cardTitle}>Learning Velocity</Text>
             </View>
-            <Text style={styles.cardTitle}>Learning Velocity</Text>
+            <Text style={styles.velocityValue}>
+              {insights.learning_velocity.toFixed(2)}x
+            </Text>
+            <Text style={styles.cardSubtext}>
+              {insights.learning_velocity > 1.0
+                ? 'You are learning faster than average'
+                : 'Keep practicing to improve your pace'}
+            </Text>
           </View>
-          <Text style={styles.velocityValue}>
-            {insights.learning_velocity.toFixed(2)}x
-          </Text>
-          <Text style={styles.cardSubtext}>
-            {insights.learning_velocity > 1.0
-              ? 'You are learning faster than average'
-              : 'Keep practicing to improve your pace'}
-          </Text>
-        </View>
+        )}
       </View>
     );
   };
@@ -334,7 +336,13 @@ export default function AnalyticsScreen() {
     );
   }
 
-  if (!insights) {
+  const hasNoData = !insights ||
+    (!insights.overall_performance &&
+     (!insights.forgetting_curve || insights.forgetting_curve.length === 0) &&
+     (!insights.topic_performance || insights.topic_performance.length === 0) &&
+     (!insights.weak_areas || insights.weak_areas.length === 0));
+
+  if (hasNoData) {
     return (
       <View style={styles.container}>
         <PageHeader
