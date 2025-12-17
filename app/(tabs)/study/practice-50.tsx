@@ -136,12 +136,14 @@ export default function Practice50Screen() {
         response_time_seconds: responseTime,
       });
 
+      console.log('[Practice50] Submit answer result:', result);
+
       setAnswerResults({
         ...answerResults,
         [currentIndex]: {
           is_correct: result.is_correct,
           response_time: responseTime,
-          rationale: result.rationale,
+          rationale: result.rationale || currentQuestion.explanation || currentQuestion.rationale,
           option_rationales: result.option_rationales,
           correct_answers: result.correct_answers,
         },

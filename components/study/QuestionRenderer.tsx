@@ -173,7 +173,7 @@ export default function QuestionRenderer({
 
       {showResult && isCorrect !== undefined && (
         <RationaleDisplay
-          rationale={rationale || question.rationale}
+          rationale={rationale || question.explanation || question.rationale}
           optionRationales={optionRationales}
           correctAnswers={correctAnswers}
           isCorrect={isCorrect}
