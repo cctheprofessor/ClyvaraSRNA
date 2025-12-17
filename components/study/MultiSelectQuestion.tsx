@@ -55,6 +55,24 @@ export default function MultiSelectQuestion({
     return styles.optionText;
   };
 
+  if (!question.options || !Array.isArray(question.options) || question.options.length === 0) {
+    console.error('MultiSelectQuestion: Invalid or empty options', {
+      questionId: question.id,
+      options: question.options,
+      fullQuestion: JSON.stringify(question, null, 2)
+    });
+    return (
+      <View style={styles.container}>
+        <Text style={styles.hint}>Select all that apply</Text>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            No options available for this question. This question may have invalid data.
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.hint}>Select all that apply</Text>
@@ -142,5 +160,17 @@ const styles = StyleSheet.create({
   optionTextIncorrect: {
     color: Colors.error,
     fontWeight: '600',
+  },
+  errorContainer: {
+    backgroundColor: Colors.error + '10',
+    borderRadius: BorderRadius.sm,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.error,
+  },
+  errorText: {
+    ...Typography.body,
+    color: Colors.error,
+    textAlign: 'center',
   },
 });
