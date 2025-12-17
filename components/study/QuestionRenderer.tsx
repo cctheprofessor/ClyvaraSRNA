@@ -8,6 +8,7 @@ import DragDropMatchingQuestion from './DragDropMatchingQuestion';
 import DragDropOrderingQuestion from './DragDropOrderingQuestion';
 import ClinicalScenarioQuestion from './ClinicalScenarioQuestion';
 import HotspotQuestion from './HotspotQuestion';
+import RationaleDisplay from './RationaleDisplay';
 
 interface QuestionRendererProps {
   question: Question;
@@ -15,6 +16,9 @@ interface QuestionRendererProps {
   showResult?: boolean;
   isCorrect?: boolean;
   disabled?: boolean;
+  rationale?: string;
+  optionRationales?: Record<string, string>;
+  correctAnswers?: string[];
 }
 
 export default function QuestionRenderer({
@@ -23,6 +27,9 @@ export default function QuestionRenderer({
   showResult = false,
   isCorrect,
   disabled = false,
+  rationale,
+  optionRationales,
+  correctAnswers,
 }: QuestionRendererProps) {
   const [multipleChoiceValue, setMultipleChoiceValue] = useState<string | null>(null);
   const [multiSelectValue, setMultiSelectValue] = useState<string[]>([]);
@@ -163,6 +170,15 @@ export default function QuestionRenderer({
     <View style={styles.container}>
       <Text style={styles.questionText}>{question.question_text}</Text>
       <View style={styles.contentContainer}>{renderQuestionContent()}</View>
+
+      {showResult && isCorrect !== undefined && (
+        <RationaleDisplay
+          rationale={rationale || question.rationale}
+          optionRationales={optionRationales}
+          correctAnswers={correctAnswers}
+          isCorrect={isCorrect}
+        />
+      )}
     </View>
   );
 }

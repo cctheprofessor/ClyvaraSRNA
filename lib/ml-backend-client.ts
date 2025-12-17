@@ -348,6 +348,9 @@ export class MLBackendClient {
     recall_probability: number;
     next_review_days: number;
     mastery_update: any;
+    rationale?: string;
+    option_rationales?: Record<string, string>;
+    correct_answers?: string[];
   }> {
     const headers = await this.getAuthHeaders();
 

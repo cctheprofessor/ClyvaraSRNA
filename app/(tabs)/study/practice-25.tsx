@@ -14,6 +14,9 @@ import { Question } from '@/types/question';
 interface AnswerResult {
   is_correct: boolean;
   response_time: number;
+  rationale?: string;
+  option_rationales?: Record<string, string>;
+  correct_answers?: string[];
 }
 
 export default function Practice25Screen() {
@@ -108,6 +111,9 @@ export default function Practice25Screen() {
         [currentIndex]: {
           is_correct: result.is_correct,
           response_time: responseTime,
+          rationale: result.rationale,
+          option_rationales: result.option_rationales,
+          correct_answers: result.correct_answers,
         },
       });
     } catch (error) {
@@ -222,6 +228,12 @@ export default function Practice25Screen() {
         <QuestionRenderer
           question={currentQuestion}
           onAnswerChange={handleAnswerChange}
+          showResult={!!answerResults[currentIndex]}
+          isCorrect={answerResults[currentIndex]?.is_correct}
+          rationale={answerResults[currentIndex]?.rationale}
+          optionRationales={answerResults[currentIndex]?.option_rationales}
+          correctAnswers={answerResults[currentIndex]?.correct_answers}
+          disabled={!!answerResults[currentIndex]}
         />
 
         <View style={styles.navigation}>

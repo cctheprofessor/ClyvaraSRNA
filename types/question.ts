@@ -13,6 +13,7 @@ interface BaseQuestion {
   id: string;
   question_text: string;
   explanation?: string;
+  rationale?: string;
   topic_id?: string;
   difficulty?: 'easy' | 'medium' | 'hard';
 }
