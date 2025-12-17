@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { router } from 'expo-router';
 import PageHeader from '@/components/PageHeader';
-import { theme } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { MLBackendClient } from '@/lib/ml-backend-client';
@@ -147,7 +147,7 @@ export default function SyncUserScreen() {
           value={userId}
           onChangeText={setUserId}
           placeholder="Enter user UUID"
-          placeholderTextColor={theme.colors.textSecondary}
+          placeholderTextColor={Colors.text.secondary}
           autoCapitalize="none"
           autoCorrect={false}
         />
@@ -181,36 +181,36 @@ export default function SyncUserScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: Spacing.md,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 8,
+    color: Colors.text.primary,
+    marginBottom: Spacing.sm,
   },
   input: {
-    backgroundColor: theme.colors.card,
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
     fontSize: 14,
-    color: theme.colors.text,
-    marginBottom: 16,
+    color: Colors.text.primary,
+    marginBottom: Spacing.md,
     fontFamily: 'monospace',
   },
   button: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: BorderRadius.md,
   },
   secondaryButton: {
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: Colors.secondary,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -221,21 +221,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   resultBox: {
-    backgroundColor: theme.colors.card,
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 20,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
   },
   resultText: {
     fontFamily: 'monospace',
     fontSize: 12,
-    color: theme.colors.text,
+    color: Colors.text.primary,
     lineHeight: 20,
   },
   errorText: {
-    color: theme.colors.error,
+    color: Colors.error,
     fontSize: 16,
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: Spacing.md,
   },
 });

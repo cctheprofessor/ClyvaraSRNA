@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import PageHeader from '@/components/PageHeader';
-import { theme } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { MessageSquare, Users } from 'lucide-react-native';
 
@@ -49,7 +49,7 @@ export default function AdminDashboard() {
               onPress={() => router.push(tool.route as any)}
             >
               <View style={styles.toolIcon}>
-                <Icon size={24} color={theme.colors.primary} />
+                <Icon size={24} color={Colors.primary} />
               </View>
               <View style={styles.toolInfo}>
                 <Text style={styles.toolTitle}>{tool.title}</Text>
@@ -66,34 +66,34 @@ export default function AdminDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: Spacing.md,
   },
   subtitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 16,
+    color: Colors.text.primary,
+    marginBottom: Spacing.md,
   },
   toolCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.card,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: BorderRadius.md,
   },
   toolIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: theme.colors.primary + '20',
+    backgroundColor: Colors.primary + '20',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: Spacing.md,
   },
   toolInfo: {
     flex: 1,
@@ -101,17 +101,17 @@ const styles = StyleSheet.create({
   toolTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: Colors.text.primary,
     marginBottom: 4,
   },
   toolDescription: {
     fontSize: 14,
-    color: theme.colors.textSecondary,
+    color: Colors.text.secondary,
   },
   errorText: {
-    color: theme.colors.error,
+    color: Colors.error,
     fontSize: 16,
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: Spacing.md,
   },
 });
