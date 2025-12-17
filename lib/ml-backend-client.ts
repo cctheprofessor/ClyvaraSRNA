@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { Question, QuestionType } from '../types/question';
 import { validateQuestion, filterValidQuestions } from './question-validator';
+import nceTopics from '../constants/nce_topics_flattened.json';
 
 const EDGE_FUNCTION_URL = process.env.EXPO_PUBLIC_SUPABASE_URL
   ? `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ml-backend-proxy`
@@ -581,7 +582,58 @@ export class MLBackendClient {
       throw new Error(errorData.error || `Failed to get student insights: ${response.statusText}`);
     }
 
-    return await response.json();
+    const rawData = await response.json();
+
+    // Transform the data to match the expected format
+    return this.transformInsightsData(rawData);
+  }
+
+  private transformInsightsData(rawData: any): {
+    overall_performance: any;
+    forgetting_curve: any;
+    topic_performance: any[];
+    weak_areas: any[];
+    learning_velocity: number;
+  } {
+    // Create a topic lookup map
+    const topicMap = new Map(nceTopics.map((topic: any) => [String(topic.id), topic.name]));
+
+    // Transform overall performance
+    const correctAnswers = Math.round(rawData.total_questions * rawData.overall_accuracy);
+    const overall_performance = {
+      accuracy: rawData.overall_accuracy * 100, // Convert to percentage
+      total_questions: rawData.total_questions,
+      correct_answers: correctAnswers,
+      consistency_score: rawData.consistency_score,
+    };
+
+    // Transform forgetting curve
+    const forgetting_curve = rawData.forgetting_curve_data || [];
+
+    // Transform topic performance
+    const topic_performance = Object.entries(rawData.topic_mastery || {}).map(([topicId, mastery]: [string, any]) => ({
+      topic_id: topicId,
+      topic_name: topicMap.get(topicId) || `Topic ${topicId}`,
+      mastery_level: typeof mastery === 'number' ? mastery * 100 : 0, // Convert to percentage
+      questions_answered: rawData.total_questions, // This is an approximation
+    }));
+
+    // Transform weak areas (struggle areas)
+    const weak_areas = (rawData.struggle_areas || []).map((topicId: number) => ({
+      topic_id: String(topicId),
+      topic_name: topicMap.get(String(topicId)) || `Topic ${topicId}`,
+      mastery_level: (rawData.topic_mastery?.[topicId] || 0) * 100,
+      accuracy: (rawData.topic_mastery?.[topicId] || 0) * 100,
+      recommended_review_days: rawData.recommended_intervals?.[topicId] || 1,
+    }));
+
+    return {
+      overall_performance,
+      forgetting_curve,
+      topic_performance,
+      weak_areas,
+      learning_velocity: rawData.learning_velocity || 0,
+    };
   }
 
   async getQuestionTypePerformance(userId: number): Promise<any[]> {

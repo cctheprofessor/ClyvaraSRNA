@@ -56,7 +56,6 @@ export default function AnalyticsScreen() {
       setLoading(true);
       setError(null);
       const data = await mlClient.getStudentInsights(profile.ml_user_id);
-      console.log('Analytics data received:', JSON.stringify(data, null, 2));
       setInsights(data);
     } catch (err) {
       setError('Unable to load insights. Please try again later.');
@@ -68,7 +67,6 @@ export default function AnalyticsScreen() {
 
   const renderPerformanceCards = () => {
     if (!insights || !insights.overall_performance) {
-      console.log('Performance cards: no data', { hasInsights: !!insights, hasOverallPerf: !!insights?.overall_performance });
       return null;
     }
 
@@ -213,23 +211,15 @@ export default function AnalyticsScreen() {
 
   const renderTopicPerformance = () => {
     if (!insights || !insights.topic_performance || insights.topic_performance.length === 0) {
-      console.log('Topic performance: no data', {
-        hasInsights: !!insights,
-        hasTopicPerf: !!insights?.topic_performance,
-        topicPerfLength: insights?.topic_performance?.length
-      });
       return null;
     }
 
-    console.log('Topic performance data:', insights.topic_performance);
     const sortedTopics = [...insights.topic_performance]
       .filter(topic => typeof topic.mastery_level === 'number' && !isNaN(topic.mastery_level))
       .sort((a, b) => b.mastery_level - a.mastery_level)
       .slice(0, 8);
 
-    console.log('Sorted topics after filter:', sortedTopics);
     if (sortedTopics.length === 0) {
-      console.log('Topic performance: all topics filtered out');
       return null;
     }
 
