@@ -33,6 +33,7 @@ export default function Practice25Screen() {
   const [showResults, setShowResults] = useState(false);
   const [sessionResults, setSessionResults] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingSubmissions, setPendingSubmissions] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadQuestions();
@@ -105,9 +106,9 @@ export default function Practice25Screen() {
     setAnswers({ ...answers, [currentIndex]: serializedAnswer });
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (currentIndex < questions.length - 1) {
-      await submitCurrentAnswer();
+      submitCurrentAnswer();
       setCurrentIndex(currentIndex + 1);
       setQuestionStartTime(Date.now());
     }
@@ -120,51 +121,69 @@ export default function Practice25Screen() {
     }
   };
 
-  const submitCurrentAnswer = async () => {
-    const currentQuestion = questions[currentIndex];
-    const serializedAnswer = answers[currentIndex];
+  const submitCurrentAnswer = () => {
+    const questionIndex = currentIndex;
+    const currentQuestion = questions[questionIndex];
+    const serializedAnswer = answers[questionIndex];
 
     if (!serializedAnswer || !profile?.ml_user_id) return;
 
+    const studentId = profile.ml_user_id;
     const responseTime = Math.floor((Date.now() - questionStartTime) / 1000);
 
-    try {
-      const result = await mlClient.submitAnswer({
-        student_id: profile.ml_user_id,
-        question_id: currentQuestion.id,
-        student_answer: serializedAnswer,
-        response_time_seconds: responseTime,
-      });
+    setPendingSubmissions(prev => new Set(prev).add(questionIndex));
 
-      console.log('[Practice25] Submit answer result:', result);
+    (async () => {
+      try {
+        const result = await mlClient.submitAnswer({
+          student_id: studentId,
+          question_id: currentQuestion.id,
+          student_answer: serializedAnswer,
+          response_time_seconds: responseTime,
+        });
 
-      setAnswerResults({
-        ...answerResults,
-        [currentIndex]: {
-          is_correct: result.is_correct,
-          response_time: responseTime,
-          rationale: result.rationale || currentQuestion.explanation || currentQuestion.rationale,
-          option_rationales: result.option_rationales,
-          correct_answers: result.correct_answers,
-        },
-      });
-    } catch (error) {
-      await offlinePracticeManager.queueResponse({
-        student_id: profile.ml_user_id,
-        question_id: currentQuestion.id,
-        student_answer: serializedAnswer,
-        response_time_seconds: responseTime,
-        answered_at: new Date().toISOString(),
-      });
-    }
+        console.log('[Practice25] Submit answer result:', result);
+
+        setAnswerResults(prev => ({
+          ...prev,
+          [questionIndex]: {
+            is_correct: result.is_correct,
+            response_time: responseTime,
+            rationale: result.rationale || currentQuestion.explanation || currentQuestion.rationale,
+            option_rationales: result.option_rationales,
+            correct_answers: result.correct_answers,
+          },
+        }));
+      } catch (error) {
+        await offlinePracticeManager.queueResponse({
+          student_id: studentId,
+          question_id: currentQuestion.id,
+          student_answer: serializedAnswer,
+          response_time_seconds: responseTime,
+          answered_at: new Date().toISOString(),
+        });
+      } finally {
+        setPendingSubmissions(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(questionIndex);
+          return newSet;
+        });
+      }
+    })();
   };
 
   const handleFinish = async () => {
-    await submitCurrentAnswer();
+    submitCurrentAnswer();
+
+    const maxWaitTime = 10000;
+    const startWait = Date.now();
+
+    while (pendingSubmissions.size > 0 && (Date.now() - startWait) < maxWaitTime) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
 
     const totalTime = Math.floor((Date.now() - startTime) / 1000);
 
-    // Count correct answers from backend results
     const correctCount = Object.values(answerResults).filter((result) => result.is_correct).length;
 
     try {
