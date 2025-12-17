@@ -75,6 +75,7 @@ export default function ProfileScreen() {
   }, [profile]);
 
   const handleSave = async () => {
+    console.log('[Profile] Starting profile update...');
     setLoading(true);
 
     const updates = {
@@ -95,13 +96,17 @@ export default function ProfileScreen() {
       specialty_interest: formData.specialty_interest || null,
     };
 
+    console.log('[Profile] Update payload:', updates);
+
     const { error } = await updateProfile(updates);
 
     setLoading(false);
 
     if (error) {
-      Alert.alert('Error', 'Failed to update profile');
+      console.error('[Profile] Update failed:', error);
+      Alert.alert('Error', `Failed to update profile: ${error.message || 'Unknown error'}`);
     } else {
+      console.log('[Profile] Update successful!');
       setEditing(false);
       Alert.alert('Success', 'Profile updated successfully');
     }

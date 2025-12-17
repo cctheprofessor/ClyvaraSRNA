@@ -216,16 +216,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error('No user logged in') };
 
-    const { error } = await supabase
+    console.log('[AuthContext] Updating profile:', {
+      userId: user.id,
+      updates: Object.keys(updates),
+    });
+
+    const { data, error } = await supabase
       .from('profiles')
       .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('id', user.id);
+      .eq('id', user.id)
+      .select();
 
-    if (!error) {
-      await loadProfile(user.id);
+    if (error) {
+      console.error('[AuthContext] Profile update failed:', error);
+      return { error };
     }
 
-    return { error };
+    console.log('[AuthContext] Profile updated successfully:', data);
+    await loadProfile(user.id, false);
+
+    return { error: null };
   };
 
   const refreshProfile = async () => {
