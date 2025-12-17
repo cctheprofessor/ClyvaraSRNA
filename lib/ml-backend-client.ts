@@ -204,7 +204,17 @@ export class MLBackendClient {
     }
 
     const data = await response.json();
-    return data.questions || [];
+    const questions = data.questions || [];
+
+    // Transform options from object to array format for QuestionCard component
+    return questions.map((q: any) => ({
+      ...q,
+      id: q.question_id,
+      options: Object.entries(q.options || {}).map(([key, value]) => ({
+        id: key,
+        text: value as string,
+      })),
+    }));
   }
 
   async submitAnswer(answerData: {
