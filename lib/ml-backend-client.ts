@@ -410,6 +410,11 @@ export class MLBackendClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      console.error('[MLBackendClient] Submit answer failed:', {
+        status: response.status,
+        error: errorData,
+        payload: apiPayload,
+      });
       throw new Error(errorData.error || `Failed to submit answer: ${response.statusText}`);
     }
 
