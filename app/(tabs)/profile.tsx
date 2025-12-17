@@ -8,14 +8,13 @@ import {
   Pressable,
   Alert,
   Modal,
-  FlatList,
   Linking,
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, Building2, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings, RefreshCw } from 'lucide-react-native';
+import { User, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings, RefreshCw } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
-import { CRNA_SCHOOLS, ROLES, PROGRAM_TRACKS } from '@/constants/crna-schools';
+import { ROLES, PROGRAM_TRACKS } from '@/constants/crna-schools';
 import PageHeader from '@/components/PageHeader';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -26,7 +25,6 @@ export default function ProfileScreen() {
   const { profile, user, signOut, updateProfile, isAdmin, refreshProfile } = useAuth();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showSchoolPicker, setShowSchoolPicker] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
   const [showProgramTrackPicker, setShowProgramTrackPicker] = useState(false);
   const [showStudyTimePicker, setShowStudyTimePicker] = useState(false);
@@ -36,7 +34,6 @@ export default function ProfileScreen() {
     full_name: profile?.full_name || '',
     first_name: profile?.first_name || '',
     last_name: profile?.last_name || '',
-    school: profile?.school || '',
     institution: profile?.institution || '',
     phone: profile?.phone || '',
     program_track: profile?.program_track || 'Full-time',
@@ -57,7 +54,6 @@ export default function ProfileScreen() {
         full_name: profile.full_name || '',
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
-        school: profile.school || '',
         institution: profile.institution || '',
         phone: profile.phone || '',
         program_track: profile.program_track || 'Full-time',
@@ -82,7 +78,6 @@ export default function ProfileScreen() {
       full_name: formData.full_name,
       first_name: formData.first_name || null,
       last_name: formData.last_name || null,
-      school: formData.school || null,
       phone: formData.phone || null,
       program_track: formData.program_track,
       current_semester: formData.current_semester,
@@ -187,7 +182,6 @@ export default function ProfileScreen() {
       full_name: profile?.full_name || '',
       first_name: profile?.first_name || '',
       last_name: profile?.last_name || '',
-      school: profile?.school || '',
       institution: profile?.institution || '',
       phone: profile?.phone || '',
       program_track: profile?.program_track || 'Full-time',
@@ -385,30 +379,6 @@ export default function ProfileScreen() {
                 onChangeText={(text) => setFormData({ ...formData, full_name: text })}
                 editable={editing}
               />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <View style={styles.inputLabel}>
-                <Building2 color="#64748b" size={18} />
-                <Text style={styles.label}>School</Text>
-              </View>
-              {editing ? (
-                <Pressable
-                  style={styles.dropdownButton}
-                  onPress={() => setShowSchoolPicker(true)}
-                >
-                  <Text style={[styles.dropdownText, !formData.school && styles.placeholderText]}>
-                    {formData.school || 'Select your CRNA school'}
-                  </Text>
-                  <ChevronDown color={Colors.text.tertiary} size={20} />
-                </Pressable>
-              ) : (
-                <TextInput
-                  style={[styles.input, styles.inputDisabled]}
-                  value={formData.school}
-                  editable={false}
-                />
-              )}
             </View>
 
             <View style={styles.inputGroup}>
@@ -692,34 +662,6 @@ export default function ProfileScreen() {
 
         <Text style={styles.version}>Version 1.0.0</Text>
       </ScrollView>
-
-      <Modal visible={showSchoolPicker} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select School</Text>
-              <Pressable onPress={() => setShowSchoolPicker(false)}>
-                <Text style={styles.modalClose}>Done</Text>
-              </Pressable>
-            </View>
-            <FlatList
-              data={CRNA_SCHOOLS}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={styles.pickerItem}
-                  onPress={() => {
-                    setFormData({ ...formData, school: item });
-                    setShowSchoolPicker(false);
-                  }}
-                >
-                  <Text style={styles.pickerItemText}>{item}</Text>
-                </Pressable>
-              )}
-            />
-          </View>
-        </View>
-      </Modal>
 
       <Modal visible={showRolePicker} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
