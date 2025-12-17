@@ -619,13 +619,19 @@ export class MLBackendClient {
     }));
 
     // Transform weak areas (struggle areas)
-    const weak_areas = (rawData.struggle_areas || []).map((topicId: number) => ({
-      topic_id: String(topicId),
-      topic_name: topicMap.get(String(topicId)) || `Topic ${topicId}`,
-      mastery_level: (rawData.topic_mastery?.[topicId] || 0) * 100,
-      accuracy: (rawData.topic_mastery?.[topicId] || 0) * 100,
-      recommended_review_days: rawData.recommended_intervals?.[topicId] || 1,
-    }));
+    const weak_areas = (rawData.struggle_areas || []).map((topicId: number) => {
+      const mastery = (rawData.topic_mastery?.[topicId] || 0) * 100;
+      const priority = mastery < 30 ? 'high' : mastery < 60 ? 'medium' : 'low';
+
+      return {
+        topic_id: String(topicId),
+        topic_name: topicMap.get(String(topicId)) || `Topic ${topicId}`,
+        mastery_level: mastery,
+        accuracy: mastery,
+        recommended_review_days: rawData.recommended_intervals?.[topicId] || 1,
+        priority,
+      };
+    });
 
     return {
       overall_performance,
