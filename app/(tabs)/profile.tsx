@@ -265,7 +265,7 @@ export default function ProfileScreen() {
       await refreshProfile();
       console.log('Profile refreshed, new timestamp should be visible');
 
-      Alert.alert('Success', 'Successfully synced with ML backend! You can now access practice questions.');
+      Alert.alert('Success', 'Successfully synced with Clyvara Analytica! You can now access practice questions.');
     } catch (error: any) {
       console.error('ML sync error:', error);
 
@@ -598,13 +598,13 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ML Backend Sync</Text>
+          <Text style={styles.sectionTitle}>Clyvara Analytica Sync</Text>
           <View style={styles.form}>
             {profile?.ml_user_id ? (
               <>
                 <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
                   <View style={{width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.success}} />
-                  <Text style={styles.label}>Synced with ML Backend</Text>
+                  <Text style={styles.label}>Synced with Clyvara Analytica</Text>
                 </View>
                 {profile.ml_last_synced_at && (
                   <>
@@ -635,7 +635,7 @@ export default function ProfileScreen() {
               <>
                 <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
                   <View style={{width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.warning}} />
-                  <Text style={styles.label}>Not synced with ML Backend</Text>
+                  <Text style={styles.label}>Not synced with Clyvara Analytica</Text>
                 </View>
                 <Text style={styles.syncWarning}>
                   You need to sync with the ML backend to access personalized practice questions and analytics.
