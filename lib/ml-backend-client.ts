@@ -263,15 +263,20 @@ export class MLBackendClient {
           },
         };
 
-      case 'clinical_scenario':
+      case 'clinical_scenario': {
+        const subQuestions = (q.options?.sub_questions || [])
+          .filter((sq: any) => typeof sq !== 'string')
+          .map((sq: any) => this.transformQuestion(sq));
+
         return {
           ...baseProps,
           question_type: 'clinical_scenario',
           options: {
             vignette: q.options?.vignette || '',
-            sub_questions: q.options?.sub_questions || [],
+            sub_questions: subQuestions,
           },
         };
+      }
 
       case 'hotspot':
         return {

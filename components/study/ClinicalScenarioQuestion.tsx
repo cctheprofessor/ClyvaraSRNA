@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { ClinicalScenarioQuestion as ClinicalScenarioQuestionType, Question, AnswerFormat, serializeAnswer } from '@/types/question';
 import { ChevronRight, ChevronLeft } from 'lucide-react-native';
@@ -23,32 +23,7 @@ export default function ClinicalScenarioQuestion({
   disabled = false,
 }: ClinicalScenarioQuestionProps) {
   const [currentSubQuestionIndex, setCurrentSubQuestionIndex] = useState(0);
-  const [subQuestions, setSubQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadSubQuestions();
-  }, [question.options.sub_questions]);
-
-  const loadSubQuestions = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/questions/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question_ids: question.options.sub_questions }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setSubQuestions(data.questions || []);
-      }
-    } catch (error) {
-      console.error('Failed to load sub-questions:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const subQuestions = question.options.sub_questions;
 
   const currentSubQuestion = subQuestions[currentSubQuestionIndex];
   const totalSubQuestions = subQuestions.length;
@@ -91,16 +66,7 @@ export default function ClinicalScenarioQuestion({
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Loading clinical scenario...</Text>
-      </View>
-    );
-  }
-
-  if (subQuestions.length === 0) {
+  if (!subQuestions || subQuestions.length === 0) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>No sub-questions available</Text>
@@ -109,7 +75,7 @@ export default function ClinicalScenarioQuestion({
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.vignetteContainer}>
         <Text style={styles.vignetteLabel}>Clinical Scenario</Text>
         <Text style={styles.vignetteText}>{question.options.vignette}</Text>
@@ -134,7 +100,7 @@ export default function ClinicalScenarioQuestion({
           <QuestionRenderer
             question={currentSubQuestion}
             onAnswerChange={handleSubAnswerChange}
-            showResult={showResult}
+            showResult={false}
             disabled={disabled}
           />
         </View>
@@ -189,22 +155,13 @@ export default function ClinicalScenarioQuestion({
           </Text>
         </View>
       )}
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    padding: Spacing.xl,
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  loadingText: {
-    ...Typography.body,
-    color: Colors.text.secondary,
+    gap: Spacing.lg,
   },
   errorContainer: {
     padding: Spacing.xl,

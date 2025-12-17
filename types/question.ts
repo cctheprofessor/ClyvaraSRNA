@@ -58,7 +58,7 @@ export interface ClinicalScenarioQuestion extends BaseQuestion {
   question_type: 'clinical_scenario';
   options: {
     vignette: string; // The clinical scenario text
-    sub_questions: string[]; // Array of sub-question IDs
+    sub_questions: Question[]; // Array of full sub-question objects
   };
 }
 
