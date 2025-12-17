@@ -232,7 +232,7 @@ export class MLBackendClient {
     const baseProps = {
       id: String(q.question_id || q.id || ''),
       question_text: this.formatQuestionText(q.question_text, q.question),
-      explanation: q.explanation,
+      explanation: q.explanation ? this.cleanQuestionText(q.explanation) : undefined,
       topic_id: q.topic_id,
       difficulty: q.difficulty,
     };
@@ -291,7 +291,7 @@ export class MLBackendClient {
           ...baseProps,
           question_type: 'clinical_scenario',
           options: {
-            vignette: q.options?.vignette || '',
+            vignette: this.cleanQuestionText(q.options?.vignette || ''),
             sub_questions: subQuestions,
           },
         };
@@ -318,9 +318,20 @@ export class MLBackendClient {
     }
   }
 
+  private cleanQuestionText(text: string): string {
+    if (!text) return text;
+
+    // Remove malformed /min patterns
+    return text
+      .replace(/\/min(?=[a-zA-Z])/g, ' ') // "/minbpm" -> " bpm"
+      .replace(/\/min(?=\d)/g, ' ') // "/min98" -> " 98"
+      .replace(/\s+/g, ' ') // Normalize multiple spaces
+      .trim();
+  }
+
   private formatQuestionText(questionText: any, fallbackQuestion?: string): string {
     if (typeof questionText === 'string') {
-      return questionText;
+      return this.cleanQuestionText(questionText);
     }
 
     if (typeof questionText === 'object' && questionText !== null) {
@@ -328,19 +339,19 @@ export class MLBackendClient {
       const scenario = questionText;
       let formatted = '';
 
-      if (scenario.patient) formatted += `Patient: ${scenario.patient}\n\n`;
-      if (scenario.chief_complaint) formatted += `Chief Complaint: ${scenario.chief_complaint}\n\n`;
-      if (scenario.history) formatted += `History: ${scenario.history}\n\n`;
-      if (scenario.medications) formatted += `Medications: ${scenario.medications}\n\n`;
-      if (scenario.physical_exam) formatted += `Physical Exam: ${scenario.physical_exam}\n\n`;
-      if (scenario.vitals) formatted += `Vitals: ${scenario.vitals}\n\n`;
-      if (scenario.labs) formatted += `Labs: ${scenario.labs}\n\n`;
+      if (scenario.patient) formatted += `Patient: ${this.cleanQuestionText(scenario.patient)}\n\n`;
+      if (scenario.chief_complaint) formatted += `Chief Complaint: ${this.cleanQuestionText(scenario.chief_complaint)}\n\n`;
+      if (scenario.history) formatted += `History: ${this.cleanQuestionText(scenario.history)}\n\n`;
+      if (scenario.medications) formatted += `Medications: ${this.cleanQuestionText(scenario.medications)}\n\n`;
+      if (scenario.physical_exam) formatted += `Physical Exam: ${this.cleanQuestionText(scenario.physical_exam)}\n\n`;
+      if (scenario.vitals) formatted += `Vitals: ${this.cleanQuestionText(scenario.vitals)}\n\n`;
+      if (scenario.labs) formatted += `Labs: ${this.cleanQuestionText(scenario.labs)}\n\n`;
 
-      formatted += fallbackQuestion || 'What is the most appropriate action?';
+      formatted += this.cleanQuestionText(fallbackQuestion || 'What is the most appropriate action?');
       return formatted;
     }
 
-    return fallbackQuestion || 'Question text not available';
+    return this.cleanQuestionText(fallbackQuestion || 'Question text not available');
   }
 
   private transformSimpleOptions(options: any): Array<{ id: string; text: string }> {
@@ -354,13 +365,13 @@ export class MLBackendClient {
           const extractedText = textValue.text || textValue.value || textValue.content || JSON.stringify(textValue);
           return {
             id: String(opt.id || opt.option_id || ''),
-            text: String(extractedText),
+            text: this.cleanQuestionText(String(extractedText)),
           };
         }
 
         return {
           id: String(opt.id || opt.option_id || ''),
-          text: String(textValue),
+          text: this.cleanQuestionText(String(textValue)),
         };
       });
     }
@@ -372,12 +383,12 @@ export class MLBackendClient {
           const extractedText = (value as any).text || (value as any).value || (value as any).content || JSON.stringify(value);
           return {
             id: String(key),
-            text: String(extractedText),
+            text: this.cleanQuestionText(String(extractedText)),
           };
         }
         return {
           id: String(key),
-          text: typeof value === 'string' ? value : String(value),
+          text: this.cleanQuestionText(typeof value === 'string' ? value : String(value)),
         };
       });
     }
