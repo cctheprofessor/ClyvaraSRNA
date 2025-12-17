@@ -203,7 +203,8 @@ export class MLBackendClient {
       throw new Error(errorData.error || `Failed to get questions: ${response.statusText}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    return data.questions || [];
   }
 
   async submitAnswer(answerData: {
