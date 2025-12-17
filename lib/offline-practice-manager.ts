@@ -23,6 +23,7 @@ const storage = {
 const OFFLINE_QUEUE_KEY = 'ml_offline_queue';
 const CACHED_QUESTIONS_KEY = 'ml_cached_questions';
 const CACHE_METADATA_KEY = 'ml_cache_metadata';
+const CACHE_STATUS_KEY = 'ml_cache_status';
 
 interface QueuedResponse {
   student_id: number;
@@ -45,8 +46,43 @@ interface CacheMetadata {
   userId: number;
 }
 
+export type CacheStatus = 'idle' | 'downloading' | 'ready' | 'stale' | 'error';
+
+interface CacheStatusInfo {
+  status: CacheStatus;
+  userId: number;
+  lastUpdated: string;
+  questionCount: number;
+  error?: string;
+}
+
 export class OfflinePracticeManager {
   private readonly CACHE_STALENESS_DAYS = 7;
+  private isDownloading = false;
+
+  async getCacheStatus(userId: number): Promise<CacheStatusInfo | null> {
+    try {
+      const statusData = await storage.getItem(CACHE_STATUS_KEY);
+      if (!statusData) return null;
+
+      const status: CacheStatusInfo = JSON.parse(statusData);
+      if (status.userId !== userId) return null;
+
+      return status;
+    } catch (error) {
+      console.error('Failed to get cache status:', error);
+      return null;
+    }
+  }
+
+  async setCacheStatus(statusInfo: CacheStatusInfo): Promise<void> {
+    try {
+      await storage.setItem(CACHE_STATUS_KEY, JSON.stringify(statusInfo));
+    } catch (error) {
+      console.error('Failed to set cache status:', error);
+      throw error;
+    }
+  }
 
   async queueResponse(response: QueuedResponse): Promise<void> {
     try {
@@ -120,7 +156,21 @@ export class OfflinePracticeManager {
   }
 
   async downloadQuestionsForOffline(userId: number, count: number = 100): Promise<void> {
+    if (this.isDownloading) {
+      console.log('Download already in progress, skipping...');
+      return;
+    }
+
     try {
+      this.isDownloading = true;
+
+      await this.setCacheStatus({
+        status: 'downloading',
+        userId,
+        lastUpdated: new Date().toISOString(),
+        questionCount: 0,
+      });
+
       const questions = await mlClient.downloadQuestionsForOffline(userId, count);
 
       const cachedData: CachedQuestions = {
@@ -138,9 +188,27 @@ export class OfflinePracticeManager {
         userId,
       };
       await storage.setItem(CACHE_METADATA_KEY, JSON.stringify(metadata));
+
+      await this.setCacheStatus({
+        status: 'ready',
+        userId,
+        lastUpdated: cachedData.downloadedAt,
+        questionCount: questions.length,
+      });
+
+      console.log(`Successfully cached ${questions.length} questions for user ${userId}`);
     } catch (error) {
       console.error('Failed to download questions:', error);
+      await this.setCacheStatus({
+        status: 'error',
+        userId,
+        lastUpdated: new Date().toISOString(),
+        questionCount: 0,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
       throw error;
+    } finally {
+      this.isDownloading = false;
     }
   }
 
@@ -161,6 +229,19 @@ export class OfflinePracticeManager {
       const isStale = this.isCacheStale(parsed.downloadedAt);
       if (isStale) {
         console.warn('Cached questions are stale');
+        await this.setCacheStatus({
+          status: 'stale',
+          userId,
+          lastUpdated: parsed.downloadedAt,
+          questionCount: parsed.count,
+        });
+      } else {
+        await this.setCacheStatus({
+          status: 'ready',
+          userId,
+          lastUpdated: parsed.downloadedAt,
+          questionCount: parsed.count,
+        });
       }
 
       return parsed.questions;
@@ -168,6 +249,20 @@ export class OfflinePracticeManager {
       console.error('Failed to get cached questions:', error);
       return null;
     }
+  }
+
+  async shouldRefreshCache(userId: number): Promise<boolean> {
+    const status = await this.getCacheStatus(userId);
+
+    if (!status) return true;
+    if (status.status === 'idle' || status.status === 'error') return true;
+    if (status.status === 'downloading') return false;
+    if (status.status === 'stale') return true;
+
+    const metadata = await this.getCacheMetadata();
+    if (!metadata || metadata.userId !== userId) return true;
+
+    return this.isCacheStale(metadata.downloadedAt);
   }
 
   async getCacheMetadata(): Promise<CacheMetadata | null> {

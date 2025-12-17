@@ -48,17 +48,27 @@ export default function Practice25Screen() {
         return;
       }
 
+      const cachedQuestions = await offlinePracticeManager.getRandomCachedQuestions(profile.ml_user_id, 25);
+
+      if (cachedQuestions.length >= 25) {
+        console.log('Loading questions from cache (fast path)');
+        setQuestions(cachedQuestions);
+        setStartTime(Date.now());
+        setQuestionStartTime(Date.now());
+        setLoading(false);
+        return;
+      }
+
+      console.log('Cache insufficient, fetching from API...');
       try {
         const fetchedQuestions = await mlClient.getNextQuestions(profile.ml_user_id, 25);
         setQuestions(fetchedQuestions);
       } catch (apiError) {
-        console.log('API failed, trying offline cache...');
-        const cachedQuestions = await offlinePracticeManager.getRandomCachedQuestions(profile.ml_user_id, 25);
-
+        console.log('API failed, using available cache...');
         if (cachedQuestions.length > 0) {
           setQuestions(cachedQuestions);
         } else {
-          throw new Error('No questions available offline. Please connect to the internet.');
+          throw new Error('No questions available. Please ensure you have an internet connection and try again.');
         }
       }
 

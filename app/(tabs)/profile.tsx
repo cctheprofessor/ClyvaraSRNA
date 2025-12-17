@@ -20,6 +20,7 @@ import PageHeader from '@/components/PageHeader';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { mlClient } from '@/lib/ml-backend-client';
+import { questionCacheService } from '@/lib/question-cache-service';
 
 export default function ProfileScreen() {
   const { profile, user, signOut, updateProfile, isAdmin, refreshProfile } = useAuth();
@@ -264,6 +265,8 @@ export default function ProfileScreen() {
       console.log('Refreshing profile to get updated data...');
       await refreshProfile();
       console.log('Profile refreshed, new timestamp should be visible');
+
+      questionCacheService.preFetchAfterSync(mlData.user_id);
 
       Alert.alert('Success', 'Successfully synced with Clyvara Analytica! You can now access practice questions.');
     } catch (error: any) {

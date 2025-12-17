@@ -3,6 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/types/database';
 import { MLBackendClient } from '@/lib/ml-backend-client';
+import { questionCacheService } from '@/lib/question-cache-service';
 
 interface AuthContextType {
   session: Session | null;
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const loadProfile = async (userId: string) => {
+  const loadProfile = async (userId: string, triggerCache: boolean = true) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -67,6 +68,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       setProfile(data);
+
+      if (triggerCache && data?.ml_user_id) {
+        questionCacheService.preFetchOnAppStart(data.ml_user_id);
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
@@ -158,6 +163,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         console.log('Successfully synced new user to ML backend:', mlData.user_id);
+
+        questionCacheService.preFetchAfterSync(mlData.user_id);
       } catch (mlError) {
         console.error('ML sync failed during registration:', mlError);
         await supabase.from('ml_sync_status').insert({
@@ -176,10 +183,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    if (!error && data?.user) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('ml_user_id')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      if (profileData?.ml_user_id) {
+        questionCacheService.preFetchOnLogin(profileData.ml_user_id);
+      }
+    }
+
     return { error };
   };
 
