@@ -44,16 +44,18 @@ export function validateQuestion(question: any): ValidationResult {
     errors.push('Missing or invalid question type');
   }
 
-  // Validate rationale/explanation quality
-  const hasRationale = question.rationale && typeof question.rationale === 'string';
-  const hasExplanation = question.explanation && typeof question.explanation === 'string';
+  // Validate rationale/explanation quality (if present)
+  // Only check for placeholder text if rationale/explanation exists
+  if (question.rationale && typeof question.rationale === 'string') {
+    if (isPlaceholderRationale(question.rationale)) {
+      errors.push('Rationale contains placeholder text');
+    }
+  }
 
-  if (!hasRationale && !hasExplanation) {
-    errors.push('Missing rationale or explanation');
-  } else if (hasRationale && isPlaceholderRationale(question.rationale)) {
-    errors.push('Rationale contains placeholder text');
-  } else if (!hasRationale && hasExplanation && isPlaceholderRationale(question.explanation)) {
-    errors.push('Explanation contains placeholder text');
+  if (question.explanation && typeof question.explanation === 'string') {
+    if (isPlaceholderRationale(question.explanation)) {
+      errors.push('Explanation contains placeholder text');
+    }
   }
 
   // Validate based on question type
@@ -105,6 +107,8 @@ function validateMultipleChoice(question: any, errors: string[]): void {
     }
     if (!option.text || typeof option.text !== 'string' || option.text.trim() === '') {
       errors.push(`Option ${index + 1} missing or invalid text`);
+    } else if (isPlaceholderRationale(option.text)) {
+      errors.push(`Option ${index + 1} contains placeholder text: "${option.text}"`);
     }
   });
 
@@ -136,6 +140,8 @@ function validateMultiSelect(question: any, errors: string[]): void {
     }
     if (!option.text || typeof option.text !== 'string' || option.text.trim() === '') {
       errors.push(`Option ${index + 1} missing or invalid text`);
+    } else if (isPlaceholderRationale(option.text)) {
+      errors.push(`Option ${index + 1} contains placeholder text: "${option.text}"`);
     }
   });
 
