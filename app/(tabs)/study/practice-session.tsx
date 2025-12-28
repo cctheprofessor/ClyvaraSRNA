@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
+  ScrollView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
@@ -230,7 +231,7 @@ export default function PracticeSessionScreen() {
         title={topicName}
         subtitle={`Question ${currentIndex + 1} of ${questions.length}`}
       />
-      <View style={styles.contentContainer}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         <QuestionRenderer
           question={currentQuestion}
           onAnswerChange={handleAnswerChange}
@@ -248,7 +249,7 @@ export default function PracticeSessionScreen() {
             {submitting ? 'Submitting...' : 'Submit Answer'}
           </Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -258,8 +259,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
   },
-  contentContainer: {
+  content: {
     flex: 1,
+  },
+  contentContainer: {
     padding: Spacing.lg,
     gap: Spacing.lg,
   },
@@ -285,7 +288,7 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 'auto',
+    marginTop: Spacing.md,
   },
   submitButtonDisabled: {
     backgroundColor: Colors.border.light,
