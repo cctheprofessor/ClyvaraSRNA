@@ -15,14 +15,24 @@ import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Question, deserializeAnswer } from '@/types/question';
+import { Question, deserializeAnswer, AnswerFormat } from '@/types/question';
 import { mlClient } from '@/lib/ml-backend-client';
+import { validateAnswer } from '@/lib/answer-validator';
+import { ArrowRight, CheckCircle } from 'lucide-react-native';
 
 interface SessionAnswer {
   question_id: string;
   is_correct: boolean;
   time_spent_seconds: number;
   answer_data: any;
+}
+
+interface AnswerResult {
+  is_correct: boolean;
+  response_time: number;
+  rationale?: string;
+  option_rationales?: Record<string, string>;
+  correct_answers?: string[];
 }
 
 export default function PracticeSessionScreen() {
@@ -37,9 +47,11 @@ export default function PracticeSessionScreen() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<SessionAnswer[]>([]);
+  const [answerResults, setAnswerResults] = useState<Record<number, AnswerResult>>({});
   const [startTime, setStartTime] = useState<Date>(new Date());
   const [showResults, setShowResults] = useState(false);
   const [currentAnswer, setCurrentAnswer] = useState<string | null>(null);
+  const [currentAnswerSubmitted, setCurrentAnswerSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [mlUserId, setMlUserId] = useState<number | null>(null);
 
@@ -49,6 +61,7 @@ export default function PracticeSessionScreen() {
 
   useEffect(() => {
     setCurrentAnswer(null);
+    setCurrentAnswerSubmitted(!!answerResults[currentIndex]);
   }, [currentIndex]);
 
   const loadSession = async () => {
@@ -102,6 +115,30 @@ export default function PracticeSessionScreen() {
     }
   };
 
+  const parseAnswer = (question: Question, serializedAnswer: string): AnswerFormat | null => {
+    try {
+      switch (question.question_type) {
+        case 'multiple_choice':
+          return { type: 'multiple_choice', answer: serializedAnswer };
+        case 'multi_select':
+          return { type: 'multi_select', answers: JSON.parse(serializedAnswer) };
+        case 'drag_drop_matching':
+          return { type: 'drag_drop_matching', pairs: JSON.parse(serializedAnswer) };
+        case 'drag_drop_ordering':
+          return { type: 'drag_drop_ordering', order: JSON.parse(serializedAnswer) };
+        case 'clinical_scenario':
+          return { type: 'clinical_scenario', sub_answers: JSON.parse(serializedAnswer) };
+        case 'hotspot':
+          return { type: 'hotspot', zone_id: serializedAnswer };
+        default:
+          return null;
+      }
+    } catch (error) {
+      console.error('[PracticeSession] Failed to parse answer:', error);
+      return null;
+    }
+  };
+
   const handleAnswerChange = (serializedAnswer: string) => {
     setCurrentAnswer(serializedAnswer);
   };
@@ -114,17 +151,50 @@ export default function PracticeSessionScreen() {
       const currentQuestion = questions[currentIndex];
       const timeSpent = Math.floor((new Date().getTime() - startTime.getTime()) / 1000);
 
-      // Submit answer to ML backend
-      const result = await mlClient.submitAnswer({
-        student_id: mlUserId,
-        question_id: currentQuestion.id,
-        student_answer: currentAnswer,
-        response_time_seconds: timeSpent,
-      });
+      const parsedAnswer = parseAnswer(currentQuestion, currentAnswer);
+      if (!parsedAnswer) {
+        Alert.alert('Error', 'Invalid answer format');
+        setSubmitting(false);
+        return;
+      }
+
+      const validationResult = validateAnswer(currentQuestion, parsedAnswer);
+
+      setAnswerResults(prev => ({
+        ...prev,
+        [currentIndex]: {
+          is_correct: validationResult.is_correct,
+          response_time: timeSpent,
+          rationale: validationResult.explanation || validationResult.rationale,
+          correct_answers: validationResult.correct_answers,
+        },
+      }));
+
+      try {
+        const result = await mlClient.submitAnswer({
+          student_id: mlUserId,
+          question_id: currentQuestion.id,
+          student_answer: currentAnswer,
+          response_time_seconds: timeSpent,
+        });
+
+        setAnswerResults(prev => ({
+          ...prev,
+          [currentIndex]: {
+            is_correct: result.is_correct,
+            response_time: timeSpent,
+            rationale: result.rationale || validationResult.explanation || validationResult.rationale,
+            option_rationales: result.option_rationales,
+            correct_answers: result.correct_answers || validationResult.correct_answers,
+          },
+        }));
+      } catch (error) {
+        console.warn('[PracticeSession] API submission failed, using cached validation', error);
+      }
 
       const newAnswer: SessionAnswer = {
         question_id: currentQuestion.id,
-        is_correct: result.is_correct,
+        is_correct: validationResult.is_correct,
         time_spent_seconds: timeSpent,
         answer_data: currentAnswer,
       };
@@ -132,7 +202,6 @@ export default function PracticeSessionScreen() {
       const updatedAnswers = [...answers, newAnswer];
       setAnswers(updatedAnswers);
 
-      // Update session in database
       await supabase
         .from('focused_topic_sessions')
         .update({
@@ -142,19 +211,21 @@ export default function PracticeSessionScreen() {
         })
         .eq('id', sessionId);
 
-      // Move to next question or show results
-      if (currentIndex + 1 >= questions.length) {
-        await completeSession(updatedAnswers);
-      } else {
-        setCurrentIndex(currentIndex + 1);
-        setStartTime(new Date());
-        setCurrentAnswer(null);
-      }
+      setCurrentAnswerSubmitted(true);
     } catch (error) {
       console.error('Error submitting answer:', error);
       Alert.alert('Error', 'Failed to submit answer');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleNext = async () => {
+    if (currentIndex + 1 >= questions.length) {
+      await completeSession(answers);
+    } else {
+      setCurrentIndex(currentIndex + 1);
+      setStartTime(new Date());
     }
   };
 
@@ -237,20 +308,46 @@ export default function PracticeSessionScreen() {
         <QuestionRenderer
           question={currentQuestion}
           onAnswerChange={handleAnswerChange}
-          disabled={submitting}
+          showResult={!!answerResults[currentIndex]}
+          isCorrect={answerResults[currentIndex]?.is_correct}
+          rationale={answerResults[currentIndex]?.rationale}
+          optionRationales={answerResults[currentIndex]?.option_rationales}
+          correctAnswers={answerResults[currentIndex]?.correct_answers}
+          disabled={!!answerResults[currentIndex]}
         />
-        <Pressable
-          style={[
-            styles.submitButton,
-            (!currentAnswer || submitting) && styles.submitButtonDisabled,
-          ]}
-          onPress={handleSubmit}
-          disabled={!currentAnswer || submitting}
-        >
-          <Text style={styles.submitButtonText}>
-            {submitting ? 'Submitting...' : 'Submit Answer'}
-          </Text>
-        </Pressable>
+
+        <View style={styles.navigation}>
+          {!currentAnswerSubmitted ? (
+            <Pressable
+              style={[
+                styles.submitButton,
+                (!currentAnswer || submitting) && styles.submitButtonDisabled,
+              ]}
+              onPress={handleSubmit}
+              disabled={!currentAnswer || submitting}
+            >
+              <Text style={styles.submitButtonText}>
+                {submitting ? 'Submitting...' : 'Submit Answer'}
+              </Text>
+            </Pressable>
+          ) : currentIndex === questions.length - 1 ? (
+            <Pressable
+              style={styles.finishButton}
+              onPress={handleNext}
+            >
+              <CheckCircle color={Colors.text.light} size={20} />
+              <Text style={styles.finishButtonText}>Finish Session</Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              style={styles.nextButton}
+              onPress={handleNext}
+            >
+              <Text style={styles.nextButtonText}>Next Question</Text>
+              <ArrowRight color={Colors.primary} size={20} />
+            </Pressable>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -284,13 +381,15 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     textAlign: 'center',
   },
+  navigation: {
+    marginTop: Spacing.md,
+  },
   submitButton: {
     backgroundColor: Colors.primary,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: Spacing.md,
   },
   submitButtonDisabled: {
     backgroundColor: Colors.border.light,
@@ -299,6 +398,36 @@ const styles = StyleSheet.create({
   submitButtonText: {
     ...Typography.button,
     color: Colors.background,
+    fontWeight: '600',
+  },
+  nextButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    backgroundColor: Colors.background,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  nextButtonText: {
+    ...Typography.button,
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  finishButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    backgroundColor: Colors.success,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  finishButtonText: {
+    ...Typography.button,
+    color: Colors.text.light,
     fontWeight: '600',
   },
 });
