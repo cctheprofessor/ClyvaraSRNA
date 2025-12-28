@@ -62,20 +62,20 @@ export default function PracticeSessionScreen() {
         return;
       }
 
-      // Get ML user ID from sync status
-      const { data: syncStatus, error: syncError } = await supabase
-        .from('ml_sync_status')
+      // Get ML user ID from profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
         .select('ml_user_id')
-        .eq('user_id', user?.id)
+        .eq('id', user?.id)
         .maybeSingle();
 
-      if (syncError || !syncStatus?.ml_user_id) {
+      if (profileError || !profile?.ml_user_id) {
         throw new Error('User not synced with ML backend. Please sync your account first.');
       }
 
       // Get questions from ML backend
       const questionsData = await mlClient.getNextQuestions(
-        syncStatus.ml_user_id,
+        profile.ml_user_id,
         session.questions_count,
         String(topicId)
       );
