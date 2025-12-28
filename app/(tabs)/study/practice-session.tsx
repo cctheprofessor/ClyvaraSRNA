@@ -160,16 +160,6 @@ export default function PracticeSessionScreen() {
 
       const validationResult = validateAnswer(currentQuestion, parsedAnswer);
 
-      setAnswerResults(prev => ({
-        ...prev,
-        [currentIndex]: {
-          is_correct: validationResult.is_correct,
-          response_time: timeSpent,
-          rationale: validationResult.explanation || validationResult.rationale,
-          correct_answers: validationResult.correct_answers,
-        },
-      }));
-
       try {
         const result = await mlClient.submitAnswer({
           student_id: mlUserId,
@@ -190,6 +180,15 @@ export default function PracticeSessionScreen() {
         }));
       } catch (error) {
         console.warn('[PracticeSession] API submission failed, using cached validation', error);
+        setAnswerResults(prev => ({
+          ...prev,
+          [currentIndex]: {
+            is_correct: validationResult.is_correct,
+            response_time: timeSpent,
+            rationale: validationResult.explanation || validationResult.rationale,
+            correct_answers: validationResult.correct_answers,
+          },
+        }));
       }
 
       const newAnswer: SessionAnswer = {
