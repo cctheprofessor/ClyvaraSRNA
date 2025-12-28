@@ -14,7 +14,7 @@ import SessionResults from '@/components/study/SessionResults';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question } from '@/types/question';
-import { mlBackendClient } from '@/lib/ml-backend-client';
+import { mlClient } from '@/lib/ml-backend-client';
 
 interface SessionAnswer {
   question_id: string;
@@ -62,10 +62,22 @@ export default function PracticeSessionScreen() {
         return;
       }
 
+      // Get ML user ID from sync status
+      const { data: syncStatus, error: syncError } = await supabase
+        .from('ml_sync_status')
+        .select('ml_user_id')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      if (syncError || !syncStatus?.ml_user_id) {
+        throw new Error('User not synced with ML backend. Please sync your account first.');
+      }
+
       // Get questions from ML backend
-      const questionsData = await mlBackendClient.getTopicQuestions(
-        topicId,
-        session.questions_count
+      const questionsData = await mlClient.getNextQuestions(
+        syncStatus.ml_user_id,
+        session.questions_count,
+        String(topicId)
       );
 
       setQuestions(questionsData);
