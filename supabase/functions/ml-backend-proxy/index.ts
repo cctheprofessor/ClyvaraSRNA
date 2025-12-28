@@ -285,6 +285,25 @@ Deno.serve(async (req: Request) => {
         break;
       }
 
+      case 'generate_questions': {
+        const body = await req.json();
+        const { topic_id, count = 10 } = body;
+
+        if (!topic_id) {
+          throw new Error('Missing topic_id');
+        }
+
+        mlResponse = await fetch(
+          `${ML_BACKEND_URL}/api/questions/generate`,
+          {
+            method: 'POST',
+            headers: getMLBackendHeaders(true),
+            body: JSON.stringify({ topic_id, count }),
+          }
+        );
+        break;
+      }
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }

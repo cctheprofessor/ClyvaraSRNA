@@ -768,6 +768,33 @@ export class MLBackendClient {
     return await response.json();
   }
 
+  async generateQuestions(
+    topicId: string,
+    count: number = 10
+  ): Promise<{
+    success: boolean;
+    generated_count: number;
+    message: string;
+  }> {
+    const headers = await this.getAuthHeaders();
+
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?action=generate_questions`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ topic_id: topicId, count }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to generate questions: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
   private async logRejectedQuestions(
     rejectedQuestions: Array<{ question: any; errors: string[] }>,
     userId: number

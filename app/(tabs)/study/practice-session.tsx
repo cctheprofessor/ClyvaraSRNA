@@ -56,6 +56,7 @@ export default function PracticeSessionScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [mlUserId, setMlUserId] = useState<number | null>(null);
   const [explanationLoading, setExplanationLoading] = useState(false);
+  const [generatingQuestions, setGeneratingQuestions] = useState(false);
 
   useEffect(() => {
     loadSession();
@@ -114,6 +115,29 @@ export default function PracticeSessionScreen() {
       router.back();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGenerateQuestions = async () => {
+    try {
+      setGeneratingQuestions(true);
+      const result = await mlClient.generateQuestions(String(topicId), 10);
+
+      if (result.success) {
+        Alert.alert('Success', result.message || 'Questions generated successfully. Reloading...', [
+          {
+            text: 'OK',
+            onPress: () => loadSession(),
+          },
+        ]);
+      } else {
+        Alert.alert('Error', 'Failed to generate questions. Please try again.');
+      }
+    } catch (error: any) {
+      console.error('Error generating questions:', error);
+      Alert.alert('Error', error.message || 'Failed to generate questions');
+    } finally {
+      setGeneratingQuestions(false);
     }
   };
 
@@ -317,6 +341,26 @@ export default function PracticeSessionScreen() {
           <Text style={styles.emptyText}>
             No questions available for this topic yet.
           </Text>
+          <Text style={styles.emptySubtext}>
+            Generate new questions using AI to start practicing this topic.
+          </Text>
+          <Pressable
+            style={[styles.generateButton, generatingQuestions && styles.generateButtonDisabled]}
+            onPress={handleGenerateQuestions}
+            disabled={generatingQuestions}
+          >
+            {generatingQuestions ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.generateButtonText}>Generate Questions</Text>
+            )}
+          </Pressable>
+          <Pressable
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backButtonText}>Go Back</Text>
+          </Pressable>
         </View>
       </View>
     );
@@ -410,11 +454,44 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.lg,
+    gap: Spacing.md,
   },
   emptyText: {
+    ...Typography.h3,
+    color: Colors.text.primary,
+    textAlign: 'center',
+  },
+  emptySubtext: {
     ...Typography.body,
     color: Colors.text.secondary,
     textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  generateButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.md,
+    minWidth: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  generateButtonDisabled: {
+    opacity: 0.6,
+  },
+  generateButtonText: {
+    ...Typography.button,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  backButton: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+  },
+  backButtonText: {
+    ...Typography.body,
+    color: Colors.text.tertiary,
   },
   navigation: {
     marginTop: Spacing.md,
