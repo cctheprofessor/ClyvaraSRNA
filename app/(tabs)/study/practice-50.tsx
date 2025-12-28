@@ -38,6 +38,7 @@ export default function Practice50Screen() {
   const [sessionResults, setSessionResults] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingSubmissions, setPendingSubmissions] = useState<Set<number>>(new Set());
+  const [explanationLoading, setExplanationLoading] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     loadQuestions();
@@ -183,6 +184,7 @@ export default function Practice50Screen() {
     questionSessionTracker.markQuestionAnswered(studentId, currentQuestion.id, validationResult.is_correct);
 
     setPendingSubmissions(prev => new Set(prev).add(questionIndex));
+    setExplanationLoading(prev => ({ ...prev, [questionIndex]: true }));
 
     (async () => {
       const cachedRationale = await rationaleCacheService.getRationale(currentQuestion.id);
@@ -198,6 +200,7 @@ export default function Practice50Screen() {
             correct_answers: cachedRationale.correct_answers || validationResult.correct_answers,
           },
         }));
+        setExplanationLoading(prev => ({ ...prev, [questionIndex]: false }));
       }
 
       try {
@@ -220,6 +223,7 @@ export default function Practice50Screen() {
             correct_answers: result.correct_answers || validationResult.correct_answers,
           },
         }));
+        setExplanationLoading(prev => ({ ...prev, [questionIndex]: false }));
 
         await rationaleCacheService.setRationale(currentQuestion.id, {
           rationale: result.rationale,
@@ -247,6 +251,7 @@ export default function Practice50Screen() {
             },
           }));
         }
+        setExplanationLoading(prev => ({ ...prev, [questionIndex]: false }));
       } finally {
         setPendingSubmissions(prev => {
           const newSet = new Set(prev);
@@ -380,6 +385,7 @@ export default function Practice50Screen() {
           optionRationales={answerResults[currentIndex]?.option_rationales}
           correctAnswers={answerResults[currentIndex]?.correct_answers}
           disabled={!!answerResults[currentIndex]}
+          rationaleLoading={explanationLoading[currentIndex]}
         />
 
         <View style={styles.navigation}>
@@ -405,19 +411,35 @@ export default function Practice50Screen() {
             </Pressable>
           ) : currentIndex === questions.length - 1 ? (
             <Pressable
-              style={styles.finishButton}
+              style={[
+                styles.finishButton,
+                explanationLoading[currentIndex] && styles.finishButtonDisabled,
+              ]}
               onPress={handleFinish}
+              disabled={explanationLoading[currentIndex]}
             >
               <CheckCircle color={Colors.text.light} size={20} />
               <Text style={styles.finishButtonText}>Finish Session</Text>
             </Pressable>
           ) : (
             <Pressable
-              style={styles.navButton}
+              style={[
+                styles.navButton,
+                explanationLoading[currentIndex] && styles.navButtonDisabled,
+              ]}
               onPress={handleNext}
+              disabled={explanationLoading[currentIndex]}
             >
-              <Text style={styles.navButtonText}>Next Question</Text>
-              <ArrowRight color={Colors.primary} size={20} />
+              <Text style={[
+                styles.navButtonText,
+                explanationLoading[currentIndex] && styles.navButtonTextDisabled,
+              ]}>
+                Next Question
+              </Text>
+              <ArrowRight
+                color={explanationLoading[currentIndex] ? Colors.text.tertiary : Colors.primary}
+                size={20}
+              />
             </Pressable>
           )}
         </View>
@@ -557,5 +579,9 @@ const styles = StyleSheet.create({
   finishButtonText: {
     ...Typography.bodyBold,
     color: Colors.text.light,
+  },
+  finishButtonDisabled: {
+    opacity: 0.4,
+    backgroundColor: Colors.border,
   },
 });

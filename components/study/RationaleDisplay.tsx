@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { BookOpen } from 'lucide-react-native';
 
@@ -7,6 +7,7 @@ interface RationaleDisplayProps {
   optionRationales?: Record<string, string>;
   correctAnswers?: string[];
   isCorrect: boolean;
+  loading?: boolean;
 }
 
 export default function RationaleDisplay({
@@ -14,15 +15,23 @@ export default function RationaleDisplay({
   optionRationales,
   correctAnswers,
   isCorrect,
+  loading = false,
 }: RationaleDisplayProps) {
-  if (!rationale && !optionRationales) return null;
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <BookOpen size={20} color={Colors.primary} />
         <Text style={styles.headerText}>Explanation</Text>
       </View>
+
+      {loading && !rationale && !optionRationales && (
+        <View style={styles.loadingCard}>
+          <ActivityIndicator size="small" color={Colors.primary} />
+          <Text style={styles.loadingText}>Explanation Loading...</Text>
+        </View>
+      )}
+
+      {!loading && !rationale && !optionRationales && null}
 
       {rationale && (
         <View style={styles.rationaleCard}>
@@ -113,5 +122,18 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     fontSize: 14,
     lineHeight: 20,
+  },
+  loadingCard: {
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.md,
+  },
+  loadingText: {
+    ...Typography.body,
+    color: Colors.text.secondary,
   },
 });

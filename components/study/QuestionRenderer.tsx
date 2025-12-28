@@ -19,6 +19,7 @@ interface QuestionRendererProps {
   rationale?: string;
   optionRationales?: Record<string, string>;
   correctAnswers?: string[];
+  rationaleLoading?: boolean;
 }
 
 export default function QuestionRenderer({
@@ -30,6 +31,7 @@ export default function QuestionRenderer({
   rationale,
   optionRationales,
   correctAnswers,
+  rationaleLoading = false,
 }: QuestionRendererProps) {
   const [multipleChoiceValue, setMultipleChoiceValue] = useState<string | null>(null);
   const [multiSelectValue, setMultiSelectValue] = useState<string[]>([]);
@@ -177,6 +179,7 @@ export default function QuestionRenderer({
           optionRationales={optionRationales}
           correctAnswers={correctAnswers}
           isCorrect={isCorrect}
+          loading={rationaleLoading}
         />
       )}
     </View>

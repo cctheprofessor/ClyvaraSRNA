@@ -55,6 +55,7 @@ export default function PracticeSessionScreen() {
   const [currentAnswerSubmitted, setCurrentAnswerSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [mlUserId, setMlUserId] = useState<number | null>(null);
+  const [explanationLoading, setExplanationLoading] = useState(false);
 
   useEffect(() => {
     loadSession();
@@ -148,6 +149,7 @@ export default function PracticeSessionScreen() {
     if (!currentAnswer || !mlUserId) return;
 
     setSubmitting(true);
+    setExplanationLoading(true);
     try {
       const currentQuestion = questions[currentIndex];
       const timeSpent = Math.floor((new Date().getTime() - startTime.getTime()) / 1000);
@@ -174,6 +176,7 @@ export default function PracticeSessionScreen() {
             correct_answers: cachedRationale.correct_answers || validationResult.correct_answers,
           },
         }));
+        setExplanationLoading(false);
       }
 
       mlClient.submitAnswer({
@@ -192,6 +195,7 @@ export default function PracticeSessionScreen() {
             correct_answers: result.correct_answers || validationResult.correct_answers,
           },
         }));
+        setExplanationLoading(false);
 
         rationaleCacheService.setRationale(currentQuestion.id, {
           rationale: result.rationale,
@@ -211,6 +215,7 @@ export default function PracticeSessionScreen() {
             },
           }));
         }
+        setExplanationLoading(false);
       });
 
       const newAnswer: SessionAnswer = {
@@ -335,6 +340,7 @@ export default function PracticeSessionScreen() {
           optionRationales={answerResults[currentIndex]?.option_rationales}
           correctAnswers={answerResults[currentIndex]?.correct_answers}
           disabled={!!answerResults[currentIndex]}
+          rationaleLoading={explanationLoading}
         />
 
         <View style={styles.navigation}>
@@ -353,16 +359,24 @@ export default function PracticeSessionScreen() {
             </Pressable>
           ) : currentIndex === questions.length - 1 ? (
             <Pressable
-              style={styles.finishButton}
+              style={[
+                styles.finishButton,
+                explanationLoading && styles.finishButtonDisabled,
+              ]}
               onPress={handleNext}
+              disabled={explanationLoading}
             >
               <CheckCircle color={Colors.text.light} size={20} />
               <Text style={styles.finishButtonText}>Finish Session</Text>
             </Pressable>
           ) : (
             <Pressable
-              style={styles.nextButton}
+              style={[
+                styles.nextButton,
+                explanationLoading && styles.nextButtonDisabled,
+              ]}
               onPress={handleNext}
+              disabled={explanationLoading}
             >
               <Text style={styles.nextButtonText}>Next Question</Text>
               <ArrowRight color={Colors.primary} size={20} />
@@ -450,5 +464,13 @@ const styles = StyleSheet.create({
     ...Typography.button,
     color: Colors.text.light,
     fontWeight: '600',
+  },
+  nextButtonDisabled: {
+    opacity: 0.4,
+    borderColor: Colors.border,
+  },
+  finishButtonDisabled: {
+    opacity: 0.4,
+    backgroundColor: Colors.border,
   },
 });
