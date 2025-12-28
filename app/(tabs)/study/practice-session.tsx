@@ -5,15 +5,16 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Pressable,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Question } from '@/types/question';
+import { Question, deserializeAnswer } from '@/types/question';
 import { mlClient } from '@/lib/ml-backend-client';
 
 interface SessionAnswer {
@@ -37,10 +38,17 @@ export default function PracticeSessionScreen() {
   const [answers, setAnswers] = useState<SessionAnswer[]>([]);
   const [startTime, setStartTime] = useState<Date>(new Date());
   const [showResults, setShowResults] = useState(false);
+  const [currentAnswer, setCurrentAnswer] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [mlUserId, setMlUserId] = useState<number | null>(null);
 
   useEffect(() => {
     loadSession();
   }, [sessionId]);
+
+  useEffect(() => {
+    setCurrentAnswer(null);
+  }, [currentIndex]);
 
   const loadSession = async () => {
     try {
@@ -83,6 +91,7 @@ export default function PracticeSessionScreen() {
       setQuestions(questionsData);
       setCurrentIndex(session.current_question_index);
       setStartTime(new Date());
+      setMlUserId(profile.ml_user_id);
     } catch (error) {
       console.error('Error loading session:', error);
       Alert.alert('Error', 'Failed to load practice session');
@@ -92,26 +101,38 @@ export default function PracticeSessionScreen() {
     }
   };
 
-  const handleAnswer = async (
-    questionId: string,
-    isCorrect: boolean,
-    answerData: any
-  ) => {
-    const timeSpent = Math.floor((new Date().getTime() - startTime.getTime()) / 1000);
+  const handleAnswerChange = (serializedAnswer: string) => {
+    setCurrentAnswer(serializedAnswer);
+  };
 
-    const newAnswer: SessionAnswer = {
-      question_id: questionId,
-      is_correct: isCorrect,
-      time_spent_seconds: timeSpent,
-      answer_data: answerData,
-    };
+  const handleSubmit = async () => {
+    if (!currentAnswer || !mlUserId) return;
 
-    const updatedAnswers = [...answers, newAnswer];
-    setAnswers(updatedAnswers);
-
-    // Update session in database
+    setSubmitting(true);
     try {
-      const { error } = await supabase
+      const currentQuestion = questions[currentIndex];
+      const timeSpent = Math.floor((new Date().getTime() - startTime.getTime()) / 1000);
+
+      // Submit answer to ML backend
+      const result = await mlClient.submitAnswer({
+        student_id: mlUserId,
+        question_id: currentQuestion.id,
+        student_answer: currentAnswer,
+        response_time_seconds: timeSpent,
+      });
+
+      const newAnswer: SessionAnswer = {
+        question_id: currentQuestion.id,
+        is_correct: result.is_correct,
+        time_spent_seconds: timeSpent,
+        answer_data: currentAnswer,
+      };
+
+      const updatedAnswers = [...answers, newAnswer];
+      setAnswers(updatedAnswers);
+
+      // Update session in database
+      await supabase
         .from('focused_topic_sessions')
         .update({
           current_question_index: currentIndex + 1,
@@ -120,17 +141,19 @@ export default function PracticeSessionScreen() {
         })
         .eq('id', sessionId);
 
-      if (error) throw error;
+      // Move to next question or show results
+      if (currentIndex + 1 >= questions.length) {
+        await completeSession(updatedAnswers);
+      } else {
+        setCurrentIndex(currentIndex + 1);
+        setStartTime(new Date());
+        setCurrentAnswer(null);
+      }
     } catch (error) {
-      console.error('Error saving answer:', error);
-    }
-
-    // Move to next question or show results
-    if (currentIndex + 1 >= questions.length) {
-      await completeSession(updatedAnswers);
-    } else {
-      setCurrentIndex(currentIndex + 1);
-      setStartTime(new Date());
+      console.error('Error submitting answer:', error);
+      Alert.alert('Error', 'Failed to submit answer');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -207,12 +230,25 @@ export default function PracticeSessionScreen() {
         title={topicName}
         subtitle={`Question ${currentIndex + 1} of ${questions.length}`}
       />
-      <QuestionRenderer
-        question={currentQuestion}
-        questionNumber={currentIndex + 1}
-        totalQuestions={questions.length}
-        onAnswer={handleAnswer}
-      />
+      <View style={styles.contentContainer}>
+        <QuestionRenderer
+          question={currentQuestion}
+          onAnswerChange={handleAnswerChange}
+          disabled={submitting}
+        />
+        <Pressable
+          style={[
+            styles.submitButton,
+            (!currentAnswer || submitting) && styles.submitButtonDisabled,
+          ]}
+          onPress={handleSubmit}
+          disabled={!currentAnswer || submitting}
+        >
+          <Text style={styles.submitButtonText}>
+            {submitting ? 'Submitting...' : 'Submit Answer'}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -221,6 +257,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
+  },
+  contentContainer: {
+    flex: 1,
+    padding: Spacing.lg,
+    gap: Spacing.lg,
   },
   loadingContainer: {
     flex: 1,
@@ -237,5 +278,22 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: Colors.text.secondary,
     textAlign: 'center',
+  },
+  submitButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 'auto',
+  },
+  submitButtonDisabled: {
+    backgroundColor: Colors.border.light,
+    opacity: 0.5,
+  },
+  submitButtonText: {
+    ...Typography.button,
+    color: Colors.background,
+    fontWeight: '600',
   },
 });
