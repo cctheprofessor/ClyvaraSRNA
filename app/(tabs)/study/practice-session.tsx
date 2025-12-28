@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Question, deserializeAnswer, AnswerFormat } from '@/types/question';
 import { mlClient } from '@/lib/ml-backend-client';
 import { validateAnswer } from '@/lib/answer-validator';
+import { rationaleCacheService } from '@/lib/rationale-cache-service';
 import { ArrowRight, CheckCircle } from 'lucide-react-native';
 
 interface SessionAnswer {
@@ -160,14 +161,27 @@ export default function PracticeSessionScreen() {
 
       const validationResult = validateAnswer(currentQuestion, parsedAnswer);
 
-      try {
-        const result = await mlClient.submitAnswer({
-          student_id: mlUserId,
-          question_id: currentQuestion.id,
-          student_answer: currentAnswer,
-          response_time_seconds: timeSpent,
-        });
+      const cachedRationale = await rationaleCacheService.getRationale(currentQuestion.id);
 
+      if (cachedRationale) {
+        setAnswerResults(prev => ({
+          ...prev,
+          [currentIndex]: {
+            is_correct: validationResult.is_correct,
+            response_time: timeSpent,
+            rationale: cachedRationale.rationale || validationResult.explanation || validationResult.rationale,
+            option_rationales: cachedRationale.option_rationales,
+            correct_answers: cachedRationale.correct_answers || validationResult.correct_answers,
+          },
+        }));
+      }
+
+      mlClient.submitAnswer({
+        student_id: mlUserId,
+        question_id: currentQuestion.id,
+        student_answer: currentAnswer,
+        response_time_seconds: timeSpent,
+      }).then(result => {
         setAnswerResults(prev => ({
           ...prev,
           [currentIndex]: {
@@ -178,18 +192,26 @@ export default function PracticeSessionScreen() {
             correct_answers: result.correct_answers || validationResult.correct_answers,
           },
         }));
-      } catch (error) {
-        console.warn('[PracticeSession] API submission failed, using cached validation', error);
-        setAnswerResults(prev => ({
-          ...prev,
-          [currentIndex]: {
-            is_correct: validationResult.is_correct,
-            response_time: timeSpent,
-            rationale: validationResult.explanation || validationResult.rationale,
-            correct_answers: validationResult.correct_answers,
-          },
-        }));
-      }
+
+        rationaleCacheService.setRationale(currentQuestion.id, {
+          rationale: result.rationale,
+          option_rationales: result.option_rationales,
+          correct_answers: result.correct_answers,
+        });
+      }).catch(error => {
+        console.warn('[PracticeSession] API submission failed', error);
+        if (!cachedRationale) {
+          setAnswerResults(prev => ({
+            ...prev,
+            [currentIndex]: {
+              is_correct: validationResult.is_correct,
+              response_time: timeSpent,
+              rationale: validationResult.explanation || validationResult.rationale,
+              correct_answers: validationResult.correct_answers,
+            },
+          }));
+        }
+      });
 
       const newAnswer: SessionAnswer = {
         question_id: currentQuestion.id,

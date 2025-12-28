@@ -13,6 +13,7 @@ import { ArrowLeft, ArrowRight, CheckCircle, Send } from 'lucide-react-native';
 import { Question, AnswerFormat } from '@/types/question';
 import { filterValidQuestions } from '@/lib/question-validator';
 import { validateAnswer } from '@/lib/answer-validator';
+import { rationaleCacheService } from '@/lib/rationale-cache-service';
 
 interface AnswerResult {
   is_correct: boolean;
@@ -186,21 +187,26 @@ export default function Practice25Screen() {
 
     const validationResult = validateAnswer(currentQuestion, parsedAnswer);
 
-    setAnswerResults(prev => ({
-      ...prev,
-      [questionIndex]: {
-        is_correct: validationResult.is_correct,
-        response_time: responseTime,
-        rationale: validationResult.explanation || validationResult.rationale,
-        correct_answers: validationResult.correct_answers,
-      },
-    }));
-
     questionSessionTracker.markQuestionAnswered(studentId, currentQuestion.id, validationResult.is_correct);
 
     setPendingSubmissions(prev => new Set(prev).add(questionIndex));
 
     (async () => {
+      const cachedRationale = await rationaleCacheService.getRationale(currentQuestion.id);
+
+      if (cachedRationale) {
+        setAnswerResults(prev => ({
+          ...prev,
+          [questionIndex]: {
+            is_correct: validationResult.is_correct,
+            response_time: responseTime,
+            rationale: cachedRationale.rationale || validationResult.explanation || validationResult.rationale,
+            option_rationales: cachedRationale.option_rationales,
+            correct_answers: cachedRationale.correct_answers || validationResult.correct_answers,
+          },
+        }));
+      }
+
       try {
         const result = await mlClient.submitAnswer({
           student_id: studentId,
@@ -221,8 +227,14 @@ export default function Practice25Screen() {
             correct_answers: result.correct_answers || validationResult.correct_answers,
           },
         }));
+
+        await rationaleCacheService.setRationale(currentQuestion.id, {
+          rationale: result.rationale,
+          option_rationales: result.option_rationales,
+          correct_answers: result.correct_answers,
+        });
       } catch (error) {
-        console.warn('[Practice25] API submission failed, using cached validation', error);
+        console.warn('[Practice25] API submission failed', error);
         await offlinePracticeManager.queueResponse({
           student_id: studentId,
           question_id: currentQuestion.id,
@@ -230,6 +242,18 @@ export default function Practice25Screen() {
           response_time_seconds: responseTime,
           answered_at: new Date().toISOString(),
         });
+
+        if (!cachedRationale) {
+          setAnswerResults(prev => ({
+            ...prev,
+            [questionIndex]: {
+              is_correct: validationResult.is_correct,
+              response_time: responseTime,
+              rationale: validationResult.explanation || validationResult.rationale,
+              correct_answers: validationResult.correct_answers,
+            },
+          }));
+        }
       } finally {
         setPendingSubmissions(prev => {
           const newSet = new Set(prev);
