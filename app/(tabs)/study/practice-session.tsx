@@ -199,12 +199,14 @@ export default function PracticeSessionScreen() {
 
   if (showResults) {
     const correctCount = answers.filter((a) => a.is_correct).length;
+    const totalTime = answers.reduce((sum, a) => sum + a.time_spent_seconds, 0);
     return (
       <View style={styles.container}>
         <SessionResults
           totalQuestions={questions.length}
           correctAnswers={correctCount}
-          onReturnToDashboard={handleReturnToDashboard}
+          totalTime={totalTime}
+          onContinue={handleReturnToDashboard}
         />
       </View>
     );
