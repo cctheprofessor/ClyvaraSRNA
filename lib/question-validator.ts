@@ -8,6 +8,22 @@ export interface ValidationResult {
 /**
  * Validates a question to ensure it has all required fields and proper structure
  */
+const PLACEHOLDER_RATIONALE_PATTERNS = [
+  /^rationale$/i,
+  /^explanation$/i,
+  /^todo$/i,
+  /^tbd$/i,
+  /^n\/a$/i,
+  /^none$/i,
+  /^\s*$/,
+];
+
+function isPlaceholderRationale(text: string | undefined): boolean {
+  if (!text) return false;
+  const trimmed = text.trim();
+  return PLACEHOLDER_RATIONALE_PATTERNS.some(pattern => pattern.test(trimmed));
+}
+
 export function validateQuestion(question: any): ValidationResult {
   const errors: string[] = [];
 
@@ -26,6 +42,18 @@ export function validateQuestion(question: any): ValidationResult {
 
   if (!question.question_type || typeof question.question_type !== 'string') {
     errors.push('Missing or invalid question type');
+  }
+
+  // Validate rationale/explanation quality
+  const hasRationale = question.rationale && typeof question.rationale === 'string';
+  const hasExplanation = question.explanation && typeof question.explanation === 'string';
+
+  if (!hasRationale && !hasExplanation) {
+    errors.push('Missing rationale or explanation');
+  } else if (hasRationale && isPlaceholderRationale(question.rationale)) {
+    errors.push('Rationale contains placeholder text');
+  } else if (!hasRationale && hasExplanation && isPlaceholderRationale(question.explanation)) {
+    errors.push('Explanation contains placeholder text');
   }
 
   // Validate based on question type
