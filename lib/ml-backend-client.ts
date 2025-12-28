@@ -319,8 +319,11 @@ export class MLBackendClient {
     }
   }
 
-  private cleanQuestionText(text: string): string {
-    if (!text) return text;
+  private cleanQuestionText(text: any): string {
+    if (!text) return '';
+    if (typeof text !== 'string') {
+      text = String(text);
+    }
 
     // Remove malformed /min patterns
     return text
