@@ -98,6 +98,8 @@ export default function PracticeSessionScreen() {
         throw new Error('User not synced with ML backend. Please sync your account first.');
       }
 
+      setMlUserId(profile.ml_user_id);
+
       // Get questions from ML backend
       const questionsData = await mlClient.getNextQuestions(
         profile.ml_user_id,
@@ -105,39 +107,40 @@ export default function PracticeSessionScreen() {
         String(topicId)
       );
 
-      setQuestions(questionsData);
+      if (questionsData.length === 0) {
+        setGeneratingQuestions(true);
+        try {
+          await mlClient.generateQuestions(String(topicId), session.questions_count);
+
+          const newQuestionsData = await mlClient.getNextQuestions(
+            profile.ml_user_id,
+            session.questions_count,
+            String(topicId)
+          );
+
+          if (newQuestionsData.length === 0) {
+            throw new Error('No questions were generated. Please try again later.');
+          }
+
+          setQuestions(newQuestionsData);
+        } catch (genError) {
+          console.error('Error generating questions:', genError);
+          throw new Error('No questions available for this topic. Question generation failed. Please try again later.');
+        } finally {
+          setGeneratingQuestions(false);
+        }
+      } else {
+        setQuestions(questionsData);
+      }
+
       setCurrentIndex(session.current_question_index);
       setStartTime(new Date());
-      setMlUserId(profile.ml_user_id);
     } catch (error) {
       console.error('Error loading session:', error);
-      Alert.alert('Error', 'Failed to load practice session');
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to load practice session');
       router.back();
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGenerateQuestions = async () => {
-    try {
-      setGeneratingQuestions(true);
-      const result = await mlClient.generateQuestions(String(topicId), 10);
-
-      if (result.success) {
-        Alert.alert('Success', result.message || 'Questions generated successfully. Reloading...', [
-          {
-            text: 'OK',
-            onPress: () => loadSession(),
-          },
-        ]);
-      } else {
-        Alert.alert('Error', 'Failed to generate questions. Please try again.');
-      }
-    } catch (error: any) {
-      console.error('Error generating questions:', error);
-      Alert.alert('Error', error.message || 'Failed to generate questions');
-    } finally {
-      setGeneratingQuestions(false);
     }
   };
 
@@ -310,9 +313,17 @@ export default function PracticeSessionScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <PageHeader title={topicName} subtitle="Loading questions..." />
+        <PageHeader
+          title={topicName}
+          subtitle={generatingQuestions ? "Generating questions..." : "Loading questions..."}
+        />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
+          {generatingQuestions && (
+            <Text style={styles.loadingText}>
+              AI is creating new questions for this topic. This may take a moment.
+            </Text>
+          )}
         </View>
       </View>
     );
@@ -336,25 +347,14 @@ export default function PracticeSessionScreen() {
   if (questions.length === 0) {
     return (
       <View style={styles.container}>
-        <PageHeader title={topicName} subtitle="No questions available" />
+        <PageHeader title={topicName} subtitle="Unable to load questions" />
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
-            No questions available for this topic yet.
+            Unable to load questions for this topic.
           </Text>
           <Text style={styles.emptySubtext}>
-            Generate new questions using AI to start practicing this topic.
+            This might be a temporary issue. Please try again.
           </Text>
-          <Pressable
-            style={[styles.generateButton, generatingQuestions && styles.generateButtonDisabled]}
-            onPress={handleGenerateQuestions}
-            disabled={generatingQuestions}
-          >
-            {generatingQuestions ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.generateButtonText}>Generate Questions</Text>
-            )}
-          </Pressable>
           <Pressable
             style={styles.backButton}
             onPress={() => router.back()}
@@ -448,6 +448,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: Spacing.md,
+    padding: Spacing.lg,
+  },
+  loadingText: {
+    ...Typography.body,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginTop: Spacing.md,
   },
   emptyContainer: {
     flex: 1,
@@ -466,24 +474,6 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     textAlign: 'center',
     marginBottom: Spacing.sm,
-  },
-  generateButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-    borderRadius: BorderRadius.md,
-    minWidth: 200,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 48,
-  },
-  generateButtonDisabled: {
-    opacity: 0.6,
-  },
-  generateButtonText: {
-    ...Typography.button,
-    color: '#fff',
-    fontWeight: '600',
   },
   backButton: {
     paddingVertical: Spacing.sm,
