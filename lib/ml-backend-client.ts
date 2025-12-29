@@ -795,6 +795,24 @@ export class MLBackendClient {
     return await response.json();
   }
 
+  private categorizeRejection(errors: string[]): string {
+    const errorText = errors.join(' ');
+
+    if (errorText.includes('Sub-question')) {
+      return 'malformed_clinical_scenario';
+    } else if (errorText.includes('correct_pairs')) {
+      return 'empty_correct_pairs';
+    } else if (errorText.includes('correct_order')) {
+      return 'empty_correct_order';
+    } else if (errorText.includes('placeholder text')) {
+      return 'placeholder_text';
+    } else if (errorText.includes('missing')) {
+      return 'missing_required_field';
+    } else {
+      return 'other';
+    }
+  }
+
   private async logRejectedQuestions(
     rejectedQuestions: Array<{ question: any; errors: string[] }>,
     userId: number
@@ -810,6 +828,8 @@ export class MLBackendClient {
         supabase_user_id: user.id,
         validation_errors: errors,
         question_data: question,
+        rejection_reason: this.categorizeRejection(errors),
+        topic_id: question.topic_id || null,
       }));
 
       await supabase.from('rejected_questions_log').insert(records);
