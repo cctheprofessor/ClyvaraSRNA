@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { mlClient } from '@/lib/ml-backend-client';
 import { offlinePracticeManager } from '@/lib/offline-practice-manager';
 import { questionSessionTracker } from '@/lib/question-session-tracker';
+import { sessionPersistenceService } from '@/lib/session-persistence-service';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
-import { ArrowLeft, ArrowRight, CheckCircle, Send } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, CheckCircle, Send, RotateCcw } from 'lucide-react-native';
 import { Question, AnswerFormat } from '@/types/question';
 import { filterValidQuestions } from '@/lib/question-validator';
 import { validateAnswer } from '@/lib/answer-validator';
@@ -39,15 +40,104 @@ export default function Practice25Screen() {
   const [error, setError] = useState<string | null>(null);
   const [pendingSubmissions, setPendingSubmissions] = useState<Set<number>>(new Set());
   const [explanationLoading, setExplanationLoading] = useState<Record<number, boolean>>({});
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [savedSessionId, setSavedSessionId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadQuestions();
+    checkForSavedSession();
     return () => {
       if (profile?.ml_user_id) {
         questionSessionTracker.endSession(profile.ml_user_id);
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!showResumeModal && questions.length > 0 && !showResults) {
+      saveSessionState();
+    }
+  }, [currentIndex, answers, answerResults, questions]);
+
+  const checkForSavedSession = async () => {
+    try {
+      const savedSession = await sessionPersistenceService.getActiveSession('25');
+      if (savedSession) {
+        const progress = sessionPersistenceService.getProgressSummary(savedSession);
+        if (progress.completed > 0 && progress.completed < progress.total) {
+          setSavedSessionId(savedSession.id);
+          setShowResumeModal(true);
+        } else {
+          loadQuestions();
+        }
+      } else {
+        loadQuestions();
+      }
+    } catch (error) {
+      console.error('[Practice25] Failed to check for saved session:', error);
+      loadQuestions();
+    }
+  };
+
+  const handleResumeSession = async () => {
+    try {
+      const savedSession = await sessionPersistenceService.getActiveSession('25');
+      if (!savedSession) {
+        setShowResumeModal(false);
+        loadQuestions();
+        return;
+      }
+
+      sessionPersistenceService.setCurrentSessionId(savedSession.id);
+      setQuestions(savedSession.questions);
+      setCurrentIndex(savedSession.currentIndex);
+      setAnswers(savedSession.answers);
+      setAnswerResults(savedSession.answerResults);
+      setStartTime(savedSession.startTime);
+      setCurrentAnswerSubmitted(savedSession.submittedQuestions.includes(savedSession.currentIndex));
+      setQuestionStartTime(Date.now());
+      setShowResumeModal(false);
+      setLoading(false);
+
+      if (profile?.ml_user_id) {
+        await questionSessionTracker.startNewSession(profile.ml_user_id);
+      }
+    } catch (error) {
+      console.error('[Practice25] Failed to resume session:', error);
+      setShowResumeModal(false);
+      loadQuestions();
+    }
+  };
+
+  const handleStartNewSession = async () => {
+    if (savedSessionId) {
+      await sessionPersistenceService.deleteSession(savedSessionId);
+    }
+    sessionPersistenceService.clearCurrentSessionId();
+    setShowResumeModal(false);
+    loadQuestions();
+  };
+
+  const saveSessionState = async () => {
+    if (questions.length === 0 || showResults) return;
+
+    try {
+      const submittedQuestions = Object.keys(answerResults).map(k => parseInt(k, 10));
+
+      await sessionPersistenceService.saveSession({
+        id: savedSessionId || '',
+        sessionType: '25',
+        questions,
+        currentIndex,
+        answers,
+        answerResults,
+        submittedQuestions,
+        startTime,
+        lastUpdated: Date.now(),
+      });
+    } catch (error) {
+      console.error('[Practice25] Failed to save session state:', error);
+    }
+  };
 
   const loadQuestions = async () => {
     try {
@@ -318,6 +408,9 @@ export default function Practice25Screen() {
       await questionSessionTracker.endSession(profile.ml_user_id);
     }
 
+    await sessionPersistenceService.completeSession(savedSessionId || undefined);
+    sessionPersistenceService.clearCurrentSessionId();
+
     setShowResults(true);
   };
 
@@ -368,6 +461,37 @@ export default function Practice25Screen() {
 
   return (
     <View style={styles.container}>
+      <Modal
+        visible={showResumeModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowResumeModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <RotateCcw size={48} color={Colors.primary} style={styles.modalIcon} />
+            <Text style={styles.modalTitle}>Continue Previous Session?</Text>
+            <Text style={styles.modalSubtitle}>
+              You have an unfinished practice session. Would you like to continue where you left off?
+            </Text>
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[styles.modalButton, styles.modalButtonPrimary]}
+                onPress={handleResumeSession}
+              >
+                <Text style={styles.modalButtonTextPrimary}>Resume Session</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.modalButton, styles.modalButtonSecondary]}
+                onPress={handleStartNewSession}
+              >
+                <Text style={styles.modalButtonTextSecondary}>Start New</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <PageHeader
         title="25 Questions"
         subtitle={`Question ${currentIndex + 1} of ${questions.length}`}
@@ -591,5 +715,61 @@ const styles = StyleSheet.create({
   finishButtonDisabled: {
     opacity: 0.4,
     backgroundColor: Colors.border,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  modalContent: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  modalIcon: {
+    marginBottom: Spacing.sm,
+  },
+  modalTitle: {
+    ...Typography.h3,
+    color: Colors.text.primary,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    ...Typography.body,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: Spacing.md,
+  },
+  modalButtons: {
+    width: '100%',
+    gap: Spacing.sm,
+  },
+  modalButton: {
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.sm,
+    alignItems: 'center',
+  },
+  modalButtonPrimary: {
+    backgroundColor: Colors.primary,
+  },
+  modalButtonSecondary: {
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  modalButtonTextPrimary: {
+    ...Typography.bodyBold,
+    color: Colors.text.light,
+  },
+  modalButtonTextSecondary: {
+    ...Typography.bodyBold,
+    color: Colors.text.primary,
   },
 });
