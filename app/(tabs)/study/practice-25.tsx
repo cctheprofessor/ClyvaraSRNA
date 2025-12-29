@@ -714,7 +714,7 @@ const styles = StyleSheet.create({
   },
   finishButtonDisabled: {
     opacity: 0.4,
-    backgroundColor: Colors.border,
+    backgroundColor: Colors.border.light,
   },
   modalOverlay: {
     flex: 1,
@@ -762,7 +762,7 @@ const styles = StyleSheet.create({
   modalButtonSecondary: {
     backgroundColor: Colors.background,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.border.medium,
   },
   modalButtonTextPrimary: {
     ...Typography.bodyBold,
