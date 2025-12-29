@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { Question, QuestionType } from '../types/question';
 import { validateQuestion, filterValidQuestions } from './question-validator';
+import { QuestionRepairService } from './question-repair-service';
 import nceTopics from '../constants/nce_topics_flattened.json';
 
 const EDGE_FUNCTION_URL = process.env.EXPO_PUBLIC_SUPABASE_URL
@@ -213,17 +214,59 @@ export class MLBackendClient {
 
     const { validQuestions, rejectedQuestions } = filterValidQuestions(transformedQuestions);
 
-    if (rejectedQuestions.length > 0) {
-      console.warn(`[MLBackendClient] Filtered out ${rejectedQuestions.length} invalid questions`);
+    const repairedQuestions: Question[] = [];
+    const repairedMetadata: Array<{ question: any; originalErrors: string[] }> = [];
+    const unreparableQuestions: Array<{ question: any; errors: string[]; originalErrors: string[] }> = [];
 
-      rejectedQuestions.forEach(({ question, errors }) => {
+    for (const { question, errors } of rejectedQuestions) {
+      const repaired = QuestionRepairService.repairQuestion(question);
+
+      if (repaired) {
+        const validation = validateQuestion(repaired);
+
+        if (validation.isValid) {
+          repairedQuestions.push(repaired as Question);
+          repairedMetadata.push({ question: repaired, originalErrors: errors });
+          console.log(`[MLBackendClient] Successfully repaired question ${question.id}`);
+        } else {
+          unreparableQuestions.push({
+            question,
+            errors: validation.errors,
+            originalErrors: errors,
+          });
+        }
+      } else {
+        unreparableQuestions.push({
+          question,
+          errors,
+          originalErrors: errors,
+        });
+      }
+    }
+
+    if (unreparableQuestions.length > 0) {
+      console.warn(`[MLBackendClient] ${unreparableQuestions.length} questions could not be repaired`);
+
+      unreparableQuestions.forEach(({ question, errors }) => {
         console.warn(`[MLBackendClient] Rejected question ${question.id}: ${errors.join(', ')}`);
       });
 
-      await this.logRejectedQuestions(rejectedQuestions, userId);
+      await this.logRejectedQuestions(
+        unreparableQuestions.map(({ question, errors, originalErrors }) => ({
+          question,
+          errors,
+          originalErrors
+        })),
+        userId
+      );
     }
 
-    return validQuestions;
+    if (repairedQuestions.length > 0) {
+      console.log(`[MLBackendClient] Repaired ${repairedQuestions.length} questions`);
+      await this.logRepairedQuestions(repairedMetadata, userId);
+    }
+
+    return [...validQuestions, ...repairedQuestions];
   }
 
   private transformQuestion(q: any): Question {
@@ -814,14 +857,14 @@ export class MLBackendClient {
   }
 
   private async logRejectedQuestions(
-    rejectedQuestions: Array<{ question: any; errors: string[] }>,
+    rejectedQuestions: Array<{ question: any; errors: string[]; originalErrors?: string[] }>,
     userId: number
   ): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const records = rejectedQuestions.map(({ question, errors }) => ({
+      const records = rejectedQuestions.map(({ question, errors, originalErrors }) => ({
         question_id: question.id || 'unknown',
         question_type: question.question_type || 'unknown',
         ml_user_id: userId,
@@ -830,12 +873,87 @@ export class MLBackendClient {
         question_data: question,
         rejection_reason: this.categorizeRejection(errors),
         topic_id: question.topic_id || null,
+        repair_attempted: !!originalErrors,
+        repair_successful: false,
+        original_errors: originalErrors || null,
       }));
 
       await supabase.from('rejected_questions_log').insert(records);
     } catch (error) {
       console.error('[MLBackendClient] Failed to log rejected questions:', error);
     }
+  }
+
+  private async logRepairedQuestions(
+    repairedQuestions: Array<{ question: any; originalErrors: string[] }>,
+    userId: number
+  ): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const records = repairedQuestions.map(({ question, originalErrors }) => ({
+        question_id: question.id || 'unknown',
+        question_type: question.question_type || 'unknown',
+        ml_user_id: userId,
+        supabase_user_id: user.id,
+        validation_errors: [],
+        question_data: question,
+        rejection_reason: this.categorizeRejection(originalErrors),
+        topic_id: question.topic_id || null,
+        repair_attempted: true,
+        repair_successful: true,
+        original_errors: originalErrors,
+        resolved: true,
+        resolved_at: new Date().toISOString(),
+        resolution_notes: 'Automatically repaired by QuestionRepairService',
+      }));
+
+      await supabase.from('rejected_questions_log').insert(records);
+    } catch (error) {
+      console.error('[MLBackendClient] Failed to log repaired questions:', error);
+    }
+  }
+
+  async getQuestionsWithRetry(
+    userId: number,
+    topicIds: number[],
+    count: number = 25,
+    maxRetries: number = 2
+  ): Promise<Question[]> {
+    let allValidQuestions: Question[] = [];
+    let remainingCount = count;
+    let attempt = 0;
+
+    while (remainingCount > 0 && attempt <= maxRetries) {
+      try {
+        const questions = await this.getNextQuestions(userId, topicIds, remainingCount);
+        allValidQuestions = [...allValidQuestions, ...questions];
+        remainingCount = count - allValidQuestions.length;
+
+        if (remainingCount <= 0) {
+          break;
+        }
+
+        if (attempt < maxRetries) {
+          console.log(
+            `[MLBackendClient] Got ${questions.length}/${count} valid questions. Retrying for ${remainingCount} more...`
+          );
+          await this.delay(1000);
+        }
+
+        attempt++;
+      } catch (error) {
+        console.error(`[MLBackendClient] Retry attempt ${attempt} failed:`, error);
+        if (attempt >= maxRetries) {
+          throw error;
+        }
+        attempt++;
+        await this.delay(2000);
+      }
+    }
+
+    return allValidQuestions;
   }
 
   getRateLimitInfo(): RateLimitInfo | null {
