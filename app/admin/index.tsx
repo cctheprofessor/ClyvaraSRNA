@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   if (!isAdmin) {
     return (
       <View style={styles.container}>
-        <PageHeader title="Unauthorized" onBack={() => router.back()} />
+        <PageHeader title="Unauthorized" />
         <Text style={styles.errorText}>Admin access required</Text>
       </View>
     );
@@ -35,7 +35,7 @@ export default function AdminDashboard() {
 
   return (
     <View style={styles.container}>
-      <PageHeader title="Admin Dashboard" onBack={() => router.back()} />
+      <PageHeader title="Admin Dashboard" />
 
       <ScrollView style={styles.content}>
         <Text style={styles.subtitle}>Admin Tools</Text>

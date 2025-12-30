@@ -982,7 +982,7 @@ export class MLBackendClient {
 
     while (remainingCount > 0 && attempt <= maxRetries) {
       try {
-        const questions = await this.getNextQuestions(userId, topicIds, remainingCount);
+        const questions = await this.getNextQuestions(userId, remainingCount);
         allValidQuestions = [...allValidQuestions, ...questions];
         remainingCount = count - allValidQuestions.length;
 

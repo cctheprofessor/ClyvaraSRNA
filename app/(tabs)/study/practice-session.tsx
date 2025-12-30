@@ -15,7 +15,7 @@ import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Question, deserializeAnswer, AnswerFormat } from '@/types/question';
+import { Question, AnswerFormat } from '@/types/question';
 import { mlClient } from '@/lib/ml-backend-client';
 import { validateAnswer } from '@/lib/answer-validator';
 import { rationaleCacheService } from '@/lib/rationale-cache-service';
@@ -498,9 +498,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitButtonText: {
-    ...Typography.button,
+    ...Typography.bodyBold,
     color: Colors.background,
-    fontWeight: '600',
   },
   nextButton: {
     flexDirection: 'row',
@@ -514,9 +513,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   nextButtonText: {
-    ...Typography.button,
+    ...Typography.bodyBold,
     color: Colors.primary,
-    fontWeight: '600',
   },
   finishButton: {
     flexDirection: 'row',
@@ -528,16 +526,15 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
   },
   finishButtonText: {
-    ...Typography.button,
+    ...Typography.bodyBold,
     color: Colors.text.light,
-    fontWeight: '600',
   },
   nextButtonDisabled: {
     opacity: 0.4,
-    borderColor: Colors.border,
+    borderColor: Colors.border.light,
   },
   finishButtonDisabled: {
     opacity: 0.4,
-    backgroundColor: Colors.border,
+    backgroundColor: Colors.border.light,
   },
 });

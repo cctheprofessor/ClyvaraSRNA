@@ -16,7 +16,7 @@ export default function SyncUserScreen() {
   if (!isAdmin) {
     return (
       <View style={styles.container}>
-        <PageHeader title="Unauthorized" onBack={() => router.back()} />
+        <PageHeader title="Unauthorized" />
         <Text style={styles.errorText}>Admin access required</Text>
       </View>
     );
@@ -138,7 +138,7 @@ export default function SyncUserScreen() {
 
   return (
     <View style={styles.container}>
-      <PageHeader title="Sync User to ML Backend" onBack={() => router.back()} />
+      <PageHeader title="Sync User to ML Backend" />
 
       <ScrollView style={styles.content}>
         <Text style={styles.label}>User ID</Text>
