@@ -451,40 +451,47 @@ export default function Practice50Screen() {
     );
   }
 
+  if (showResumeModal) {
+    return (
+      <View style={styles.container}>
+        <Modal
+          visible={showResumeModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowResumeModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <RotateCcw size={48} color={Colors.primary} style={styles.modalIcon} />
+              <Text style={styles.modalTitle}>Continue Previous Session?</Text>
+              <Text style={styles.modalSubtitle}>
+                You have an unfinished practice session. Would you like to continue where you left off?
+              </Text>
+              <View style={styles.modalButtons}>
+                <Pressable
+                  style={[styles.modalButton, styles.modalButtonPrimary]}
+                  onPress={handleResumeSession}
+                >
+                  <Text style={styles.modalButtonTextPrimary}>Resume Session</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.modalButton, styles.modalButtonSecondary]}
+                  onPress={handleStartNewSession}
+                >
+                  <Text style={styles.modalButtonTextSecondary}>Start New</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    );
+  }
+
   const currentQuestion = questions[currentIndex];
 
   return (
     <View style={styles.container}>
-      <Modal
-        visible={showResumeModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowResumeModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <RotateCcw size={48} color={Colors.primary} style={styles.modalIcon} />
-            <Text style={styles.modalTitle}>Continue Previous Session?</Text>
-            <Text style={styles.modalSubtitle}>
-              You have an unfinished practice session. Would you like to continue where you left off?
-            </Text>
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={[styles.modalButton, styles.modalButtonPrimary]}
-                onPress={handleResumeSession}
-              >
-                <Text style={styles.modalButtonTextPrimary}>Resume Session</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.modalButton, styles.modalButtonSecondary]}
-                onPress={handleStartNewSession}
-              >
-                <Text style={styles.modalButtonTextSecondary}>Start New</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       <PageHeader
         title="50 Questions"
