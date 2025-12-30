@@ -91,9 +91,32 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log('Processing checkout.session.completed:', session.id);
 
   const userId = session.metadata?.user_id;
+  const bookingId = session.metadata?.booking_id;
   const donationId = session.metadata?.donation_id;
   const donationType = session.metadata?.donation_type;
 
+  // Handle TA booking payments
+  if (bookingId) {
+    console.log('Processing TA booking payment:', bookingId);
+
+    const { error } = await supabase
+      .from('ta_bookings')
+      .update({
+        status: 'confirmed',
+        stripe_payment_intent_id: session.payment_intent as string,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', bookingId);
+
+    if (error) {
+      console.error('Failed to update booking:', error);
+    } else {
+      console.log('Successfully confirmed booking:', bookingId);
+    }
+    return;
+  }
+
+  // Handle donation payments
   if (!userId || !donationId) {
     console.error('Missing metadata in session:', session.id);
     return;

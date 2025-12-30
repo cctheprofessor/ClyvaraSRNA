@@ -5,6 +5,11 @@ import {
   Hospital,
   UserRound,
   MessageCircleQuestion,
+  Calendar,
+  User,
+  Clock,
+  LayoutDashboard,
+  BookOpen,
 } from 'lucide-react-native';
 import PageHeader from '@/components/PageHeader';
 
@@ -12,6 +17,51 @@ export default function ToolsScreen() {
   const router = useRouter();
 
   const categories = [
+    {
+      title: 'TA Bookings',
+      tools: [
+        {
+          id: 'book-session',
+          title: 'Book a Session',
+          description: 'Schedule time with a teaching assistant',
+          icon: Calendar,
+          color: '#4CAF50',
+          route: '/(tabs)/tools/book-ta-session',
+        },
+        {
+          id: 'my-bookings',
+          title: 'My Bookings',
+          description: 'View and manage your bookings',
+          icon: BookOpen,
+          color: '#2196F3',
+          route: '/(tabs)/tools/my-bookings',
+        },
+        {
+          id: 'ta-profile',
+          title: 'TA Profile Setup',
+          description: 'Set up your teaching assistant profile',
+          icon: User,
+          color: '#FF9800',
+          route: '/(tabs)/tools/ta-profile-setup',
+        },
+        {
+          id: 'ta-availability',
+          title: 'Manage Availability',
+          description: 'Set your available times for bookings',
+          icon: Clock,
+          color: '#9C27B0',
+          route: '/(tabs)/tools/ta-availability',
+        },
+        {
+          id: 'ta-dashboard',
+          title: 'TA Dashboard',
+          description: 'View your bookings and earnings',
+          icon: LayoutDashboard,
+          color: '#F44336',
+          route: '/(tabs)/tools/ta-dashboard',
+        },
+      ],
+    },
     {
       title: 'Clinical Preference Cards',
       tools: [
