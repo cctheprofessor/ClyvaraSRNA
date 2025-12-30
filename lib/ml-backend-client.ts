@@ -210,7 +210,15 @@ export class MLBackendClient {
     const data = await response.json();
     const questions = data.questions || [];
 
-    const transformedQuestions = questions.map((q: any) => this.transformQuestion(q));
+    const preFilteredQuestions = questions.filter((q: any) => {
+      const shouldKeep = QuestionRepairService.preFilter(q);
+      if (!shouldKeep) {
+        console.log(`[MLBackendClient] Pre-filtered out question ${q.question_id || q.id} of type ${q.question_type} - fundamentally broken`);
+      }
+      return shouldKeep;
+    });
+
+    const transformedQuestions = preFilteredQuestions.map((q: any) => this.transformQuestion(q));
 
     const { validQuestions, rejectedQuestions } = filterValidQuestions(transformedQuestions);
 
@@ -244,26 +252,38 @@ export class MLBackendClient {
       }
     }
 
-    if (unreparableQuestions.length > 0) {
-      console.warn(`[MLBackendClient] ${unreparableQuestions.length} questions could not be repaired`);
+    const preFilteredCount = questions.length - preFilteredQuestions.length;
+    const totalRejected = unreparableQuestions.length;
+    const totalRepaired = repairedQuestions.length;
+    const totalValid = validQuestions.length;
 
-      unreparableQuestions.forEach(({ question, errors }) => {
-        console.warn(`[MLBackendClient] Rejected question ${question.id}: ${errors.join(', ')}`);
-      });
-
-      await this.logRejectedQuestions(
-        unreparableQuestions.map(({ question, errors, originalErrors }) => ({
-          question,
-          errors,
-          originalErrors
-        })),
-        userId
+    if (preFilteredCount > 0 || totalRejected > 0 || totalRepaired > 0) {
+      console.log(
+        `[MLBackendClient] Question processing summary:
+        - Pre-filtered (fundamentally broken): ${preFilteredCount}
+        - Valid on first pass: ${totalValid}
+        - Successfully repaired: ${totalRepaired}
+        - Rejected (unrepairable): ${totalRejected}
+        - Final usable questions: ${totalValid + totalRepaired}`
       );
-    }
 
-    if (repairedQuestions.length > 0) {
-      console.log(`[MLBackendClient] Repaired ${repairedQuestions.length} questions`);
-      await this.logRepairedQuestions(repairedMetadata, userId);
+      if (unreparableQuestions.length > 0) {
+        const summary = QuestionRepairService.getrejectionSummary(unreparableQuestions);
+        console.warn(`[MLBackendClient] Rejection breakdown:`, summary);
+
+        await this.logRejectedQuestions(
+          unreparableQuestions.map(({ question, errors, originalErrors }) => ({
+            question,
+            errors,
+            originalErrors
+          })),
+          userId
+        );
+      }
+
+      if (repairedQuestions.length > 0) {
+        await this.logRepairedQuestions(repairedMetadata, userId);
+      }
     }
 
     return [...validQuestions, ...repairedQuestions];
@@ -556,21 +576,56 @@ export class MLBackendClient {
     const data = await response.json();
     const questions = data.questions || [];
 
-    const transformedQuestions = questions.map((q: any) => this.transformQuestion(q));
+    const preFilteredQuestions = questions.filter((q: any) => {
+      const shouldKeep = QuestionRepairService.preFilter(q);
+      if (!shouldKeep) {
+        console.log(`[MLBackendClient] Pre-filtered offline question ${q.question_id || q.id} - fundamentally broken`);
+      }
+      return shouldKeep;
+    });
+
+    const transformedQuestions = preFilteredQuestions.map((q: any) => this.transformQuestion(q));
 
     const { validQuestions, rejectedQuestions } = filterValidQuestions(transformedQuestions);
 
-    if (rejectedQuestions.length > 0) {
-      console.warn(`[MLBackendClient] Filtered ${rejectedQuestions.length} invalid questions from offline download`);
+    const repairedQuestions: Question[] = [];
+    const unreparableQuestions: Array<{ question: any; errors: string[] }> = [];
 
-      rejectedQuestions.forEach(({ question, errors }) => {
-        console.warn(`[MLBackendClient] Rejected offline question ${question.id}: ${errors.join(', ')}`);
-      });
+    for (const { question, errors } of rejectedQuestions) {
+      const repaired = QuestionRepairService.repairQuestion(question);
 
-      await this.logRejectedQuestions(rejectedQuestions, userId);
+      if (repaired) {
+        const validation = validateQuestion(repaired);
+        if (validation.isValid) {
+          repairedQuestions.push(repaired as Question);
+        } else {
+          unreparableQuestions.push({ question, errors });
+        }
+      } else {
+        unreparableQuestions.push({ question, errors });
+      }
     }
 
-    return validQuestions;
+    const preFilteredCount = questions.length - preFilteredQuestions.length;
+
+    if (preFilteredCount > 0 || unreparableQuestions.length > 0 || repairedQuestions.length > 0) {
+      console.log(
+        `[MLBackendClient] Offline download summary:
+        - Pre-filtered: ${preFilteredCount}
+        - Valid: ${validQuestions.length}
+        - Repaired: ${repairedQuestions.length}
+        - Rejected: ${unreparableQuestions.length}
+        - Final usable: ${validQuestions.length + repairedQuestions.length}`
+      );
+
+      if (unreparableQuestions.length > 0) {
+        const summary = QuestionRepairService.getrejectionSummary(unreparableQuestions);
+        console.warn(`[MLBackendClient] Offline rejection breakdown:`, summary);
+        await this.logRejectedQuestions(unreparableQuestions, userId);
+      }
+    }
+
+    return [...validQuestions, ...repairedQuestions];
   }
 
   async syncOfflineResponses(
