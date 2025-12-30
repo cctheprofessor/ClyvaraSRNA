@@ -46,6 +46,7 @@ export default function Practice25Screen() {
   useEffect(() => {
     checkForSavedSession();
     return () => {
+      sessionPersistenceService.flushPendingSave();
       if (profile?.ml_user_id) {
         questionSessionTracker.endSession(profile.ml_user_id);
       }
@@ -60,16 +61,23 @@ export default function Practice25Screen() {
 
   const checkForSavedSession = async () => {
     try {
+      console.log('[Practice25] Checking for saved session...');
       const savedSession = await sessionPersistenceService.getActiveSession('25');
       if (savedSession) {
         const progress = sessionPersistenceService.getProgressSummary(savedSession);
+        console.log('[Practice25] Found saved session:', {
+          id: savedSession.id,
+          progress: `${progress.completed}/${progress.total}`,
+        });
         if (progress.completed > 0 && progress.completed < progress.total) {
           setSavedSessionId(savedSession.id);
           setShowResumeModal(true);
         } else {
+          console.log('[Practice25] Session is empty or complete, starting new');
           loadQuestions();
         }
       } else {
+        console.log('[Practice25] No saved session found, starting new');
         loadQuestions();
       }
     } catch (error) {
@@ -122,6 +130,12 @@ export default function Practice25Screen() {
 
     try {
       const submittedQuestions = Object.keys(answerResults).map(k => parseInt(k, 10));
+
+      console.log('[Practice25] Saving session state:', {
+        currentIndex,
+        answersCount: Object.keys(answers).length,
+        submittedCount: submittedQuestions.length,
+      });
 
       await sessionPersistenceService.saveSession({
         id: savedSessionId || '',

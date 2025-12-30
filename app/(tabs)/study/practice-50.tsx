@@ -46,6 +46,7 @@ export default function Practice50Screen() {
   useEffect(() => {
     checkForSavedSession();
     return () => {
+      sessionPersistenceService.flushPendingSave();
       if (profile?.ml_user_id) {
         questionSessionTracker.endSession(profile.ml_user_id);
       }

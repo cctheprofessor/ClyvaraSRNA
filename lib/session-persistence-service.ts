@@ -31,6 +31,7 @@ export interface SavedSession {
 class SessionPersistenceService {
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
   private currentSessionId: string | null = null;
+  private pendingState: SessionState | null = null;
 
   /**
    * Check if there's an active session to resume
@@ -38,7 +39,12 @@ class SessionPersistenceService {
   async getActiveSession(sessionType: '25' | '50' | 'focused'): Promise<SessionState | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!user) {
+        console.log('[SessionPersistence] No user found when checking for active session');
+        return null;
+      }
+
+      console.log('[SessionPersistence] Checking for active session:', sessionType);
 
       const { data, error } = await supabase
         .from('practice_session_state')
@@ -50,14 +56,29 @@ class SessionPersistenceService {
         .limit(1)
         .maybeSingle();
 
-      if (error || !data) return null;
+      if (error) {
+        console.error('[SessionPersistence] Error querying sessions:', error);
+        return null;
+      }
+
+      if (!data) {
+        console.log('[SessionPersistence] No active session found');
+        return null;
+      }
 
       const session: SavedSession = data;
+      console.log('[SessionPersistence] Found session:', {
+        id: session.id,
+        currentIndex: session.current_index,
+        questionCount: session.questions.length,
+        submittedCount: session.submitted_questions.length,
+      });
 
       // Ignore sessions older than 24 hours
       const lastUpdated = new Date(session.last_updated).getTime();
       const now = Date.now();
       if (now - lastUpdated > 24 * 60 * 60 * 1000) {
+        console.log('[SessionPersistence] Session too old, deleting');
         await this.deleteSession(session.id);
         return null;
       }
@@ -73,6 +94,9 @@ class SessionPersistenceService {
    * Save or update the current session state
    */
   async saveSession(state: SessionState): Promise<void> {
+    // Store the pending state
+    this.pendingState = state;
+
     // Debounce saves to avoid too many database writes
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
@@ -81,10 +105,34 @@ class SessionPersistenceService {
     this.saveTimeout = setTimeout(async () => {
       try {
         await this.saveSessionImmediate(state);
+        this.pendingState = null;
       } catch (error) {
         console.error('[SessionPersistence] Failed to save session:', error);
       }
     }, 500);
+  }
+
+  /**
+   * Flush any pending saves immediately
+   */
+  async flushPendingSave(): Promise<void> {
+    if (this.saveTimeout) {
+      console.log('[SessionPersistence] Flushing pending save...');
+      clearTimeout(this.saveTimeout);
+      this.saveTimeout = null;
+    }
+
+    if (this.pendingState) {
+      try {
+        await this.saveSessionImmediate(this.pendingState);
+        this.pendingState = null;
+        console.log('[SessionPersistence] Pending save flushed successfully');
+      } catch (error) {
+        console.error('[SessionPersistence] Failed to flush pending save:', error);
+      }
+    } else {
+      console.log('[SessionPersistence] No pending save to flush');
+    }
   }
 
   /**
@@ -93,7 +141,10 @@ class SessionPersistenceService {
   async saveSessionImmediate(state: SessionState): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('[SessionPersistence] No user found, skipping save');
+        return;
+      }
 
       const sessionData = {
         user_id: user.id,
@@ -111,23 +162,42 @@ class SessionPersistenceService {
 
       if (this.currentSessionId) {
         // Update existing session
+        console.log('[SessionPersistence] Updating existing session:', this.currentSessionId, {
+          sessionType: state.sessionType,
+          currentIndex: state.currentIndex,
+          submittedCount: state.submittedQuestions.length,
+        });
+
         const { error } = await supabase
           .from('practice_session_state')
           .update(sessionData)
           .eq('id', this.currentSessionId);
 
-        if (error) throw error;
+        if (error) {
+          console.error('[SessionPersistence] Update failed:', error);
+          throw error;
+        }
+        console.log('[SessionPersistence] Session updated successfully');
       } else {
         // Create new session
+        console.log('[SessionPersistence] Creating new session:', {
+          sessionType: state.sessionType,
+          questionCount: state.questions.length,
+        });
+
         const { data, error } = await supabase
           .from('practice_session_state')
           .insert(sessionData)
           .select('id')
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('[SessionPersistence] Insert failed:', error);
+          throw error;
+        }
         if (data) {
           this.currentSessionId = data.id;
+          console.log('[SessionPersistence] New session created with ID:', this.currentSessionId);
         }
       }
     } catch (error) {
