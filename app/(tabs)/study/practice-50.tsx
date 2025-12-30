@@ -67,6 +67,7 @@ export default function Practice50Screen() {
         if (progress.completed > 0 && progress.completed < progress.total) {
           setSavedSessionId(savedSession.id);
           setShowResumeModal(true);
+          setLoading(false);
         } else {
           loadQuestions();
         }

@@ -72,6 +72,7 @@ export default function Practice25Screen() {
         if (progress.completed > 0 && progress.completed < progress.total) {
           setSavedSessionId(savedSession.id);
           setShowResumeModal(true);
+          setLoading(false);
         } else {
           console.log('[Practice25] Session is empty or complete, starting new');
           loadQuestions();
