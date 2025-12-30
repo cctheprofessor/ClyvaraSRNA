@@ -175,7 +175,24 @@ export default function Practice50Screen() {
 
       console.log('Cache insufficient, fetching from API...');
       try {
-        let fetchedQuestions = await mlClient.getNextQuestions(profile.ml_user_id, 50);
+        let fetchedQuestions: Question[] = [];
+
+        try {
+          console.log('Attempting to fetch 50 questions...');
+          fetchedQuestions = await mlClient.getNextQuestions(profile.ml_user_id, 50);
+        } catch (fetchError) {
+          console.warn('Failed to fetch 50 questions, trying 25 instead...', fetchError);
+
+          try {
+            const firstBatch = await mlClient.getNextQuestions(profile.ml_user_id, 25);
+            const secondBatch = await mlClient.getNextQuestions(profile.ml_user_id, 25);
+            fetchedQuestions = [...firstBatch, ...secondBatch];
+            console.log(`Successfully fetched questions in two batches: ${firstBatch.length} + ${secondBatch.length}`);
+          } catch (batchError) {
+            console.error('Batch fetch also failed:', batchError);
+            throw batchError;
+          }
+        }
 
         const { validQuestions, rejectedQuestions } = filterValidQuestions(fetchedQuestions);
 
@@ -183,16 +200,24 @@ export default function Practice50Screen() {
           console.warn(`[Practice50] Filtered ${rejectedQuestions.length} invalid API questions`);
         }
 
-        if (validQuestions.length === 0) {
-          throw new Error('No valid questions received. Please try again later.');
+        const combined = [...validQuestions, ...cachedQuestions];
+        const unique = Array.from(new Map(combined.map(q => [q.id, q])).values());
+        const finalQuestions = unique.slice(0, 50);
+
+        if (finalQuestions.length === 0) {
+          throw new Error('No valid questions received. The question service may be experiencing issues.');
         }
 
-        setQuestions(validQuestions);
-      } catch (apiError) {
-        console.log('API failed, using available cache...');
+        setQuestions(finalQuestions);
+      } catch (apiError: any) {
+        console.log('API failed, using available cache...', apiError);
         if (cachedQuestions.length > 0) {
           setQuestions(cachedQuestions);
         } else {
+          const errorMessage = apiError?.message || 'Unknown error';
+          if (errorMessage.includes('ML Backend') || errorMessage.includes('Internal Server Error')) {
+            throw new Error('The question service is currently unavailable. This may be due to server maintenance. Please try again in a few minutes.');
+          }
           throw new Error('No questions available. Please ensure you have an internet connection and try again.');
         }
       }
