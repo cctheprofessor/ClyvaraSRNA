@@ -170,7 +170,7 @@ export default function TAAvailability() {
 
   return (
     <View style={styles.container}>
-      <PageHeader title="Manage Availability" showBack />
+      <PageHeader title="Manage Availability" />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.description}>
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
     marginBottom: 20,
     lineHeight: 20,
   },
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   dayName: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   addButton: {
     flexDirection: 'row',
@@ -338,11 +338,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   emptySubtext: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
     marginTop: 4,
   },
   slotCard: {
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   timeLabel: {
     fontSize: 12,
     fontWeight: '500',
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
     marginBottom: 4,
   },
   timeButton: {
@@ -378,13 +378,13 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
     textAlign: 'center',
   },
   timeSeparator: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
     marginTop: 20,
   },
   deleteButton: {

@@ -144,7 +144,7 @@ export default function MyBookings() {
 
   return (
     <View style={styles.container}>
-      <PageHeader title="My Bookings" showBack />
+      <PageHeader title="My Bookings" />
 
       <ScrollView
         style={styles.content}
@@ -233,7 +233,7 @@ export default function MyBookings() {
             <View key={booking.id} style={[styles.bookingCard, styles.pastBookingCard]}>
               <View style={styles.bookingHeader}>
                 <View style={styles.dateTime}>
-                  <Calendar size={16} color={Colors.textSecondary} />
+                  <Calendar size={16} color={Colors.text.tertiary} />
                   <Text style={styles.bookingDate}>{booking.session_date}</Text>
                 </View>
                 <View style={[styles.statusBadge, styles[`status${booking.status}`]]}>
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.text.primary,
     marginBottom: 16,
     marginTop: 8,
   },
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
     marginBottom: 16,
   },
   bookButton: {
@@ -336,16 +336,16 @@ const styles = StyleSheet.create({
   bookingDate: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   bookingTime: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   bookingDuration: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
   },
   taInfo: {
     flexDirection: 'row',
@@ -365,16 +365,16 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   taSpecialties: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
     flex: 1,
   },
   bookingNotes: {
     fontSize: 14,
-    color: Colors.text,
+    color: Colors.text.primary,
     lineHeight: 20,
     marginBottom: 12,
     backgroundColor: '#fff',
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   bookingTotal: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   cancelButton: {
     flexDirection: 'row',
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFD700',
   },
   reviewButtonText: {
-    color: Colors.text,
+    color: Colors.text.primary,
     fontSize: 13,
     fontWeight: '600',
   },

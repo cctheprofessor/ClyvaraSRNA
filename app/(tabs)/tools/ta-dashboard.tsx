@@ -165,7 +165,7 @@ export default function TADashboard() {
 
   return (
     <View style={styles.container}>
-      <PageHeader title="TA Dashboard" showBack />
+      <PageHeader title="TA Dashboard" />
 
       <ScrollView
         style={styles.content}
@@ -230,7 +230,7 @@ export default function TADashboard() {
             <View key={booking.id} style={styles.bookingCard}>
               <View style={styles.bookingHeader}>
                 <View style={styles.dateTime}>
-                  <Calendar size={16} color={Colors.textSecondary} />
+                  <Calendar size={16} color={Colors.text.tertiary} />
                   <Text style={styles.bookingDate}>{booking.session_date}</Text>
                   <Text style={styles.bookingTime}>{booking.start_time}</Text>
                 </View>
@@ -273,7 +273,7 @@ export default function TADashboard() {
             <View key={booking.id} style={[styles.bookingCard, styles.pastBookingCard]}>
               <View style={styles.bookingHeader}>
                 <View style={styles.dateTime}>
-                  <Calendar size={16} color={Colors.textSecondary} />
+                  <Calendar size={16} color={Colors.text.tertiary} />
                   <Text style={styles.bookingDate}>{booking.session_date}</Text>
                   <Text style={styles.bookingTime}>{booking.start_time}</Text>
                 </View>
@@ -329,11 +329,11 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   statLabel: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
   },
   quickActions: {
     flexDirection: 'row',
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.text.primary,
     marginBottom: 16,
   },
   emptyState: {
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
   },
   bookingCard: {
     backgroundColor: '#f9f9f9',
@@ -389,11 +389,11 @@ const styles = StyleSheet.create({
   bookingDate: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   bookingTime: {
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
   },
   bookingDuration: {
     fontSize: 14,
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   },
   bookingNotes: {
     fontSize: 14,
-    color: Colors.text,
+    color: Colors.text.primary,
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
   bookingRate: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   completeButton: {
     flexDirection: 'row',

@@ -159,7 +159,7 @@ export default function TAProfileSetup() {
           onChangeText={setBio}
           multiline
           numberOfLines={4}
-          placeholderTextColor={Colors.textSecondary}
+          placeholderTextColor={Colors.text.tertiary}
         />
 
         <Text style={styles.sectionTitle}>Base Rate (30 minutes)</Text>
@@ -171,7 +171,7 @@ export default function TAProfileSetup() {
             onChangeText={setBaseRate}
             keyboardType="decimal-pad"
             placeholder="25.00"
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={Colors.text.tertiary}
           />
         </View>
 
@@ -264,13 +264,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.text.primary,
     marginTop: 20,
     marginBottom: 12,
   },
   subtitle: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
     marginBottom: 12,
   },
   bioInput: {
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: Colors.text,
+    color: Colors.text.primary,
     minHeight: 100,
     textAlignVertical: 'top',
   },
@@ -292,14 +292,14 @@ const styles = StyleSheet.create({
   dollarSign: {
     fontSize: 20,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
     marginRight: 8,
   },
   rateInput: {
     flex: 1,
     fontSize: 20,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
     paddingVertical: 16,
   },
   rateBreakdown: {
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   breakdownText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   serviceChargeNote: {
     marginTop: 12,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   noteText: {
     fontSize: 13,
-    color: Colors.text,
+    color: Colors.text.primary,
     fontWeight: '500',
   },
   specialtiesGrid: {
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   specialtyText: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   specialtyTextSelected: {
     color: '#fff',
@@ -365,11 +365,11 @@ const styles = StyleSheet.create({
   activeTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   activeSubtitle: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
     marginTop: 4,
   },
   toggle: {

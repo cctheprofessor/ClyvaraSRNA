@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
   },
   taCard: {
     backgroundColor: '#f9f9f9',
@@ -437,11 +437,11 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   sessionCount: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
   },
   taRate: {
     fontSize: 16,
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   },
   taBio: {
     fontSize: 14,
-    color: Colors.text,
+    color: Colors.text.primary,
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -469,11 +469,11 @@ const styles = StyleSheet.create({
   specialtyTagText: {
     fontSize: 12,
     fontWeight: '500',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   moreSpecialties: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
     fontStyle: 'italic',
   },
   inputGroup: {
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
     marginBottom: 8,
   },
   input: {
@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: Colors.text,
+    color: Colors.text.primary,
     borderWidth: 1,
     borderColor: '#e0e0e0',
   },
@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
   durationLabel: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.text.primary,
     marginBottom: 8,
   },
   priceBreakdown: {
@@ -524,12 +524,12 @@ const styles = StyleSheet.create({
   },
   priceText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
   },
   totalText: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.text.primary,
     marginTop: 4,
   },
   summaryCard: {
@@ -546,12 +546,12 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: Colors.text.tertiary,
   },
   summaryValue: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   summaryDivider: {
     height: 1,
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
   summaryTotal: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   summaryTotalValue: {
     fontSize: 18,

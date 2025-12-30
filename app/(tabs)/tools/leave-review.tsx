@@ -106,7 +106,7 @@ export default function LeaveReview() {
             onChangeText={setReviewText}
             multiline
             numberOfLines={6}
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={Colors.text.tertiary}
           />
         </View>
 
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.text.primary,
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   ratingLabel: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
     marginBottom: 12,
   },
   reviewInput: {
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: Colors.text,
+    color: Colors.text.primary,
     minHeight: 120,
     textAlignVertical: 'top',
     borderWidth: 1,
