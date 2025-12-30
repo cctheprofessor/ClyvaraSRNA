@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Stethoscope, BookOpen, Calculator, GraduationCap } from 'lucide-react-native';
+import { BookOpen, Calculator, GraduationCap } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 
 export default function WelcomeScreen() {

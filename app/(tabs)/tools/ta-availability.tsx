@@ -32,7 +32,7 @@ const TIME_OPTIONS = [
   '20:00', '20:30', '21:00',
 ];
 
-export default function TAAvailability() {
+export default function TAAvailabilityScreen() {
   const router = useRouter();
   const { user } = useAuth();
 
@@ -174,7 +174,7 @@ export default function TAAvailability() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.description}>
-          Set your recurring weekly availability. Students will only be able to book times when you're available.
+          Set your recurring weekly availability. Students will only be able to book times when you&apos;re available.
         </Text>
 
         {slotsByDay.map(({ day, slots: daySlots }) => (

@@ -1,8 +1,7 @@
-import { View, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
-import { Text } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Image, Platform, Text } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { FileText, GraduationCap, Stethoscope, User, Home } from 'lucide-react-native';
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
 
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const icons: Record<string, any> = {

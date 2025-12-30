@@ -91,8 +91,7 @@ export default function TADashboard() {
 
   async function markComplete(bookingId: string) {
     try {
-      const { EXPO_PUBLIC_SUPABASE_URL } = process.env;
-      const apiUrl = `${EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ta-booking-management`;
+      const apiUrl = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ta-booking-management`;
 
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
