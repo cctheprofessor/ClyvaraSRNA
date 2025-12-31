@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Dimensions } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { mlClient } from '@/lib/ml-backend-client';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
@@ -36,14 +37,19 @@ interface StudentInsights {
 }
 
 export default function AnalyticsScreen() {
+  const router = useRouter();
   const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [insights, setInsights] = useState<StudentInsights | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (profile && !profile.diagnostic_completed) {
+      router.replace('/(tabs)/study/diagnostic-exam');
+      return;
+    }
     loadInsights();
-  }, []);
+  }, [profile]);
 
   const loadInsights = async () => {
     if (!profile?.ml_user_id) {

@@ -64,14 +64,14 @@ export default function StudyScreen() {
   ];
 
   const handleFeaturePress = (feature: any) => {
-    if (!diagnosticCompleted && (feature.id === 'practice25' || feature.id === 'practice50' || feature.id === 'focused')) {
+    if (!diagnosticCompleted && (feature.id === 'practice25' || feature.id === 'practice50' || feature.id === 'focused' || feature.id === 'analytics')) {
       return;
     }
     router.push(feature.route as any);
   };
 
   const isFeatureLocked = (featureId: string) => {
-    return !diagnosticCompleted && (featureId === 'practice25' || featureId === 'practice50' || featureId === 'focused');
+    return !diagnosticCompleted && (featureId === 'practice25' || featureId === 'practice50' || featureId === 'focused' || featureId === 'analytics');
   };
 
   return (

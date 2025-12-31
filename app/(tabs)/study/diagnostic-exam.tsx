@@ -11,6 +11,13 @@ import { CheckCircle, AlertCircle } from 'lucide-react-native';
 import { Question } from '@/types/question';
 import { validateAnswer } from '@/lib/answer-validator';
 
+interface DiagnosticAnswer {
+  question_id: string;
+  answer: string;
+  response_time_ms: number;
+  is_correct?: boolean;
+}
+
 export default function DiagnosticExamScreen() {
   const router = useRouter();
   const { profile, refreshProfile } = useAuth();
@@ -18,6 +25,7 @@ export default function DiagnosticExamScreen() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [diagnosticAnswers, setDiagnosticAnswers] = useState<DiagnosticAnswer[]>([]);
   const [startTime] = useState<number>(Date.now());
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [submitting, setSubmitting] = useState(false);
@@ -63,6 +71,36 @@ export default function DiagnosticExamScreen() {
     }));
   };
 
+  const checkAnswer = (question: Question, userAnswer: string): boolean => {
+    switch (question.question_type) {
+      case 'multiple_choice':
+        return userAnswer === question.correct_answer;
+      case 'multi_select':
+        const userAnswers = JSON.parse(userAnswer).sort();
+        const correctAnswers = question.correct_answers?.sort() || [];
+        return JSON.stringify(userAnswers) === JSON.stringify(correctAnswers);
+      case 'drag_drop_matching':
+        const userPairs = JSON.parse(userAnswer);
+        const correctPairs = question.options.correct_pairs;
+        return JSON.stringify(userPairs) === JSON.stringify(correctPairs);
+      case 'drag_drop_ordering':
+        const userOrder = JSON.parse(userAnswer);
+        const correctOrder = question.options.correct_order;
+        return JSON.stringify(userOrder) === JSON.stringify(correctOrder);
+      case 'clinical_scenario':
+        const parsedAnswers = JSON.parse(userAnswer);
+        return parsedAnswers.every((ans: any, idx: number) => {
+          const subQ = question.options.sub_questions[idx];
+          if (subQ.question_type === 'multiple_choice') {
+            return ans.answer === subQ.correct_answer;
+          }
+          return false;
+        });
+      default:
+        return false;
+    }
+  };
+
   const handleNext = async () => {
     const currentQuestion = questions[currentIndex];
     const currentAnswer = answers[currentIndex];
@@ -81,13 +119,27 @@ export default function DiagnosticExamScreen() {
     setSubmitting(true);
     try {
       const responseTime = Date.now() - questionStartTime;
+      const isCorrect = checkAnswer(currentQuestion, currentAnswer);
 
-      await mlClient.submitDiagnosticAnswer({
-        user_id: profile!.ml_user_id!,
+      const diagnosticAnswer: DiagnosticAnswer = {
         question_id: currentQuestion.id,
         answer: currentAnswer,
         response_time_ms: responseTime,
-      });
+        is_correct: isCorrect,
+      };
+
+      setDiagnosticAnswers(prev => [...prev, diagnosticAnswer]);
+
+      try {
+        await mlClient.submitDiagnosticAnswer({
+          user_id: profile!.ml_user_id!,
+          question_id: currentQuestion.id,
+          answer: currentAnswer,
+          response_time_ms: responseTime,
+        });
+      } catch (err) {
+        console.log('[DiagnosticExam] Backend submission failed, continuing with local tracking');
+      }
 
       if (currentIndex < questions.length - 1) {
         setCurrentIndex(currentIndex + 1);
@@ -96,8 +148,8 @@ export default function DiagnosticExamScreen() {
         await completeDiagnostic();
       }
     } catch (err: any) {
-      console.error('[DiagnosticExam] Error submitting answer:', err);
-      Alert.alert('Error', 'Failed to submit answer. Please try again.');
+      console.error('[DiagnosticExam] Error processing answer:', err);
+      Alert.alert('Error', 'Failed to process answer. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -107,21 +159,33 @@ export default function DiagnosticExamScreen() {
     try {
       setSubmitting(true);
 
-      const result = await mlClient.completeDiagnosticExam(profile!.ml_user_id!);
+      const totalScore = diagnosticAnswers.filter(a => a.is_correct).length;
+      const attemptId = `diagnostic_${profile!.id}_${Date.now()}`;
 
-      await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({
           diagnostic_completed: true,
           diagnostic_completed_at: new Date().toISOString(),
-          diagnostic_score: result.total_score,
-          diagnostic_attempt_id: result.attempt_id,
+          diagnostic_score: totalScore,
+          diagnostic_attempt_id: attemptId,
         })
         .eq('id', profile!.id);
 
+      if (updateError) {
+        console.error('[DiagnosticExam] Error updating profile:', updateError);
+        throw updateError;
+      }
+
+      try {
+        await mlClient.completeDiagnosticExam(profile!.ml_user_id!);
+      } catch (err) {
+        console.log('[DiagnosticExam] Backend completion failed, continuing with local data');
+      }
+
       await refreshProfile();
 
-      router.replace('/study/diagnostic-results');
+      router.replace('/(tabs)/study/diagnostic-results');
     } catch (err: any) {
       console.error('[DiagnosticExam] Error completing diagnostic:', err);
       Alert.alert('Error', 'Failed to complete diagnostic. Please try again.');

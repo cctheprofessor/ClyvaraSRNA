@@ -56,14 +56,48 @@ export default function DiagnosticResultsScreen() {
       setLoading(true);
       setError(null);
 
-      if (!profile?.ml_user_id) {
-        setError('Your account is not synced. Please contact support.');
+      if (!profile?.diagnostic_completed) {
+        setError('Diagnostic not completed yet.');
         setLoading(false);
         return;
       }
 
-      const diagnosticResults = await mlClient.getDiagnosticResults(profile.ml_user_id);
-      setResults(diagnosticResults);
+      try {
+        if (profile.ml_user_id) {
+          const diagnosticResults = await mlClient.getDiagnosticResults(profile.ml_user_id);
+          setResults(diagnosticResults);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.log('[DiagnosticResults] Backend results not available, using local data');
+      }
+
+      const score = profile.diagnostic_score || 0;
+      const totalQuestions = 50;
+      const percentage = (score / totalQuestions) * 100;
+
+      const basicResults: DiagnosticResults = {
+        attempt_id: profile.diagnostic_attempt_id || '',
+        total_score: score,
+        total_questions: totalQuestions,
+        percentage,
+        completed_at: profile.diagnostic_completed_at || new Date().toISOString(),
+        section_scores: [],
+        bloom_scores: [],
+        type_scores: [],
+        strengths: percentage >= 70 ? ['Strong overall performance'] : [],
+        weaknesses: percentage < 70 ? ['Continue practicing to improve'] : [],
+        recommended_topics: percentage < 80 ? [
+          {
+            topic: 'Review all NCE topics',
+            reason: 'Strengthen your knowledge across all areas',
+            priority: 'high' as const,
+          }
+        ] : [],
+      };
+
+      setResults(basicResults);
       setLoading(false);
     } catch (err: any) {
       console.error('[DiagnosticResults] Error loading results:', err);
