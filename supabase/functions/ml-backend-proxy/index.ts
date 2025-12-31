@@ -41,6 +41,12 @@ const getMLBackendHeaders = (includeContentType = false) => {
     headers['Content-Type'] = 'application/json';
   }
 
+  console.log('[ml-backend-proxy] Headers:', {
+    hasApiKey: !!ML_API_KEY,
+    apiKeyLength: ML_API_KEY?.length,
+    headers: Object.keys(headers)
+  });
+
   return headers;
 };
 
@@ -310,13 +316,15 @@ Deno.serve(async (req: Request) => {
           throw new Error('Missing user_id');
         }
 
-        mlResponse = await fetch(
-          `${ML_BACKEND_URL}/api/diagnostic-exam/${mlUserId}`,
-          {
-            method: 'GET',
-            headers: getMLBackendHeaders(),
-          }
-        );
+        const diagnosticQuestionsUrl = `${ML_BACKEND_URL}/api/diagnostic-exam/${mlUserId}`;
+        console.log('[ml-backend-proxy] Fetching diagnostic questions:', diagnosticQuestionsUrl);
+
+        mlResponse = await fetch(diagnosticQuestionsUrl, {
+          method: 'GET',
+          headers: getMLBackendHeaders(),
+        });
+
+        console.log('[ml-backend-proxy] Diagnostic questions response:', mlResponse.status);
         break;
       }
 
@@ -326,26 +334,30 @@ Deno.serve(async (req: Request) => {
           throw new Error('Missing user_id');
         }
 
-        mlResponse = await fetch(
-          `${ML_BACKEND_URL}/api/diagnostic-exam/status/${mlUserId}`,
-          {
-            method: 'GET',
-            headers: getMLBackendHeaders(),
-          }
-        );
+        const diagnosticStatusUrl = `${ML_BACKEND_URL}/api/diagnostic-exam/status/${mlUserId}`;
+        console.log('[ml-backend-proxy] Fetching diagnostic status:', diagnosticStatusUrl);
+
+        mlResponse = await fetch(diagnosticStatusUrl, {
+          method: 'GET',
+          headers: getMLBackendHeaders(),
+        });
+
+        console.log('[ml-backend-proxy] Diagnostic status response:', mlResponse.status);
         break;
       }
 
       case 'submit_diagnostic_answer': {
         const body = await req.json();
-        mlResponse = await fetch(
-          `${ML_BACKEND_URL}/api/diagnostic-exam/submit-answer`,
-          {
-            method: 'POST',
-            headers: getMLBackendHeaders(true),
-            body: JSON.stringify(body),
-          }
-        );
+        const submitUrl = `${ML_BACKEND_URL}/api/diagnostic-exam/submit-answer`;
+        console.log('[ml-backend-proxy] Submitting diagnostic answer:', { url: submitUrl, body });
+
+        mlResponse = await fetch(submitUrl, {
+          method: 'POST',
+          headers: getMLBackendHeaders(true),
+          body: JSON.stringify(body),
+        });
+
+        console.log('[ml-backend-proxy] Submit answer response:', mlResponse.status);
         break;
       }
 
@@ -356,14 +368,16 @@ Deno.serve(async (req: Request) => {
           throw new Error('Missing user_id');
         }
 
-        mlResponse = await fetch(
-          `${ML_BACKEND_URL}/api/diagnostic-exam/complete/${user_id}`,
-          {
-            method: 'POST',
-            headers: getMLBackendHeaders(true),
-            body: JSON.stringify(body),
-          }
-        );
+        const completeUrl = `${ML_BACKEND_URL}/api/diagnostic-exam/complete/${user_id}`;
+        console.log('[ml-backend-proxy] Completing diagnostic exam:', { url: completeUrl, user_id });
+
+        mlResponse = await fetch(completeUrl, {
+          method: 'POST',
+          headers: getMLBackendHeaders(true),
+          body: JSON.stringify(body),
+        });
+
+        console.log('[ml-backend-proxy] Complete diagnostic response:', mlResponse.status);
         break;
       }
 
