@@ -18,12 +18,12 @@ export default function ToolsScreen() {
 
   const categories = [
     {
-      title: 'TA Bookings',
+      title: 'Teaching Assistant Bookings',
       tools: [
         {
           id: 'book-session',
           title: 'Book a Session',
-          description: 'Schedule time with a teaching assistant',
+          description: 'Get expert help from experience TAs',
           icon: Calendar,
           color: '#4CAF50',
           route: '/(tabs)/tools/book-ta-session',
