@@ -1029,49 +1029,38 @@ export class MLBackendClient {
     questions_answered?: number;
     total_questions?: number;
   }> {
-    const headers = await this.getAuthHeaders();
-    const response = await this.fetchWithRetry(
-      `${EDGE_FUNCTION_URL}?action=diagnostic_status&user_id=${userId}`,
-      {
-        method: 'GET',
-        headers,
-      }
-    );
+    const { data, error } = await supabase
+      .from('diagnostic_exam_attempts')
+      .select('*')
+      .eq('ml_user_id', userId)
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: response.statusText }));
-      throw new Error(errorData.error || `Failed to get diagnostic status: ${response.statusText}`);
+    if (error) {
+      console.error('[MLBackendClient] Error fetching diagnostic status:', error);
     }
 
-    return await response.json();
+    if (!data) {
+      return {
+        required: true,
+        in_progress: false,
+        completed: false,
+      };
+    }
+
+    return {
+      required: false,
+      in_progress: !!data.started_at && !data.completed_at,
+      completed: !!data.completed_at,
+      attempt_id: data.id,
+      questions_answered: data.questions_answered || 0,
+      total_questions: data.total_questions || 50,
+    };
   }
 
   async getDiagnosticQuestions(userId: number): Promise<Question[]> {
-    const headers = await this.getAuthHeaders();
-
-    try {
-      const response = await this.fetchWithRetry(
-        `${EDGE_FUNCTION_URL}?action=diagnostic_questions&user_id=${userId}`,
-        {
-          method: 'GET',
-          headers,
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const questions = data.questions || [];
-
-        const transformedQuestions = questions.map((q: any) => this.transformQuestion(q));
-        const { validQuestions } = filterValidQuestions(transformedQuestions);
-
-        return validQuestions;
-      }
-    } catch (error) {
-      console.log('[MLBackendClient] Diagnostic endpoint not available, falling back to regular questions');
-    }
-
-    console.log('[MLBackendClient] Using regular question endpoint for diagnostic (50 questions)');
+    console.log('[MLBackendClient] Fetching diagnostic questions using regular endpoint (50 questions)');
     return await this.getNextQuestions(userId, 50);
   }
 
@@ -1081,25 +1070,7 @@ export class MLBackendClient {
     answer: string | string[];
     response_time_ms: number;
   }): Promise<{ success: boolean }> {
-    const headers = await this.getAuthHeaders();
-
-    try {
-      const response = await this.fetchWithRetry(
-        `${EDGE_FUNCTION_URL}?action=submit_diagnostic_answer`,
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(answerData),
-        }
-      );
-
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (error) {
-      console.log('[MLBackendClient] Diagnostic answer submission endpoint not available, using local tracking');
-    }
-
+    console.log('[MLBackendClient] Diagnostic answer submission - using local tracking only');
     return { success: true };
   }
 
