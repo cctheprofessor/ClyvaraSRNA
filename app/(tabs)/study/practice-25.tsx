@@ -10,11 +10,13 @@ import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
+import DiagnosticRequiredModal from '@/components/study/DiagnosticRequiredModal';
 import { ArrowLeft, ArrowRight, CheckCircle, Send, RotateCcw } from 'lucide-react-native';
 import { Question, AnswerFormat } from '@/types/question';
 import { filterValidQuestions } from '@/lib/question-validator';
 import { validateAnswer } from '@/lib/answer-validator';
 import { rationaleCacheService } from '@/lib/rationale-cache-service';
+import { isDiagnosticRequiredError } from '@/types/errors';
 
 interface AnswerResult {
   is_correct: boolean;
@@ -42,6 +44,7 @@ export default function Practice25Screen() {
   const [explanationLoading, setExplanationLoading] = useState<Record<number, boolean>>({});
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [savedSessionId, setSavedSessionId] = useState<string | null>(null);
+  const [showDiagnosticModal, setShowDiagnosticModal] = useState(false);
 
   useEffect(() => {
     if (profile && !profile.diagnostic_completed) {
@@ -217,7 +220,11 @@ export default function Practice25Screen() {
       setStartTime(Date.now());
       setQuestionStartTime(Date.now());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load questions');
+      if (isDiagnosticRequiredError(err)) {
+        setShowDiagnosticModal(true);
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to load questions');
+      }
     } finally {
       setLoading(false);
     }
@@ -602,6 +609,18 @@ export default function Practice25Screen() {
           )}
         </View>
       </ScrollView>
+
+      <DiagnosticRequiredModal
+        visible={showDiagnosticModal}
+        onClose={() => {
+          setShowDiagnosticModal(false);
+          router.back();
+        }}
+        onStartDiagnostic={() => {
+          setShowDiagnosticModal(false);
+          router.push('/(tabs)/study/diagnostic-exam');
+        }}
+      />
     </View>
   );
 }

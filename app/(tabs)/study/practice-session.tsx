@@ -13,12 +13,14 @@ import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
+import DiagnosticRequiredModal from '@/components/study/DiagnosticRequiredModal';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, AnswerFormat } from '@/types/question';
 import { mlClient } from '@/lib/ml-backend-client';
 import { validateAnswer } from '@/lib/answer-validator';
 import { rationaleCacheService } from '@/lib/rationale-cache-service';
+import { isDiagnosticRequiredError } from '@/types/errors';
 import { ArrowRight, CheckCircle } from 'lucide-react-native';
 
 interface SessionAnswer {
@@ -57,6 +59,7 @@ export default function PracticeSessionScreen() {
   const [mlUserId, setMlUserId] = useState<number | null>(null);
   const [explanationLoading, setExplanationLoading] = useState(false);
   const [generatingQuestions, setGeneratingQuestions] = useState(false);
+  const [showDiagnosticModal, setShowDiagnosticModal] = useState(false);
 
   useEffect(() => {
     loadSession();
@@ -137,6 +140,13 @@ export default function PracticeSessionScreen() {
       setStartTime(new Date());
     } catch (error) {
       console.error('Error loading session:', error);
+
+      if (isDiagnosticRequiredError(error)) {
+        setShowDiagnosticModal(true);
+        setLoading(false);
+        return;
+      }
+
       Alert.alert('Error', error instanceof Error ? error.message : 'Failed to load practice session');
       router.back();
     } finally {
@@ -428,6 +438,18 @@ export default function PracticeSessionScreen() {
           )}
         </View>
       </ScrollView>
+
+      <DiagnosticRequiredModal
+        visible={showDiagnosticModal}
+        onClose={() => {
+          setShowDiagnosticModal(false);
+          router.back();
+        }}
+        onStartDiagnostic={() => {
+          setShowDiagnosticModal(false);
+          router.push('/(tabs)/study/diagnostic-exam');
+        }}
+      />
     </View>
   );
 }

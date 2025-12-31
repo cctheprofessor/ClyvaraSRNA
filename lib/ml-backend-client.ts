@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import { Question, QuestionType } from '../types/question';
 import { validateQuestion, filterValidQuestions } from './question-validator';
 import { QuestionRepairService } from './question-repair-service';
+import { DiagnosticRequiredError, MLBackendError } from '../types/errors';
 import nceTopics from '../constants/nce_topics_flattened.json';
 
 const EDGE_FUNCTION_URL = process.env.EXPO_PUBLIC_SUPABASE_URL
@@ -204,7 +205,19 @@ export class MLBackendClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: response.statusText }));
-      throw new Error(errorData.error || `Failed to get questions: ${response.statusText}`);
+      const errorMessage = errorData.error || errorData.message || response.statusText;
+
+      if (response.status === 403 &&
+          (errorMessage.toLowerCase().includes('diagnostic') ||
+           errorMessage.toLowerCase().includes('exam must be completed'))) {
+        throw new DiagnosticRequiredError(errorMessage);
+      }
+
+      throw new MLBackendError(
+        errorMessage || 'Failed to get questions',
+        response.status,
+        errorData
+      );
     }
 
     const data = await response.json();
