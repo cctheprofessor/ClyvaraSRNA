@@ -381,6 +381,24 @@ Deno.serve(async (req: Request) => {
         break;
       }
 
+      case 'diagnostic_results': {
+        const mlUserId = url.searchParams.get('user_id');
+        if (!mlUserId) {
+          throw new Error('Missing user_id');
+        }
+
+        const resultsUrl = `${ML_BACKEND_URL}/api/diagnostic-exam/results/${mlUserId}`;
+        console.log('[ml-backend-proxy] Fetching diagnostic results:', resultsUrl);
+
+        mlResponse = await fetch(resultsUrl, {
+          method: 'GET',
+          headers: getMLBackendHeaders(),
+        });
+
+        console.log('[ml-backend-proxy] Diagnostic results response:', mlResponse.status);
+        break;
+      }
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }

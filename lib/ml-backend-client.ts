@@ -1073,8 +1073,40 @@ export class MLBackendClient {
   }
 
   async getDiagnosticQuestions(userId: number): Promise<Question[]> {
-    console.log('[MLBackendClient] Fetching diagnostic questions using regular endpoint (50 questions)');
-    return await this.getNextQuestions(userId, 50);
+    console.log('[MLBackendClient] Fetching diagnostic questions from dedicated endpoint');
+    const headers = await this.getAuthHeaders();
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?action=diagnostic_questions&user_id=${userId}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to get diagnostic questions: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const questions = data.questions || [];
+
+    const preFilteredQuestions = questions.filter((q: any) => {
+      const shouldKeep = QuestionRepairService.preFilter(q);
+      if (!shouldKeep) {
+        console.log(`[MLBackendClient] Pre-filtered diagnostic question ${q.question_id || q.id} - fundamentally broken`);
+      }
+      return shouldKeep;
+    });
+
+    const transformedQuestions = preFilteredQuestions.map((q: any) => this.transformQuestion(q));
+    const { validQuestions, rejectedQuestions } = filterValidQuestions(transformedQuestions);
+
+    if (rejectedQuestions.length > 0) {
+      console.warn(`[MLBackendClient] Filtered ${rejectedQuestions.length} invalid diagnostic questions`);
+    }
+
+    return validQuestions;
   }
 
   async submitDiagnosticAnswer(answerData: {
