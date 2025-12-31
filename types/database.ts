@@ -33,6 +33,12 @@ export interface Profile {
   email_notifications: boolean;
   weekly_report_enabled: boolean;
   is_active: boolean;
+
+  // Diagnostic exam fields
+  diagnostic_completed: boolean;
+  diagnostic_completed_at: string | null;
+  diagnostic_score: number | null;
+  diagnostic_attempt_id: string | null;
 }
 
 export interface CarePlan {

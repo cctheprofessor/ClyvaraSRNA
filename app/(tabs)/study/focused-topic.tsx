@@ -35,7 +35,7 @@ interface FocusedTopicSession {
 
 export default function FocusedTopicScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [selectedTopics, setSelectedTopics] = useState<(number | null)[]>([null]);
   const [topicHierarchy, setTopicHierarchy] = useState<NCETopic[][]>([]);
   const [activeSessions, setActiveSessions] = useState<FocusedTopicSession[]>([]);
@@ -43,9 +43,13 @@ export default function FocusedTopicScreen() {
   const [loadingSessions, setLoadingSessions] = useState(true);
 
   useEffect(() => {
+    if (profile && !profile.diagnostic_completed) {
+      router.replace('/(tabs)/study/diagnostic-exam');
+      return;
+    }
     const hierarchy = getTopicHierarchy(selectedTopics);
     setTopicHierarchy(hierarchy);
-  }, [selectedTopics]);
+  }, [selectedTopics, profile]);
 
   useEffect(() => {
     if (user) {

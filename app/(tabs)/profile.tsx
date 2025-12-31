@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings, RefreshCw } from 'lucide-react-native';
+import { User, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings, RefreshCw, ClipboardCheck } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { ROLES, PROGRAM_TRACKS } from '@/constants/crna-schools';
 import PageHeader from '@/components/PageHeader';
@@ -642,6 +642,52 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Diagnostic Assessment</Text>
+          <View style={styles.form}>
+            {profile?.diagnostic_completed ? (
+              <>
+                <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                  <View style={{width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.success}} />
+                  <Text style={styles.label}>Diagnostic Completed</Text>
+                </View>
+                {profile.diagnostic_score !== null && (
+                  <Text style={styles.diagnosticScore}>
+                    Score: {profile.diagnostic_score}/50 ({Math.round((profile.diagnostic_score / 50) * 100)}%)
+                  </Text>
+                )}
+                {profile.diagnostic_completed_at && (
+                  <Text style={{fontSize: 12, color: Colors.text.tertiary}}>
+                    Completed: {new Date(profile.diagnostic_completed_at).toLocaleDateString()}
+                  </Text>
+                )}
+                <Pressable
+                  style={styles.viewResultsButton}
+                  onPress={() => router.push('/(tabs)/study/diagnostic-results')}
+                >
+                  <Text style={styles.viewResultsButtonText}>View Detailed Results</Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                  <View style={{width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.warning}} />
+                  <Text style={styles.label}>Not Completed</Text>
+                </View>
+                <Text style={styles.diagnosticWarning}>
+                  Complete the diagnostic assessment to unlock personalized practice features.
+                </Text>
+                <Pressable
+                  style={[styles.syncButton, styles.syncButtonPrimary]}
+                  onPress={() => router.push('/(tabs)/study/diagnostic-exam')}
+                >
+                  <Text style={styles.syncButtonTextPrimary}>Take Assessment</Text>
+                </Pressable>
+              </>
+            )}
+          </View>
+        </View>
+
         {isAdmin && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Admin</Text>
@@ -1020,5 +1066,30 @@ const styles = StyleSheet.create({
     color: Colors.warning,
     lineHeight: 18,
     fontStyle: 'italic',
+  },
+  diagnosticScore: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text.primary,
+  },
+  diagnosticWarning: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    lineHeight: 20,
+  },
+  viewResultsButton: {
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+  },
+  viewResultsButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.primary,
   },
 });

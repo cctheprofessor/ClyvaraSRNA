@@ -1020,6 +1020,154 @@ export class MLBackendClient {
     const percentageRemaining = (this.rateLimitInfo.remaining / this.rateLimitInfo.limit) * 100;
     return percentageRemaining < 20;
   }
+
+  async getDiagnosticStatus(userId: number): Promise<{
+    required: boolean;
+    in_progress: boolean;
+    completed: boolean;
+    attempt_id?: string;
+    questions_answered?: number;
+    total_questions?: number;
+  }> {
+    const headers = await this.getAuthHeaders();
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?action=diagnostic_status&user_id=${userId}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to get diagnostic status: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async getDiagnosticQuestions(userId: number): Promise<Question[]> {
+    const headers = await this.getAuthHeaders();
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?action=diagnostic_questions&user_id=${userId}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to get diagnostic questions: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const questions = data.questions || [];
+
+    const transformedQuestions = questions.map((q: any) => this.transformQuestion(q));
+    const { validQuestions } = filterValidQuestions(transformedQuestions);
+
+    return validQuestions;
+  }
+
+  async submitDiagnosticAnswer(answerData: {
+    user_id: number;
+    question_id: string;
+    answer: string | string[];
+    response_time_ms: number;
+  }): Promise<{ success: boolean }> {
+    const headers = await this.getAuthHeaders();
+
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?action=submit_diagnostic_answer`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(answerData),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to submit diagnostic answer: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async completeDiagnosticExam(userId: number): Promise<{
+    attempt_id: string;
+    total_score: number;
+    total_questions: number;
+    percentage: number;
+  }> {
+    const headers = await this.getAuthHeaders();
+
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?action=complete_diagnostic`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ user_id: userId }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to complete diagnostic exam: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async getDiagnosticResults(userId: number): Promise<{
+    attempt_id: string;
+    total_score: number;
+    total_questions: number;
+    percentage: number;
+    completed_at: string;
+    section_scores: Array<{
+      section: string;
+      correct: number;
+      total: number;
+      percentage: number;
+    }>;
+    bloom_scores: Array<{
+      level: string;
+      correct: number;
+      total: number;
+      percentage: number;
+    }>;
+    type_scores: Array<{
+      type: string;
+      correct: number;
+      total: number;
+      percentage: number;
+    }>;
+    strengths: string[];
+    weaknesses: string[];
+    recommended_topics: Array<{
+      topic: string;
+      reason: string;
+      priority: 'high' | 'medium' | 'low';
+    }>;
+  }> {
+    const headers = await this.getAuthHeaders();
+    const response = await this.fetchWithRetry(
+      `${EDGE_FUNCTION_URL}?action=diagnostic_results&user_id=${userId}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `Failed to get diagnostic results: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
 }
 
 export const mlClient = new MLBackendClient();

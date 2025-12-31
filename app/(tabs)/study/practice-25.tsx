@@ -44,6 +44,10 @@ export default function Practice25Screen() {
   const [savedSessionId, setSavedSessionId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (profile && !profile.diagnostic_completed) {
+      router.replace('/(tabs)/study/diagnostic-exam');
+      return;
+    }
     checkForSavedSession();
     return () => {
       sessionPersistenceService.flushPendingSave();
@@ -51,7 +55,7 @@ export default function Practice25Screen() {
         questionSessionTracker.endSession(profile.ml_user_id);
       }
     };
-  }, []);
+  }, [profile]);
 
   useEffect(() => {
     if (!showResumeModal && questions.length > 0 && !showResults) {
