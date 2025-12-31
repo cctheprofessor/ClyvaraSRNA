@@ -304,6 +304,69 @@ Deno.serve(async (req: Request) => {
         break;
       }
 
+      case 'diagnostic_questions': {
+        const mlUserId = url.searchParams.get('user_id');
+        if (!mlUserId) {
+          throw new Error('Missing user_id');
+        }
+
+        mlResponse = await fetch(
+          `${ML_BACKEND_URL}/api/diagnostic-exam/${mlUserId}`,
+          {
+            method: 'GET',
+            headers: getMLBackendHeaders(),
+          }
+        );
+        break;
+      }
+
+      case 'diagnostic_status': {
+        const mlUserId = url.searchParams.get('user_id');
+        if (!mlUserId) {
+          throw new Error('Missing user_id');
+        }
+
+        mlResponse = await fetch(
+          `${ML_BACKEND_URL}/api/diagnostic-exam/status/${mlUserId}`,
+          {
+            method: 'GET',
+            headers: getMLBackendHeaders(),
+          }
+        );
+        break;
+      }
+
+      case 'submit_diagnostic_answer': {
+        const body = await req.json();
+        mlResponse = await fetch(
+          `${ML_BACKEND_URL}/api/diagnostic-exam/submit-answer`,
+          {
+            method: 'POST',
+            headers: getMLBackendHeaders(true),
+            body: JSON.stringify(body),
+          }
+        );
+        break;
+      }
+
+      case 'complete_diagnostic': {
+        const body = await req.json();
+        const { user_id } = body;
+        if (!user_id) {
+          throw new Error('Missing user_id');
+        }
+
+        mlResponse = await fetch(
+          `${ML_BACKEND_URL}/api/diagnostic-exam/complete/${user_id}`,
+          {
+            method: 'POST',
+            headers: getMLBackendHeaders(true),
+            body: JSON.stringify(body),
+          }
+        );
+        break;
+      }
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }
