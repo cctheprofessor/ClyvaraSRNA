@@ -1090,21 +1090,43 @@ export class MLBackendClient {
 
     const data = await response.json();
     const questions = data.questions || [];
+    console.log(`[MLBackendClient] Received ${questions.length} diagnostic questions from backend`);
+
+    const typeDistribution: Record<string, number> = {};
+    const preFilterReasons: Record<string, number> = {};
+
+    questions.forEach((q: any) => {
+      const type = q.question_type || 'unknown';
+      typeDistribution[type] = (typeDistribution[type] || 0) + 1;
+    });
+    console.log('[MLBackendClient] Question types received:', typeDistribution);
 
     const preFilteredQuestions = questions.filter((q: any) => {
       const shouldKeep = QuestionRepairService.preFilter(q);
       if (!shouldKeep) {
-        console.log(`[MLBackendClient] Pre-filtered diagnostic question ${q.question_id || q.id} - fundamentally broken`);
+        const type = q.question_type || 'unknown';
+        preFilterReasons[type] = (preFilterReasons[type] || 0) + 1;
+        console.log(`[MLBackendClient] PRE-FILTERED question ${q.question_id || q.id} (type: ${q.question_type})`);
       }
       return shouldKeep;
     });
+
+    if (Object.keys(preFilterReasons).length > 0) {
+      console.log('[MLBackendClient] Pre-filter rejections by type:', preFilterReasons);
+    }
+    console.log(`[MLBackendClient] After pre-filtering: ${preFilteredQuestions.length}/${questions.length} questions remaining`);
 
     const transformedQuestions = preFilteredQuestions.map((q: any) => this.transformQuestion(q));
     const { validQuestions, rejectedQuestions } = filterValidQuestions(transformedQuestions);
 
     if (rejectedQuestions.length > 0) {
-      console.warn(`[MLBackendClient] Filtered ${rejectedQuestions.length} invalid diagnostic questions`);
+      console.warn(`[MLBackendClient] VALIDATION REJECTED ${rejectedQuestions.length} questions:`);
+      rejectedQuestions.forEach(({ question, errors }) => {
+        console.warn(`  - Question ${question.id} (${question.question_type}): ${errors.join(', ')}`);
+      });
     }
+
+    console.log(`[MLBackendClient] FINAL: ${validQuestions.length} valid questions after all filtering`);
 
     return validQuestions;
   }
