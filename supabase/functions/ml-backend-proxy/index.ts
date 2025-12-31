@@ -385,6 +385,23 @@ Deno.serve(async (req: Request) => {
       if (mlResponse.status === 503 || mlResponse.status === 502) {
         errorMessage = 'ML Backend is currently unavailable. It may be starting up or experiencing downtime.';
       } else if (mlResponse.status === 404) {
+        if (action === 'diagnostic_questions' || action === 'diagnostic_status' ||
+            action === 'submit_diagnostic_answer' || action === 'complete_diagnostic' ||
+            action === 'diagnostic_results') {
+          return new Response(
+            JSON.stringify({
+              error: 'Diagnostic endpoints not yet implemented',
+              fallback: true,
+            }),
+            {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+        }
         errorMessage = `ML Backend endpoint not found: ${action}`;
       } else if (mlResponse.status === 400) {
         errorMessage = `Invalid request to ML Backend: ${errorText}`;
