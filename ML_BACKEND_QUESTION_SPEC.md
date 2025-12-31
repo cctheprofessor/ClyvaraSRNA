@@ -4,17 +4,32 @@
 
 ALL questions MUST pass frontend validation or they will be rejected. This document defines the exact JSON structure required for each question type.
 
+### What Gets Validated vs What Doesn't
+
+**Validated (REQUIRED):**
+- `id`: Must be non-empty string
+- `question_text`: Must be non-empty string (not placeholder)
+- `question_type`: Must be valid type
+- Type-specific fields (options, correct_answer, etc.) - see each type below
+- `rationale`/`explanation`: If present, must NOT be placeholder text ("rationale", "TODO", "TBD", "N/A", empty)
+
+**NOT Validated (Optional Metadata):**
+- `topic_id`: Stored but not validated - can be any string or omitted
+- `difficulty`: Stored but not validated - recommend "easy", "medium", or "hard" if provided
+
+The frontend will accept questions with or without `topic_id` and `difficulty`. These fields are for organizational purposes only.
+
 ## Common Requirements (ALL Question Types)
 
 Every question MUST have:
-- `id`: String (unique identifier)
+- `id`: String (unique identifier, non-empty)
 - `question_text`: String (non-empty, not placeholder text)
 - `question_type`: String (one of the types below)
-- `topic_id`: Integer
-- `difficulty`: Number (0.0 to 1.0)
 
-Optional fields:
-- `rationale`: String (explanation of correct answer - must NOT be placeholder text like "rationale", "TODO", "TBD", "N/A", or empty)
+Optional fields (metadata - NOT validated but recommended):
+- `topic_id`: String (topic identifier - stored but not validated)
+- `difficulty`: String (one of: "easy", "medium", "hard" - stored but not validated)
+- `rationale`: String (explanation of correct answer - must NOT be placeholder text like "rationale", "TODO", "TBD", "N/A", or empty strings)
 - `explanation`: String (additional explanation - must NOT be placeholder text)
 
 ## Question Types
@@ -26,8 +41,8 @@ Optional fields:
   "id": "123",
   "question_type": "multiple_choice",
   "question_text": "What is the mechanism of action of propofol?",
-  "topic_id": 387,
-  "difficulty": 0.6,
+  "topic_id": "387",
+  "difficulty": "medium",
   "options": [
     {
       "id": "A",
@@ -65,8 +80,8 @@ Optional fields:
   "id": "124",
   "question_type": "multi_select",
   "question_text": "Which of the following are contraindications to regional anesthesia? Select all that apply.",
-  "topic_id": 391,
-  "difficulty": 0.7,
+  "topic_id": "391",
+  "difficulty": "hard",
   "options": [
     {
       "id": "A",
@@ -108,8 +123,8 @@ Optional fields:
   "id": "125",
   "question_type": "drag_drop_matching",
   "question_text": "Match each anesthetic agent with its primary mechanism",
-  "topic_id": 387,
-  "difficulty": 0.65,
+  "topic_id": "387",
+  "difficulty": "medium",
   "options": {
     "column_a": [
       {
@@ -166,8 +181,8 @@ Optional fields:
   "id": "126",
   "question_type": "drag_drop_ordering",
   "question_text": "Arrange the steps of spinal anesthesia in correct order",
-  "topic_id": 391,
-  "difficulty": 0.7,
+  "topic_id": "391",
+  "difficulty": "hard",
   "options": {
     "steps": [
       {
@@ -214,8 +229,8 @@ Optional fields:
   "id": "127",
   "question_type": "clinical_scenario",
   "question_text": "Clinical Scenario: 68-year-old patient scheduled for total knee arthroplasty",
-  "topic_id": 392,
-  "difficulty": 0.75,
+  "topic_id": "392",
+  "difficulty": "hard",
   "options": {
     "vignette": "A 68-year-old male with BMI 32, history of hypertension and diabetes, presents for total knee arthroplasty. Vitals: BP 145/88, HR 72, SpO2 98% on room air. Takes metformin and lisinopril daily.",
     "sub_questions": [
@@ -298,8 +313,8 @@ Optional fields:
   "id": "128",
   "question_type": "hotspot",
   "question_text": "Click on the area representing the cricothyroid membrane",
-  "topic_id": 390,
-  "difficulty": 0.8,
+  "topic_id": "390",
+  "difficulty": "hard",
   "options": {
     "image_url": "https://example.com/neck-anatomy.jpg",
     "hotspot_zones": [
@@ -420,22 +435,23 @@ Optional fields:
 ## Validation Summary
 
 Before returning ANY question, verify:
-1. All required fields are present and correct type
-2. No placeholder text (rationale, TODO, TBD, N/A, empty strings)
-3. Arrays are not empty when they shouldn't be
-4. Objects contain required key-value pairs
-5. IDs match correctly (correct_answer matches option.id, correct_pairs reference valid IDs, etc.)
-6. Clinical scenario sub-questions are COMPLETE questions, not placeholders
-7. Clinical scenario vignette is a STRING, not an object serialization
+1. **Core fields**: `id`, `question_text`, `question_type` are present and non-empty
+2. **Type-specific fields**: All required fields for the question type are present and valid
+3. **No placeholder text**: rationale, explanation, and option text must NOT contain "rationale", "TODO", "TBD", "N/A", or be empty strings
+4. **Arrays not empty**: Options arrays, correct_answers, correct_pairs, correct_order must have required minimum items
+5. **ID references valid**: correct_answer matches an option ID, correct_answers reference valid IDs, correct_pairs keys/values match column IDs, correct_order contains all step IDs
+6. **Clinical scenarios**: Vignette is a STRING (not "[object Object]"), sub-questions are COMPLETE questions with all required fields
+7. **Option text quality**: Every option text must be meaningful content, not placeholders
 
 ## Testing Your Questions
 
 Run this mental checklist:
-- [ ] Does question have id, question_text, question_type?
-- [ ] Are all required fields for this type present?
+- [ ] Does question have id (non-empty), question_text (non-empty), question_type (valid)?
+- [ ] Are all REQUIRED fields for this type present and valid?
 - [ ] Do all option IDs follow the pattern (A, B, C or a1, a2, etc.)?
-- [ ] Does correct_answer/correct_answers reference valid option IDs?
-- [ ] For matching: Does correct_pairs have at least 1 pair?
-- [ ] For ordering: Does correct_order.length === steps.length?
-- [ ] For clinical: Is vignette a string? Do all sub-questions have IDs, options, and correct answers?
-- [ ] No placeholder text anywhere?
+- [ ] Does correct_answer/correct_answers reference valid option IDs that exist in options?
+- [ ] For matching: Does correct_pairs have at least 1 pair? Keys match column_a IDs? Values match column_b IDs?
+- [ ] For ordering: Does correct_order.length === steps.length? All IDs in correct_order exist in steps?
+- [ ] For clinical: Is vignette a STRING (not "[object Object]")? Do all sub-questions have IDs, options, and correct answers?
+- [ ] No placeholder text in rationale, explanation, or option text ("rationale", "TODO", "TBD", "N/A", empty strings)?
+- [ ] Optional: Include topic_id (string) and difficulty ("easy"/"medium"/"hard") for better organization
