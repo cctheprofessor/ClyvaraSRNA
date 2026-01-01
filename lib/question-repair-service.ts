@@ -302,9 +302,26 @@ export class QuestionRepairService {
   /**
    * Pre-filters obviously broken questions before validation/repair
    * Returns true if question should be kept, false if it should be rejected
+   *
+   * PHILOSOPHY:
+   * - This runs BEFORE transformQuestion(), so be lenient with FORMAT issues
+   * - Accept both array and object formats for options (transformer handles both)
+   * - Accept different field names (id vs question_id, question_text vs question)
+   * - But reject questions missing truly REQUIRED data (correct answers, IDs, etc)
+   * - Let the transformer and repair service handle fixable formatting issues
    */
   static preFilter(question: any): boolean {
-    if (!question || !question.id || !question.question_type) {
+    if (!question || !question.question_type) {
+      return false;
+    }
+
+    const hasQuestionId = !!(question.id || question.question_id);
+    if (!hasQuestionId) {
+      return false;
+    }
+
+    const hasQuestionText = !!(question.question_text || question.question);
+    if (!hasQuestionText) {
       return false;
     }
 
@@ -319,40 +336,47 @@ export class QuestionRepairService {
         break;
 
       case 'drag_drop_matching':
-        if (!question.options?.correct_pairs || typeof question.options.correct_pairs !== 'object') {
+        if (!question.options || typeof question.options !== 'object') {
+          return false;
+        }
+        if (!question.options.correct_pairs || typeof question.options.correct_pairs !== 'object') {
           return false;
         }
         if (Object.keys(question.options.correct_pairs).length === 0) {
           return false;
         }
-        if (!Array.isArray(question.options?.column_a) || question.options.column_a.length === 0) {
-          return false;
-        }
-        if (!Array.isArray(question.options?.column_b) || question.options.column_b.length === 0) {
-          return false;
-        }
         break;
 
       case 'drag_drop_ordering':
-        if (!Array.isArray(question.options?.steps) || question.options.steps.length === 0) {
+        if (!question.options || typeof question.options !== 'object') {
           return false;
         }
-        if (!Array.isArray(question.options?.correct_order) || question.options.correct_order.length === 0) {
+        const hasSteps = Array.isArray(question.options.steps) && question.options.steps.length > 0;
+        const hasCorrectOrder = Array.isArray(question.options.correct_order) && question.options.correct_order.length > 0;
+        if (!hasSteps || !hasCorrectOrder) {
           return false;
         }
         break;
 
       case 'multiple_choice':
-        if (!Array.isArray(question.options) || question.options.length < 2) {
+        const hasOptions = question.options && (
+          Array.isArray(question.options) ||
+          (typeof question.options === 'object' && Object.keys(question.options).length >= 2)
+        );
+        if (!hasOptions) {
           return false;
         }
-        if (!question.correct_answer) {
+        if (!question.correct_answer && question.correct_answer !== 0) {
           return false;
         }
         break;
 
       case 'multi_select':
-        if (!Array.isArray(question.options) || question.options.length < 2) {
+        const hasMultiOptions = question.options && (
+          Array.isArray(question.options) ||
+          (typeof question.options === 'object' && Object.keys(question.options).length >= 2)
+        );
+        if (!hasMultiOptions) {
           return false;
         }
         if (!Array.isArray(question.correct_answers) || question.correct_answers.length === 0) {
