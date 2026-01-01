@@ -134,6 +134,37 @@ export default function DiagnosticExamScreen() {
     setCurrentAnswerSubmitted(true);
     setRationaleLoading(true);
 
+    try {
+      const backendResult = await mlClient.submitDiagnosticAnswer({
+        user_id: profile!.ml_user_id!,
+        question_id: currentQuestion.id,
+        answer: currentAnswer,
+        response_time_ms: responseTime,
+      });
+
+      if (backendResult.success && backendResult.rationale) {
+        setAnswerResults(prev => ({
+          ...prev,
+          [currentIndex]: {
+            is_correct: backendResult.is_correct ?? validationResult.is_correct,
+            rationale: backendResult.rationale,
+            option_rationales: backendResult.option_rationales,
+            correct_answers: backendResult.correct_answers || validationResult.correct_answers,
+          },
+        }));
+        setRationaleLoading(false);
+
+        await rationaleCacheService.setRationale(currentQuestion.id, {
+          rationale: backendResult.rationale,
+          option_rationales: backendResult.option_rationales,
+          correct_answers: backendResult.correct_answers || validationResult.correct_answers,
+        });
+        return;
+      }
+    } catch (err) {
+      console.log('[DiagnosticExam] Backend submission failed, falling back to cache and local validation');
+    }
+
     const cachedRationale = await rationaleCacheService.getRationale(currentQuestion.id);
 
     if (cachedRationale) {
@@ -157,17 +188,6 @@ export default function DiagnosticExamScreen() {
         },
       }));
       setRationaleLoading(false);
-    }
-
-    try {
-      await mlClient.submitDiagnosticAnswer({
-        user_id: profile!.ml_user_id!,
-        question_id: currentQuestion.id,
-        answer: currentAnswer,
-        response_time_ms: responseTime,
-      });
-    } catch (err) {
-      console.log('[DiagnosticExam] Backend submission failed, continuing with local tracking');
     }
   };
 

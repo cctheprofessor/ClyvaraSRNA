@@ -1150,9 +1150,53 @@ export class MLBackendClient {
     question_id: string;
     answer: string | string[];
     response_time_ms: number;
-  }): Promise<{ success: boolean }> {
-    console.log('[MLBackendClient] Diagnostic answer submission - using local tracking only');
-    return { success: true };
+  }): Promise<{
+    success: boolean;
+    is_correct?: boolean;
+    rationale?: string;
+    option_rationales?: Record<string, string>;
+    correct_answers?: string[];
+  }> {
+    try {
+      const headers = await this.getAuthHeaders();
+
+      const apiPayload = {
+        user_id: answerData.user_id,
+        question_id: answerData.question_id,
+        user_answer: answerData.answer,
+        elapsed_time: Math.round(answerData.response_time_ms / 1000),
+      };
+
+      const response = await this.fetchWithRetry(
+        `${EDGE_FUNCTION_URL}?action=submit_diagnostic_answer`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(apiPayload),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: response.statusText }));
+        console.error('[MLBackendClient] Submit diagnostic answer failed:', {
+          status: response.status,
+          error: errorData,
+        });
+        throw new Error(errorData.error || `Failed to submit diagnostic answer: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return {
+        success: true,
+        is_correct: data.is_correct,
+        rationale: data.rationale,
+        option_rationales: data.option_rationales,
+        correct_answers: data.correct_answers,
+      };
+    } catch (error) {
+      console.log('[MLBackendClient] Diagnostic answer submission failed, continuing with local tracking:', error);
+      return { success: false };
+    }
   }
 
   async completeDiagnosticExam(userId: number): Promise<{
