@@ -7,15 +7,23 @@ import { supabase } from '@/lib/supabase';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
-import { CheckCircle, AlertCircle } from 'lucide-react-native';
-import { Question } from '@/types/question';
+import { CheckCircle, AlertCircle, Send, ArrowRight } from 'lucide-react-native';
+import { Question, AnswerFormat } from '@/types/question';
 import { validateAnswer } from '@/lib/answer-validator';
+import { rationaleCacheService } from '@/lib/rationale-cache-service';
 
 interface DiagnosticAnswer {
   question_id: string;
   answer: string;
   response_time_ms: number;
   is_correct?: boolean;
+}
+
+interface AnswerResult {
+  is_correct: boolean;
+  rationale?: string;
+  option_rationales?: Record<string, string>;
+  correct_answers?: string[];
 }
 
 export default function DiagnosticExamScreen() {
@@ -25,10 +33,13 @@ export default function DiagnosticExamScreen() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answerResults, setAnswerResults] = useState<Record<number, AnswerResult>>({});
+  const [currentAnswerSubmitted, setCurrentAnswerSubmitted] = useState(false);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<DiagnosticAnswer[]>([]);
   const [startTime] = useState<number>(Date.now());
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [submitting, setSubmitting] = useState(false);
+  const [rationaleLoading, setRationaleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -71,87 +82,102 @@ export default function DiagnosticExamScreen() {
     }));
   };
 
-  const checkAnswer = (question: Question, userAnswer: string): boolean => {
-    switch (question.question_type) {
-      case 'multiple_choice':
-        return userAnswer === question.correct_answer;
-      case 'multi_select':
-        const userAnswers = JSON.parse(userAnswer).sort();
-        const correctAnswers = question.correct_answers?.sort() || [];
-        return JSON.stringify(userAnswers) === JSON.stringify(correctAnswers);
-      case 'drag_drop_matching':
-        const userPairs = JSON.parse(userAnswer);
-        const correctPairs = question.options.correct_pairs;
-        return JSON.stringify(userPairs) === JSON.stringify(correctPairs);
-      case 'drag_drop_ordering':
-        const userOrder = JSON.parse(userAnswer);
-        const correctOrder = question.options.correct_order;
-        return JSON.stringify(userOrder) === JSON.stringify(correctOrder);
-      case 'clinical_scenario':
-        const parsedAnswers = JSON.parse(userAnswer);
-        return parsedAnswers.every((ans: any, idx: number) => {
-          const subQ = question.options.sub_questions[idx];
-          if (subQ.question_type === 'multiple_choice') {
-            return ans.answer === subQ.correct_answer;
-          }
-          return false;
-        });
-      default:
-        return false;
+  const parseAnswer = (question: Question, serializedAnswer: string): AnswerFormat | null => {
+    try {
+      switch (question.question_type) {
+        case 'multiple_choice':
+          return { type: 'multiple_choice', answer: serializedAnswer };
+        case 'multi_select':
+          return { type: 'multi_select', answers: JSON.parse(serializedAnswer) };
+        case 'drag_drop_matching':
+          return { type: 'drag_drop_matching', pairs: JSON.parse(serializedAnswer) };
+        case 'drag_drop_ordering':
+          return { type: 'drag_drop_ordering', order: JSON.parse(serializedAnswer) };
+        case 'clinical_scenario':
+          return { type: 'clinical_scenario', sub_answers: JSON.parse(serializedAnswer) };
+        case 'hotspot':
+          return { type: 'hotspot', zone_id: serializedAnswer };
+        default:
+          return null;
+      }
+    } catch (error) {
+      console.error('[DiagnosticExam] Failed to parse answer:', error);
+      return null;
     }
   };
 
-  const handleNext = async () => {
+  const handleSubmitAnswer = async () => {
     const currentQuestion = questions[currentIndex];
     const currentAnswer = answers[currentIndex];
 
     if (!currentAnswer) {
-      Alert.alert('Answer Required', 'Please select an answer before continuing.');
       return;
     }
 
-    const validation = validateAnswer(currentQuestion, currentAnswer);
-    if (!validation.isValid) {
-      Alert.alert('Invalid Answer', validation.error || 'Please select a valid answer.');
+    const parsedAnswer = parseAnswer(currentQuestion, currentAnswer);
+    if (!parsedAnswer) {
+      console.error('[DiagnosticExam] Failed to parse answer');
       return;
     }
 
-    setSubmitting(true);
+    const validationResult = validateAnswer(currentQuestion, parsedAnswer);
+    const responseTime = Date.now() - questionStartTime;
+
+    const diagnosticAnswer: DiagnosticAnswer = {
+      question_id: currentQuestion.id,
+      answer: currentAnswer,
+      response_time_ms: responseTime,
+      is_correct: validationResult.is_correct,
+    };
+
+    setDiagnosticAnswers(prev => [...prev, diagnosticAnswer]);
+    setCurrentAnswerSubmitted(true);
+    setRationaleLoading(true);
+
+    const cachedRationale = await rationaleCacheService.getRationale(currentQuestion.id);
+
+    if (cachedRationale) {
+      setAnswerResults(prev => ({
+        ...prev,
+        [currentIndex]: {
+          is_correct: validationResult.is_correct,
+          rationale: cachedRationale.rationale || validationResult.explanation || validationResult.rationale,
+          option_rationales: cachedRationale.option_rationales,
+          correct_answers: cachedRationale.correct_answers || validationResult.correct_answers,
+        },
+      }));
+      setRationaleLoading(false);
+    } else {
+      setAnswerResults(prev => ({
+        ...prev,
+        [currentIndex]: {
+          is_correct: validationResult.is_correct,
+          rationale: validationResult.explanation || validationResult.rationale,
+          correct_answers: validationResult.correct_answers,
+        },
+      }));
+      setRationaleLoading(false);
+    }
+
     try {
-      const responseTime = Date.now() - questionStartTime;
-      const isCorrect = checkAnswer(currentQuestion, currentAnswer);
-
-      const diagnosticAnswer: DiagnosticAnswer = {
+      await mlClient.submitDiagnosticAnswer({
+        user_id: profile!.ml_user_id!,
         question_id: currentQuestion.id,
         answer: currentAnswer,
         response_time_ms: responseTime,
-        is_correct: isCorrect,
-      };
+      });
+    } catch (err) {
+      console.log('[DiagnosticExam] Backend submission failed, continuing with local tracking');
+    }
+  };
 
-      setDiagnosticAnswers(prev => [...prev, diagnosticAnswer]);
-
-      try {
-        await mlClient.submitDiagnosticAnswer({
-          user_id: profile!.ml_user_id!,
-          question_id: currentQuestion.id,
-          answer: currentAnswer,
-          response_time_ms: responseTime,
-        });
-      } catch (err) {
-        console.log('[DiagnosticExam] Backend submission failed, continuing with local tracking');
-      }
-
-      if (currentIndex < questions.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-        setQuestionStartTime(Date.now());
-      } else {
-        await completeDiagnostic();
-      }
-    } catch (err: any) {
-      console.error('[DiagnosticExam] Error processing answer:', err);
-      Alert.alert('Error', 'Failed to process answer. Please try again.');
-    } finally {
-      setSubmitting(false);
+  const handleNext = async () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setQuestionStartTime(Date.now());
+      setCurrentAnswerSubmitted(false);
+    } else {
+      await completeDiagnostic();
     }
   };
 
@@ -196,7 +222,7 @@ export default function DiagnosticExamScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <PageHeader title="Diagnostic Assessment" showBack onBackPress={() => router.back()} />
+        <PageHeader title="Diagnostic Assessment" subtitle="Loading your exam" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
           <Text style={styles.loadingText}>Loading your diagnostic exam...</Text>
@@ -208,7 +234,7 @@ export default function DiagnosticExamScreen() {
   if (error) {
     return (
       <View style={styles.container}>
-        <PageHeader title="Diagnostic Assessment" showBack onBackPress={() => router.back()} />
+        <PageHeader title="Diagnostic Assessment" subtitle="Error loading exam" />
         <View style={styles.errorContainer}>
           <AlertCircle size={48} color={Colors.error} />
           <Text style={styles.errorText}>{error}</Text>
@@ -241,35 +267,58 @@ export default function DiagnosticExamScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
         <QuestionRenderer
           question={currentQuestion}
-          selectedAnswer={answers[currentIndex]}
           onAnswerChange={handleAnswerChange}
-          showExplanation={false}
+          showResult={currentAnswerSubmitted}
+          isCorrect={answerResults[currentIndex]?.is_correct}
+          rationale={answerResults[currentIndex]?.rationale}
+          optionRationales={answerResults[currentIndex]?.option_rationales}
+          correctAnswers={answerResults[currentIndex]?.correct_answers}
+          disabled={currentAnswerSubmitted}
+          rationaleLoading={rationaleLoading}
         />
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable
-          style={[
-            styles.nextButton,
-            (!answers[currentIndex] || submitting) && styles.nextButtonDisabled,
-          ]}
-          onPress={handleNext}
-          disabled={!answers[currentIndex] || submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator color={Colors.white} />
-          ) : (
-            <>
-              <Text style={styles.nextButtonText}>
-                {currentIndex === questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
-              </Text>
-              <CheckCircle size={20} color={Colors.white} />
-            </>
-          )}
-        </Pressable>
+        {!currentAnswerSubmitted ? (
+          <Pressable
+            style={[
+              styles.submitButton,
+              !answers[currentIndex] && styles.submitButtonDisabled,
+            ]}
+            onPress={handleSubmitAnswer}
+            disabled={!answers[currentIndex]}
+          >
+            <Send color={Colors.white} size={20} />
+            <Text style={styles.submitButtonText}>Submit Answer</Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            style={[
+              styles.nextButton,
+              (rationaleLoading || submitting) && styles.nextButtonDisabled,
+            ]}
+            onPress={handleNext}
+            disabled={rationaleLoading || submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator color={Colors.white} />
+            ) : (
+              <>
+                <Text style={styles.nextButtonText}>
+                  {currentIndex === questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
+                </Text>
+                {currentIndex === questions.length - 1 ? (
+                  <CheckCircle size={20} color={Colors.white} />
+                ) : (
+                  <ArrowRight size={20} color={Colors.white} />
+                )}
+              </>
+            )}
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -278,7 +327,7 @@ export default function DiagnosticExamScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.backgroundSecondary,
   },
   loadingContainer: {
     flex: 1,
@@ -289,7 +338,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: Spacing.md,
     fontSize: Typography.body.fontSize,
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
     textAlign: 'center',
   },
   errorContainer: {
@@ -320,11 +369,11 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Colors.border.light,
   },
   instructionsText: {
     fontSize: Typography.small.fontSize,
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
@@ -333,7 +382,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    backgroundColor: Colors.border,
+    backgroundColor: Colors.border.light,
     borderRadius: BorderRadius.sm,
     overflow: 'hidden',
   },
@@ -344,18 +393,38 @@ const styles = StyleSheet.create({
   progressText: {
     marginTop: Spacing.xs,
     fontSize: Typography.small.fontSize,
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
     textAlign: 'center',
     fontWeight: '600',
   },
   content: {
     flex: 1,
   },
+  contentContainer: {
+    padding: Spacing.lg,
+  },
   footer: {
     padding: Spacing.md,
     backgroundColor: Colors.white,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: Colors.border.light,
+  },
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+  },
+  submitButtonDisabled: {
+    opacity: 0.5,
+  },
+  submitButtonText: {
+    color: Colors.white,
+    fontSize: Typography.body.fontSize,
+    fontWeight: '600',
   },
   nextButton: {
     flexDirection: 'row',
