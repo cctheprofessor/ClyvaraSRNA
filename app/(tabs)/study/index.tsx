@@ -7,7 +7,6 @@ import {
   Target,
   Focus,
   BarChart3,
-  MessageCircleQuestion,
   ClipboardCheck,
   Lock,
   AlertCircle,
@@ -52,14 +51,6 @@ export default function StudyScreen() {
       icon: BarChart3,
       color: Colors.accent,
       route: '/(tabs)/study/analytics',
-    },
-    {
-      id: 'ta',
-      title: 'Ask a Teaching Assistant',
-      description: 'Get expert help from experienced TAs',
-      icon: MessageCircleQuestion,
-      color: Colors.secondaryLight,
-      route: '/(tabs)/study/ask-ta',
     },
   ];
 
