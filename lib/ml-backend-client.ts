@@ -224,11 +224,11 @@ export class MLBackendClient {
     const questions = data.questions || [];
 
     const preFilteredQuestions = questions.filter((q: any) => {
-      const shouldKeep = QuestionRepairService.preFilter(q);
-      if (!shouldKeep) {
-        console.log(`[MLBackendClient] Pre-filtered out question ${q.question_id || q.id} of type ${q.question_type} - fundamentally broken`);
+      const result = QuestionRepairService.preFilter(q);
+      if (!result.shouldKeep) {
+        console.log(`[MLBackendClient] PRE-FILTERED question ${q.question_id || q.id} (type: ${q.question_type}): ${result.reason}`);
       }
-      return shouldKeep;
+      return result.shouldKeep;
     });
 
     const transformedQuestions = preFilteredQuestions.map((q: any) => this.transformQuestion(q));
@@ -590,11 +590,11 @@ export class MLBackendClient {
     const questions = data.questions || [];
 
     const preFilteredQuestions = questions.filter((q: any) => {
-      const shouldKeep = QuestionRepairService.preFilter(q);
-      if (!shouldKeep) {
-        console.log(`[MLBackendClient] Pre-filtered offline question ${q.question_id || q.id} - fundamentally broken`);
+      const result = QuestionRepairService.preFilter(q);
+      if (!result.shouldKeep) {
+        console.log(`[MLBackendClient] PRE-FILTERED offline question ${q.question_id || q.id} (type: ${q.question_type}): ${result.reason}`);
       }
-      return shouldKeep;
+      return result.shouldKeep;
     });
 
     const transformedQuestions = preFilteredQuestions.map((q: any) => this.transformQuestion(q));
@@ -1094,6 +1094,7 @@ export class MLBackendClient {
 
     const typeDistribution: Record<string, number> = {};
     const preFilterReasons: Record<string, number> = {};
+    const reasonsByType: Record<string, Record<string, number>> = {};
 
     questions.forEach((q: any) => {
       const type = q.question_type || 'unknown';
@@ -1102,17 +1103,30 @@ export class MLBackendClient {
     console.log('[MLBackendClient] Question types received:', typeDistribution);
 
     const preFilteredQuestions = questions.filter((q: any) => {
-      const shouldKeep = QuestionRepairService.preFilter(q);
-      if (!shouldKeep) {
+      const result = QuestionRepairService.preFilter(q);
+      if (!result.shouldKeep) {
         const type = q.question_type || 'unknown';
         preFilterReasons[type] = (preFilterReasons[type] || 0) + 1;
-        console.log(`[MLBackendClient] PRE-FILTERED question ${q.question_id || q.id} (type: ${q.question_type})`);
+
+        if (!reasonsByType[type]) {
+          reasonsByType[type] = {};
+        }
+        reasonsByType[type][result.reason!] = (reasonsByType[type][result.reason!] || 0) + 1;
+
+        console.log(`[MLBackendClient] PRE-FILTERED question ${q.question_id || q.id} (type: ${q.question_type}): ${result.reason}`);
       }
-      return shouldKeep;
+      return result.shouldKeep;
     });
 
     if (Object.keys(preFilterReasons).length > 0) {
       console.log('[MLBackendClient] Pre-filter rejections by type:', preFilterReasons);
+      console.log('[MLBackendClient] Pre-filter rejection reasons by type:');
+      Object.entries(reasonsByType).forEach(([type, reasons]) => {
+        console.log(`  ${type}:`);
+        Object.entries(reasons).forEach(([reason, count]) => {
+          console.log(`    - ${reason}: ${count} questions`);
+        });
+      });
     }
     console.log(`[MLBackendClient] After pre-filtering: ${preFilteredQuestions.length}/${questions.length} questions remaining`);
 

@@ -301,7 +301,7 @@ export class QuestionRepairService {
 
   /**
    * Pre-filters obviously broken questions before validation/repair
-   * Returns true if question should be kept, false if it should be rejected
+   * Returns an object with shouldKeep boolean and reason string
    *
    * PHILOSOPHY:
    * - This runs BEFORE transformQuestion(), so be lenient with FORMAT issues
@@ -310,51 +310,54 @@ export class QuestionRepairService {
    * - But reject questions missing truly REQUIRED data (correct answers, IDs, etc)
    * - Let the transformer and repair service handle fixable formatting issues
    */
-  static preFilter(question: any): boolean {
+  static preFilter(question: any): { shouldKeep: boolean; reason?: string } {
     if (!question || !question.question_type) {
-      return false;
+      return { shouldKeep: false, reason: 'Missing question or question_type' };
     }
 
     const hasQuestionId = !!(question.id || question.question_id);
     if (!hasQuestionId) {
-      return false;
+      return { shouldKeep: false, reason: 'Missing question ID (id or question_id field)' };
     }
 
     const hasQuestionText = !!(question.question_text || question.question);
     if (!hasQuestionText) {
-      return false;
+      return { shouldKeep: false, reason: 'Missing question text (question_text or question field)' };
     }
 
     switch (question.question_type) {
       case 'clinical_scenario':
         if (!question.options?.sub_questions || !Array.isArray(question.options.sub_questions)) {
-          return false;
+          return { shouldKeep: false, reason: 'Missing or invalid options.sub_questions array' };
         }
         if (question.options.sub_questions.length === 0) {
-          return false;
+          return { shouldKeep: false, reason: 'Empty options.sub_questions array' };
         }
         break;
 
       case 'drag_drop_matching':
         if (!question.options || typeof question.options !== 'object') {
-          return false;
+          return { shouldKeep: false, reason: 'Missing or invalid options object' };
         }
         if (!question.options.correct_pairs || typeof question.options.correct_pairs !== 'object') {
-          return false;
+          return { shouldKeep: false, reason: 'Missing or invalid options.correct_pairs object' };
         }
         if (Object.keys(question.options.correct_pairs).length === 0) {
-          return false;
+          return { shouldKeep: false, reason: 'Empty options.correct_pairs object - need answer key mapping' };
         }
         break;
 
       case 'drag_drop_ordering':
         if (!question.options || typeof question.options !== 'object') {
-          return false;
+          return { shouldKeep: false, reason: 'Missing or invalid options object' };
         }
         const hasSteps = Array.isArray(question.options.steps) && question.options.steps.length > 0;
         const hasCorrectOrder = Array.isArray(question.options.correct_order) && question.options.correct_order.length > 0;
-        if (!hasSteps || !hasCorrectOrder) {
-          return false;
+        if (!hasSteps) {
+          return { shouldKeep: false, reason: 'Missing or empty options.steps array' };
+        }
+        if (!hasCorrectOrder) {
+          return { shouldKeep: false, reason: 'Missing or empty options.correct_order array - need correct sequence' };
         }
         break;
 
@@ -364,10 +367,10 @@ export class QuestionRepairService {
           (typeof question.options === 'object' && Object.keys(question.options).length >= 2)
         );
         if (!hasOptions) {
-          return false;
+          return { shouldKeep: false, reason: 'Missing options or less than 2 options provided' };
         }
         if (!question.correct_answer && question.correct_answer !== 0) {
-          return false;
+          return { shouldKeep: false, reason: 'Missing correct_answer field' };
         }
         break;
 
@@ -377,14 +380,14 @@ export class QuestionRepairService {
           (typeof question.options === 'object' && Object.keys(question.options).length >= 2)
         );
         if (!hasMultiOptions) {
-          return false;
+          return { shouldKeep: false, reason: 'Missing options or less than 2 options provided' };
         }
         if (!Array.isArray(question.correct_answers) || question.correct_answers.length === 0) {
-          return false;
+          return { shouldKeep: false, reason: 'Missing or empty correct_answers array' };
         }
         break;
     }
 
-    return true;
+    return { shouldKeep: true };
   }
 }
