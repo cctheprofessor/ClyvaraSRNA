@@ -6,7 +6,6 @@ import {
   UserRound,
   MessageCircleQuestion,
   Calendar,
-  User,
   Clock,
   LayoutDashboard,
   BookOpen,
@@ -36,15 +35,6 @@ export default function ToolsScreen() {
       color: '#2196F3',
       route: '/(tabs)/tools/my-bookings',
       taOnly: false,
-    },
-    {
-      id: 'ta-profile',
-      title: 'TA Profile Setup',
-      description: 'Set up your teaching assistant profile',
-      icon: User,
-      color: '#FF9800',
-      route: '/(tabs)/tools/ta-profile-setup',
-      taOnly: true,
     },
     {
       id: 'ta-availability',
