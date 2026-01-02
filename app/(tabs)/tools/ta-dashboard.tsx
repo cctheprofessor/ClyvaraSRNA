@@ -96,42 +96,58 @@ export default function TADashboard() {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      console.log('[TADashboard] Approving booking:', bookingId);
+
+      const { data, error } = await supabase
         .from('ta_bookings')
         .update({
           status: 'approved',
           approved_at: new Date().toISOString(),
           approved_by: user.id,
         })
-        .eq('id', bookingId);
+        .eq('id', bookingId)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[TADashboard] Approve error:', error);
+        throw error;
+      }
 
+      console.log('[TADashboard] Booking approved:', data);
       Alert.alert('Success', 'Booking request approved! Student will be notified and can now pay.');
       loadDashboard();
     } catch (error: any) {
-      console.error('Approve error:', error);
+      console.error('[TADashboard] Approve error:', error);
       Alert.alert('Error', error.message || 'Failed to approve booking');
     }
   }
 
   async function rejectBooking(bookingId: string, reason: string) {
     try {
-      const { error } = await supabase
+      console.log('[TADashboard] Rejecting booking:', bookingId, 'reason:', reason);
+
+      const { data, error } = await supabase
         .from('ta_bookings')
         .update({
           status: 'rejected',
           rejected_at: new Date().toISOString(),
           rejection_reason: reason,
         })
-        .eq('id', bookingId);
+        .eq('id', bookingId)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[TADashboard] Reject error:', error);
+        throw error;
+      }
 
-      Alert.alert('Success', 'Booking request rejected');
+      console.log('[TADashboard] Booking rejected:', data);
+      Alert.alert('Success', 'Booking request rejected. Student has been notified.');
       loadDashboard();
     } catch (error: any) {
-      console.error('Reject error:', error);
+      console.error('[TADashboard] Reject error:', error);
       Alert.alert('Error', error.message || 'Failed to reject booking');
     }
   }
@@ -148,23 +164,17 @@ export default function TADashboard() {
   }
 
   function handleReject(booking: BookingWithDetails) {
-    Alert.prompt(
+    Alert.alert(
       'Reject Request',
-      'Please provide a reason for rejection:',
+      'Are you sure you want to reject this booking request? The student will be notified.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reject',
-          onPress: (reason?: string) => {
-            if (reason && reason.trim()) {
-              rejectBooking(booking.id, reason.trim());
-            } else {
-              Alert.alert('Error', 'Please provide a rejection reason');
-            }
-          },
+          style: 'destructive',
+          onPress: () => rejectBooking(booking.id, 'Time slot no longer available'),
         },
-      ],
-      'plain-text'
+      ]
     );
   }
 

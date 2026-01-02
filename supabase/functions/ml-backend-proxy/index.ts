@@ -183,13 +183,23 @@ Deno.serve(async (req: Request) => {
           count: count,
         });
 
-        mlResponse = await fetch(
-          `${ML_BACKEND_URL}/api/questions/download-batch?${params}`,
-          {
+        const downloadUrl = `${ML_BACKEND_URL}/api/questions/download-batch?${params}`;
+        console.log('[ml-backend-proxy] Downloading questions:', {
+          url: downloadUrl,
+          ml_user_id: mlUserId,
+          count,
+        });
+
+        try {
+          mlResponse = await fetch(downloadUrl, {
             method: 'GET',
             headers: getMLBackendHeaders(),
-          }
-        );
+          });
+          console.log('[ml-backend-proxy] Download response status:', mlResponse.status);
+        } catch (fetchError) {
+          console.error('[ml-backend-proxy] Network error downloading questions:', fetchError);
+          throw new Error('Failed to connect to ML Backend for question download');
+        }
         break;
       }
 
