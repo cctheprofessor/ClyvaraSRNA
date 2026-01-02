@@ -165,7 +165,7 @@ export default function TAAvailabilityScreen() {
         if (insertError) throw insertError;
       }
 
-      Alert.alert('Success', 'Availability saved successfully');
+      router.replace('/(tabs)/tools/ta-dashboard');
     } catch (error: any) {
       console.error('Error saving availability:', error);
       Alert.alert('Error', 'Failed to save availability');
