@@ -1133,16 +1133,61 @@ export class MLBackendClient {
     const transformedQuestions = preFilteredQuestions.map((q: any) => this.transformQuestion(q));
     const { validQuestions, rejectedQuestions } = filterValidQuestions(transformedQuestions);
 
-    if (rejectedQuestions.length > 0) {
-      console.warn(`[MLBackendClient] VALIDATION REJECTED ${rejectedQuestions.length} questions:`);
-      rejectedQuestions.forEach(({ question, errors }) => {
-        console.warn(`  - Question ${question.id} (${question.question_type}): ${errors.join(', ')}`);
-      });
+    const repairedQuestions: Question[] = [];
+    const unreparableQuestions: Array<{ question: any; errors: string[]; originalErrors: string[] }> = [];
+
+    for (const { question, errors } of rejectedQuestions) {
+      console.log(`[MLBackendClient] Attempting to repair question ${question.id} (${question.question_type})`);
+      const repaired = QuestionRepairService.repairQuestion(question);
+
+      if (repaired) {
+        const validation = validateQuestion(repaired);
+
+        if (validation.isValid) {
+          repairedQuestions.push(repaired as Question);
+          console.log(`[MLBackendClient] Successfully repaired question ${question.id}`);
+        } else {
+          console.warn(`[MLBackendClient] Repair failed for question ${question.id}: ${validation.errors.join(', ')}`);
+          unreparableQuestions.push({
+            question,
+            errors: validation.errors,
+            originalErrors: errors,
+          });
+        }
+      } else {
+        console.warn(`[MLBackendClient] Could not repair question ${question.id}`);
+        unreparableQuestions.push({
+          question,
+          errors,
+          originalErrors: errors,
+        });
+      }
     }
 
-    console.log(`[MLBackendClient] FINAL: ${validQuestions.length} valid questions after all filtering`);
+    if (unreparableQuestions.length > 0) {
+      console.warn(`[MLBackendClient] VALIDATION REJECTED ${unreparableQuestions.length} unrepairable questions:`);
+      unreparableQuestions.forEach(({ question, errors }) => {
+        console.warn(`  - Question ${question.id} (${question.question_type}): ${errors.join(', ')}`);
+      });
 
-    return validQuestions;
+      await this.logRejectedQuestions(unreparableQuestions, userId);
+    }
+
+    if (repairedQuestions.length > 0) {
+      console.log(`[MLBackendClient] Successfully repaired ${repairedQuestions.length} questions`);
+      await this.logRepairedQuestions(
+        repairedQuestions.map(q => ({
+          question: q,
+          originalErrors: rejectedQuestions.find(rq => rq.question.id === q.id)?.errors || [],
+        })),
+        userId
+      );
+    }
+
+    const finalQuestions = [...validQuestions, ...repairedQuestions];
+    console.log(`[MLBackendClient] FINAL: ${finalQuestions.length} valid questions (${validQuestions.length} originally valid + ${repairedQuestions.length} repaired)`);
+
+    return finalQuestions;
   }
 
   async submitDiagnosticAnswer(answerData: {
