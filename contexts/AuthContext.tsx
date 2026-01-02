@@ -22,8 +22,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ADMIN_EMAIL = 'christian.cansino@gmail.com';
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -36,7 +34,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setIsAdmin(session?.user?.email === ADMIN_EMAIL);
       if (session?.user) {
         loadProfile(session.user.id);
       } else {
@@ -47,7 +44,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setIsAdmin(session?.user?.email === ADMIN_EMAIL);
       if (session?.user) {
         loadProfile(session.user.id);
       } else {
@@ -71,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       setProfile(data);
+      setIsAdmin(data?.is_admin ?? false);
       setIsTA(data?.is_ta ?? false);
 
       if (triggerCache && data?.ml_user_id) {
@@ -210,6 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    setIsAdmin(false);
     setIsTA(false);
   };
 
