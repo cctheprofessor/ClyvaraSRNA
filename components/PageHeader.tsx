@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
     color: Colors.text.light,
     marginBottom: 4,
     textAlign: 'center',
+    width: '100%',
   },
   subtitle: {
     ...Typography.body,
