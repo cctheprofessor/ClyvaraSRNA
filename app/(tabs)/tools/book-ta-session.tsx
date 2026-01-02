@@ -14,6 +14,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { supabase } from '../../../lib/supabase';
 import {
   TAProfile,
+  TAAvailability,
   DURATION_OPTIONS,
   calculateSessionRate,
   calculateTotalAmount,
@@ -26,12 +27,30 @@ import { Star, Calendar, Clock, ChevronDown, ChevronUp } from 'lucide-react-nati
 
 type Step = 'select-ta' | 'select-time' | 'select-duration' | 'confirm';
 
+interface AvailableDate {
+  date: string;
+  dayOfWeek: number;
+  hasAvailability: boolean;
+}
+
+interface TimeSlot {
+  time: string;
+  available: boolean;
+}
+
+interface ExistingBooking {
+  session_date: string;
+  start_time: string;
+  duration_minutes: number;
+}
+
 export default function BookTASession() {
   const router = useRouter();
   const { user } = useAuth();
 
   const [step, setStep] = useState<Step>('select-ta');
   const [loading, setLoading] = useState(true);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [booking, setBooking] = useState(false);
   const [tas, setTas] = useState<TAProfile[]>([]);
   const [selectedTA, setSelectedTA] = useState<TAProfile | null>(null);
@@ -41,9 +60,26 @@ export default function BookTASession() {
   const [selectedDuration, setSelectedDuration] = useState<30 | 60 | 90>(30);
   const [notes, setNotes] = useState('');
 
+  const [availability, setAvailability] = useState<TAAvailability[]>([]);
+  const [availableDates, setAvailableDates] = useState<AvailableDate[]>([]);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
+  const [existingBookings, setExistingBookings] = useState<ExistingBooking[]>([]);
+
   useEffect(() => {
     loadTAs();
   }, []);
+
+  useEffect(() => {
+    if (selectedTA && step === 'select-time') {
+      loadTAAvailability(selectedTA.id);
+    }
+  }, [selectedTA, step]);
+
+  useEffect(() => {
+    if (selectedDate) {
+      calculateAvailableTimeSlots(selectedDate);
+    }
+  }, [selectedDate, selectedDuration, existingBookings]);
 
   async function loadTAs() {
     try {
@@ -64,8 +100,171 @@ export default function BookTASession() {
     }
   }
 
+  async function loadTAAvailability(taId: string) {
+    setLoadingAvailability(true);
+    try {
+      const { data: availData, error: availError } = await supabase
+        .from('ta_availability')
+        .select('*')
+        .eq('ta_id', taId)
+        .order('day_of_week', { ascending: true })
+        .order('start_time', { ascending: true });
+
+      if (availError) throw availError;
+
+      const { data: bookingsData, error: bookingsError } = await supabase
+        .from('ta_bookings')
+        .select('session_date, start_time, duration_minutes')
+        .eq('ta_id', taId)
+        .in('status', ['pending', 'confirmed'])
+        .gte('session_date', new Date().toISOString().split('T')[0]);
+
+      if (bookingsError) throw bookingsError;
+
+      setAvailability(availData || []);
+      setExistingBookings(bookingsData || []);
+
+      calculateAvailableDates(availData || []);
+    } catch (error: any) {
+      console.error('Error loading availability:', error);
+      Alert.alert('Error', 'Failed to load availability');
+    } finally {
+      setLoadingAvailability(false);
+    }
+  }
+
+  function calculateAvailableDates(availabilitySlots: TAAvailability[]) {
+    const dates: AvailableDate[] = [];
+    const today = new Date();
+    const daysToShow = 60;
+
+    const availableDaysOfWeek = new Set(availabilitySlots.map(slot => slot.day_of_week));
+
+    for (let i = 1; i <= daysToShow; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      const dayOfWeek = date.getDay();
+      const dateString = date.toISOString().split('T')[0];
+
+      dates.push({
+        date: dateString,
+        dayOfWeek,
+        hasAvailability: availableDaysOfWeek.has(dayOfWeek),
+      });
+    }
+
+    setAvailableDates(dates);
+  }
+
+  function calculateAvailableTimeSlots(date: string) {
+    if (!selectedTA || availability.length === 0) return;
+
+    const selectedDateObj = new Date(date + 'T00:00:00');
+    const dayOfWeek = selectedDateObj.getDay();
+
+    const dayAvailability = availability.filter(slot => slot.day_of_week === dayOfWeek);
+
+    if (dayAvailability.length === 0) {
+      setAvailableTimeSlots([]);
+      return;
+    }
+
+    const slots: TimeSlot[] = [];
+
+    dayAvailability.forEach(avail => {
+      const startParts = avail.start_time.split(':');
+      const endParts = avail.end_time.split(':');
+      const startMinutes = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
+      const endMinutes = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
+
+      for (let minutes = startMinutes; minutes < endMinutes; minutes += 30) {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        const timeString = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+
+        const isAvailable = checkTimeSlotAvailability(date, timeString);
+
+        slots.push({
+          time: timeString,
+          available: isAvailable,
+        });
+      }
+    });
+
+    const uniqueSlots = Array.from(
+      new Map(slots.map(slot => [slot.time, slot])).values()
+    ).sort((a, b) => a.time.localeCompare(b.time));
+
+    setAvailableTimeSlots(uniqueSlots);
+  }
+
+  function checkTimeSlotAvailability(date: string, time: string): boolean {
+    const now = new Date();
+    const slotDateTime = new Date(`${date}T${time}:00`);
+
+    if (slotDateTime <= now) {
+      return false;
+    }
+
+    const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    if (slotDateTime < twoHoursFromNow) {
+      return false;
+    }
+
+    const [hours, minutes] = time.split(':').map(Number);
+    const slotStartMinutes = hours * 60 + minutes;
+    const slotEndMinutes = slotStartMinutes + selectedDuration;
+
+    for (const booking of existingBookings) {
+      if (booking.session_date !== date) continue;
+
+      const [bookingHours, bookingMinutes] = booking.start_time.split(':').map(Number);
+      const bookingStartMinutes = bookingHours * 60 + bookingMinutes;
+      const bookingEndMinutes = bookingStartMinutes + booking.duration_minutes;
+
+      if (
+        (slotStartMinutes >= bookingStartMinutes && slotStartMinutes < bookingEndMinutes) ||
+        (slotEndMinutes > bookingStartMinutes && slotEndMinutes <= bookingEndMinutes) ||
+        (slotStartMinutes <= bookingStartMinutes && slotEndMinutes >= bookingEndMinutes)
+      ) {
+        return false;
+      }
+    }
+
+    const dayOfWeek = new Date(date + 'T00:00:00').getDay();
+    const dayAvailability = availability.filter(slot => slot.day_of_week === dayOfWeek);
+
+    for (const avail of dayAvailability) {
+      const [availStartHours, availStartMinutes] = avail.start_time.split(':').map(Number);
+      const [availEndHours, availEndMinutes] = avail.end_time.split(':').map(Number);
+      const availStartMinutes = availStartHours * 60 + availStartMinutes;
+      const availEndMinutes = availEndHours * 60 + availEndMinutes;
+
+      if (slotStartMinutes >= availStartMinutes && slotEndMinutes <= availEndMinutes) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   async function proceedToCheckout() {
     if (!selectedTA || !selectedDate || !selectedTime || !user) return;
+
+    const isAvailable = checkTimeSlotAvailability(selectedDate, selectedTime);
+    if (!isAvailable) {
+      Alert.alert(
+        'Time Slot Unavailable',
+        'This time slot is no longer available. Please select a different time.',
+        [
+          {
+            text: 'OK',
+            onPress: () => setStep('select-time'),
+          },
+        ]
+      );
+      return;
+    }
 
     setBooking(true);
 
@@ -245,38 +444,124 @@ export default function BookTASession() {
 
             <Text style={styles.stepTitle}>Select Date & Time</Text>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Date</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                value={selectedDate}
-                onChangeText={setSelectedDate}
-                placeholderTextColor={Colors.text.tertiary}
-              />
-            </View>
+            {loadingAvailability ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Loading availability...</Text>
+              </View>
+            ) : availability.length === 0 ? (
+              <View style={styles.noAvailabilityContainer}>
+                <Text style={styles.noAvailabilityText}>
+                  This TA hasn&apos;t set their availability yet.
+                </Text>
+                <Text style={styles.noAvailabilitySubtext}>
+                  Please select a different TA or check back later.
+                </Text>
+              </View>
+            ) : (
+              <>
+                <View style={styles.availabilityInfo}>
+                  <Text style={styles.availabilityInfoText}>
+                    {selectedTA.display_name || 'This TA'} is available on:{' '}
+                    {Array.from(new Set(availability.map(a => DAY_NAMES[a.day_of_week])))
+                      .join(', ')}
+                  </Text>
+                </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Time</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="HH:MM (e.g., 14:30)"
-                value={selectedTime}
-                onChangeText={setSelectedTime}
-                placeholderTextColor={Colors.text.tertiary}
-              />
-            </View>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Select Date</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.dateScroller}
+                  >
+                    {availableDates.filter(d => d.hasAvailability).slice(0, 30).map((dateOption) => {
+                      const dateObj = new Date(dateOption.date + 'T00:00:00');
+                      const isSelected = selectedDate === dateOption.date;
 
-            <TouchableOpacity
-              style={[
-                styles.continueButton,
-                (!selectedDate || !selectedTime) && styles.continueButtonDisabled,
-              ]}
-              disabled={!selectedDate || !selectedTime}
-              onPress={() => setStep('select-duration')}
-            >
-              <Text style={styles.continueButtonText}>Continue</Text>
-            </TouchableOpacity>
+                      return (
+                        <TouchableOpacity
+                          key={dateOption.date}
+                          style={[
+                            styles.dateCard,
+                            isSelected && styles.dateCardSelected,
+                            !dateOption.hasAvailability && styles.dateCardDisabled,
+                          ]}
+                          onPress={() => {
+                            setSelectedDate(dateOption.date);
+                            setSelectedTime('');
+                          }}
+                          disabled={!dateOption.hasAvailability}
+                        >
+                          <Text style={[styles.dateDayName, isSelected && styles.dateTextSelected]}>
+                            {DAY_NAMES[dateOption.dayOfWeek].slice(0, 3)}
+                          </Text>
+                          <Text style={[styles.dateDay, isSelected && styles.dateTextSelected]}>
+                            {dateObj.getDate()}
+                          </Text>
+                          <Text style={[styles.dateMonth, isSelected && styles.dateTextSelected]}>
+                            {dateObj.toLocaleDateString('en-US', { month: 'short' })}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+
+                {selectedDate && (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Select Time</Text>
+                    {availableTimeSlots.length === 0 ? (
+                      <View style={styles.noSlotsContainer}>
+                        <Text style={styles.noSlotsText}>
+                          No time slots available for this date
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={styles.timeSlotsGrid}>
+                        {availableTimeSlots.map((slot) => {
+                          const isSelected = selectedTime === slot.time;
+
+                          return (
+                            <TouchableOpacity
+                              key={slot.time}
+                              style={[
+                                styles.timeSlotCard,
+                                isSelected && styles.timeSlotCardSelected,
+                                !slot.available && styles.timeSlotCardDisabled,
+                              ]}
+                              onPress={() => setSelectedTime(slot.time)}
+                              disabled={!slot.available}
+                            >
+                              <Text
+                                style={[
+                                  styles.timeSlotText,
+                                  isSelected && styles.timeSlotTextSelected,
+                                  !slot.available && styles.timeSlotTextDisabled,
+                                ]}
+                              >
+                                {slot.time}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                <TouchableOpacity
+                  style={[
+                    styles.continueButton,
+                    (!selectedDate || !selectedTime) && styles.continueButtonDisabled,
+                  ]}
+                  disabled={!selectedDate || !selectedTime}
+                  onPress={() => setStep('select-duration')}
+                >
+                  <Text style={styles.continueButtonText}>Continue</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </>
         )}
 
@@ -669,5 +954,127 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: Colors.text.tertiary,
+  },
+  noAvailabilityContainer: {
+    padding: 40,
+    alignItems: 'center',
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+  },
+  noAvailabilityText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  noAvailabilitySubtext: {
+    fontSize: 14,
+    color: Colors.text.tertiary,
+    textAlign: 'center',
+  },
+  availabilityInfo: {
+    backgroundColor: '#e8f5e9',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  availabilityInfoText: {
+    fontSize: 14,
+    color: '#2e7d32',
+    lineHeight: 20,
+  },
+  dateScroller: {
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+  },
+  dateCard: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    padding: 12,
+    marginRight: 12,
+    minWidth: 70,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  dateCardSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  dateCardDisabled: {
+    opacity: 0.4,
+  },
+  dateDayName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.text.tertiary,
+    marginBottom: 4,
+  },
+  dateDay: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.text.primary,
+    marginBottom: 2,
+  },
+  dateMonth: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: Colors.text.tertiary,
+  },
+  dateTextSelected: {
+    color: '#fff',
+  },
+  timeSlotsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  timeSlotCard: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    padding: 12,
+    minWidth: '30%',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  timeSlotCardSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  timeSlotCardDisabled: {
+    opacity: 0.4,
+  },
+  timeSlotText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.text.primary,
+  },
+  timeSlotTextSelected: {
+    color: '#fff',
+  },
+  timeSlotTextDisabled: {
+    color: Colors.text.tertiary,
+  },
+  noSlotsContainer: {
+    padding: 20,
+    alignItems: 'center',
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+  },
+  noSlotsText: {
+    fontSize: 14,
+    color: Colors.text.tertiary,
+    textAlign: 'center',
   },
 });
