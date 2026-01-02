@@ -235,10 +235,10 @@ export default function BookTASession() {
     const dayAvailability = availability.filter(slot => slot.day_of_week === dayOfWeek);
 
     for (const avail of dayAvailability) {
-      const [availStartHours, availStartMinutes] = avail.start_time.split(':').map(Number);
-      const [availEndHours, availEndMinutes] = avail.end_time.split(':').map(Number);
-      const availStartMinutes = availStartHours * 60 + availStartMinutes;
-      const availEndMinutes = availEndHours * 60 + availEndMinutes;
+      const [availStartHours, availStartMins] = avail.start_time.split(':').map(Number);
+      const [availEndHours, availEndMins] = avail.end_time.split(':').map(Number);
+      const availStartMinutes = availStartHours * 60 + availStartMins;
+      const availEndMinutes = availEndHours * 60 + availEndMins;
 
       if (slotStartMinutes >= availStartMinutes && slotEndMinutes <= availEndMinutes) {
         return true;
