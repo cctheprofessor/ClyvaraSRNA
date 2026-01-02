@@ -165,9 +165,11 @@ export default function BookTASession() {
     for (let i = 1; i <= daysToShow; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      const jsDay = date.getDay();
-      const isoDay = jsToIsoDay(jsDay);
       const dateString = date.toISOString().split('T')[0];
+
+      const dateForDayOfWeek = new Date(dateString + 'T00:00:00');
+      const jsDay = dateForDayOfWeek.getDay();
+      const isoDay = jsToIsoDay(jsDay);
 
       dates.push({
         date: dateString,
