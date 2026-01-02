@@ -6,7 +6,6 @@ import {
   UserRound,
   MessageCircleQuestion,
   Calendar,
-  Clock,
   LayoutDashboard,
   BookOpen,
 } from 'lucide-react-native';
@@ -35,15 +34,6 @@ export default function ToolsScreen() {
       color: '#2196F3',
       route: '/(tabs)/tools/my-bookings',
       taOnly: false,
-    },
-    {
-      id: 'ta-availability',
-      title: 'Manage Availability',
-      description: 'Set your available times for bookings',
-      icon: Clock,
-      color: '#9C27B0',
-      route: '/(tabs)/tools/ta-availability',
-      taOnly: true,
     },
     {
       id: 'ta-dashboard',
