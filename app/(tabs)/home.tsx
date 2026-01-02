@@ -50,7 +50,7 @@ export default function HomeScreen() {
     if (!session?.user) return;
 
     const channel = supabase
-      .channel('feed_posts_changes')
+      .channel('feed_changes')
       .on(
         'postgres_changes',
         {
@@ -60,6 +60,17 @@ export default function HomeScreen() {
         },
         () => {
           loadPosts(true);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'feed_prompts',
+        },
+        () => {
+          loadPrompts();
         }
       )
       .subscribe();
@@ -181,6 +192,7 @@ export default function HomeScreen() {
 
   const handleRefresh = () => {
     setRefreshing(true);
+    loadPrompts();
     loadPosts(true);
   };
 
