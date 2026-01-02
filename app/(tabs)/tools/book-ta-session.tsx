@@ -22,7 +22,7 @@ import {
 } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Star, Calendar, Clock } from 'lucide-react-native';
+import { Star, Calendar, Clock, ChevronDown, ChevronUp } from 'lucide-react-native';
 
 type Step = 'select-ta' | 'select-time' | 'select-duration' | 'confirm';
 
@@ -35,6 +35,7 @@ export default function BookTASession() {
   const [booking, setBooking] = useState(false);
   const [tas, setTas] = useState<TAProfile[]>([]);
   const [selectedTA, setSelectedTA] = useState<TAProfile | null>(null);
+  const [expandedTAId, setExpandedTAId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [selectedDuration, setSelectedDuration] = useState<30 | 60 | 90>(30);
@@ -149,59 +150,89 @@ export default function BookTASession() {
                 <Text style={styles.emptyText}>No TAs available at the moment</Text>
               </View>
             ) : (
-              tas.map((ta) => (
-                <TouchableOpacity
-                  key={ta.id}
-                  style={[
-                    styles.taCard,
-                    selectedTA?.id === ta.id && styles.taCardSelected,
-                  ]}
-                  onPress={() => {
-                    setSelectedTA(ta);
-                    setStep('select-time');
-                  }}
-                >
-                  {ta.display_name && (
-                    <Text style={styles.taName}>{ta.display_name}</Text>
-                  )}
+              tas.map((ta) => {
+                const isExpanded = expandedTAId === ta.id;
 
-                  <View style={styles.taHeader}>
-                    <View style={styles.taInfo}>
-                      <View style={styles.ratingBadge}>
-                        <Star size={14} color="#FFD700" fill="#FFD700" />
-                        <Text style={styles.ratingText}>
-                          {ta.average_rating > 0 ? ta.average_rating.toFixed(1) : 'New'}
-                        </Text>
+                return (
+                  <View
+                    key={ta.id}
+                    style={[
+                      styles.taCard,
+                      isExpanded && styles.taCardExpanded,
+                    ]}
+                  >
+                    <TouchableOpacity
+                      onPress={() => {
+                        setExpandedTAId(isExpanded ? null : ta.id);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.taCardHeader}>
+                        {ta.display_name && (
+                          <Text style={styles.taName}>{ta.display_name}</Text>
+                        )}
+
+                        {isExpanded ? (
+                          <ChevronUp size={20} color={Colors.primary} />
+                        ) : (
+                          <ChevronDown size={20} color={Colors.text.tertiary} />
+                        )}
                       </View>
-                      <Text style={styles.sessionCount}>
-                        {ta.total_sessions} sessions
-                      </Text>
-                    </View>
-                    <Text style={styles.taRate}>${ta.base_rate_30min}/30min</Text>
-                  </View>
 
-                  {ta.bio && (
-                    <Text style={styles.taBio} numberOfLines={2}>
-                      {ta.bio}
-                    </Text>
-                  )}
-
-                  {ta.specialties && ta.specialties.length > 0 && (
-                    <View style={styles.specialtiesRow}>
-                      {ta.specialties.slice(0, 3).map((specialty, index) => (
-                        <View key={index} style={styles.specialtyTag}>
-                          <Text style={styles.specialtyTagText}>{specialty}</Text>
+                      <View style={styles.taHeader}>
+                        <View style={styles.taInfo}>
+                          <View style={styles.ratingBadge}>
+                            <Star size={14} color="#FFD700" fill="#FFD700" />
+                            <Text style={styles.ratingText}>
+                              {ta.average_rating > 0 ? ta.average_rating.toFixed(1) : 'New'}
+                            </Text>
+                          </View>
+                          <Text style={styles.sessionCount}>
+                            {ta.total_sessions} sessions
+                          </Text>
                         </View>
-                      ))}
-                      {ta.specialties.length > 3 && (
-                        <Text style={styles.moreSpecialties}>
-                          +{ta.specialties.length - 3} more
+                        <Text style={styles.taRate}>${ta.base_rate_30min}/30min</Text>
+                      </View>
+
+                      {ta.bio && (
+                        <Text
+                          style={styles.taBio}
+                          numberOfLines={isExpanded ? undefined : 2}
+                        >
+                          {ta.bio}
                         </Text>
                       )}
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))
+
+                      {ta.specialties && ta.specialties.length > 0 && (
+                        <View style={styles.specialtiesRow}>
+                          {(isExpanded ? ta.specialties : ta.specialties.slice(0, 3)).map((specialty, index) => (
+                            <View key={index} style={styles.specialtyTag}>
+                              <Text style={styles.specialtyTagText}>{specialty}</Text>
+                            </View>
+                          ))}
+                          {!isExpanded && ta.specialties.length > 3 && (
+                            <Text style={styles.moreSpecialties}>
+                              +{ta.specialties.length - 3} more
+                            </Text>
+                          )}
+                        </View>
+                      )}
+                    </TouchableOpacity>
+
+                    {isExpanded && (
+                      <TouchableOpacity
+                        style={styles.selectButton}
+                        onPress={() => {
+                          setSelectedTA(ta);
+                          setStep('select-time');
+                        }}
+                      >
+                        <Text style={styles.selectButtonText}>Select This TA</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              })
             )}
           </>
         )}
@@ -424,15 +455,25 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'transparent',
   },
+  taCardExpanded: {
+    borderColor: Colors.primary,
+    backgroundColor: '#f0f8ff',
+  },
   taCardSelected: {
     borderColor: Colors.primary,
     backgroundColor: '#f0f8ff',
+  },
+  taCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   taName: {
     fontSize: 18,
     fontWeight: '700',
     color: Colors.text.primary,
-    marginBottom: 8,
+    flex: 1,
   },
   taHeader: {
     flexDirection: 'row',
@@ -616,5 +657,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+  },
+  selectButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 8,
+    padding: 14,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  selectButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
