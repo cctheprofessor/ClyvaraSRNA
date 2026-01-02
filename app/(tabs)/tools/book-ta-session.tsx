@@ -129,6 +129,9 @@ export default function BookTASession() {
 
       if (bookingsError) throw bookingsError;
 
+      console.log('Raw availability data from DB:', availData);
+      console.log('Day of week values in DB:', availData?.map(a => a.day_of_week));
+
       setAvailability(availData || []);
       setExistingBookings(bookingsData || []);
 
@@ -176,11 +179,13 @@ export default function BookTASession() {
     const isoDay = jsToIsoDay(jsDay);
 
     console.log('Calculating time slots for:', { date, jsDay, isoDay, availabilityRecords: availability.length });
+    console.log('All availability day_of_week values:', availability.map(a => a.day_of_week));
+    console.log('Looking for day_of_week === ', isoDay);
 
     const dayAvailability = availability.filter(slot => slot.day_of_week === isoDay);
 
     if (dayAvailability.length === 0) {
-      console.log('No availability for this day of week');
+      console.log('No availability for this day of week - no match found');
       setAvailableTimeSlots([]);
       return;
     }

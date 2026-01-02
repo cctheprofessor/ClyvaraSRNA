@@ -17,6 +17,14 @@ import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
 import { Plus, Trash2, X } from 'lucide-react-native';
 
+function jsToIsoDay(jsDay: number): number {
+  return jsDay === 0 ? 7 : jsDay;
+}
+
+function isoToJsDay(isoDay: number): number {
+  return isoDay === 7 ? 0 : isoDay;
+}
+
 interface TimeSlot {
   id?: string;
   day_of_week: number;
@@ -81,7 +89,12 @@ export default function TAAvailabilityScreen() {
 
       if (availError) throw availError;
 
-      setSlots(availability || []);
+      const slotsWithJsDays = (availability || []).map(slot => ({
+        ...slot,
+        day_of_week: isoToJsDay(slot.day_of_week),
+      }));
+
+      setSlots(slotsWithJsDays);
     } catch (error: any) {
       console.error('Error loading availability:', error);
       Alert.alert('Error', 'Failed to load availability');
@@ -152,7 +165,7 @@ export default function TAAvailabilityScreen() {
       if (slots.length > 0) {
         const slotsToInsert = slots.map(slot => ({
           ta_id: taId,
-          day_of_week: slot.day_of_week,
+          day_of_week: jsToIsoDay(slot.day_of_week),
           start_time: slot.start_time,
           end_time: slot.end_time,
           is_recurring: slot.is_recurring,
