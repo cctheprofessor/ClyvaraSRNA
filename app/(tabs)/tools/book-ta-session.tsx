@@ -111,6 +111,8 @@ export default function BookTASession() {
   async function loadTAAvailability(taId: string) {
     setLoadingAvailability(true);
     try {
+      console.log('=== Loading availability for TA:', taId);
+
       const { data: availData, error: availError } = await supabase
         .from('ta_availability')
         .select('*')
@@ -118,7 +120,12 @@ export default function BookTASession() {
         .order('day_of_week', { ascending: true })
         .order('start_time', { ascending: true });
 
-      if (availError) throw availError;
+      console.log('Query result:', { availData, availError });
+
+      if (availError) {
+        console.error('Availability query error:', availError);
+        throw availError;
+      }
 
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('ta_bookings')
@@ -127,9 +134,13 @@ export default function BookTASession() {
         .in('status', ['pending', 'confirmed'])
         .gte('session_date', new Date().toISOString().split('T')[0]);
 
-      if (bookingsError) throw bookingsError;
+      if (bookingsError) {
+        console.error('Bookings query error:', bookingsError);
+        throw bookingsError;
+      }
 
       console.log('Raw availability data from DB:', availData);
+      console.log('Number of availability slots:', availData?.length);
       console.log('Day of week values in DB:', availData?.map(a => a.day_of_week));
 
       setAvailability(availData || []);
