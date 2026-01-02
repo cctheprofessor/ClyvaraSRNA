@@ -103,11 +103,12 @@ export default function TAAvailabilityScreen() {
     }
   }
 
-  function addSlot() {
+  function addSlot(dayOverride?: number) {
+    const dayToUse = dayOverride !== undefined ? dayOverride : selectedDay;
     setSlots([
       ...slots,
       {
-        day_of_week: selectedDay,
+        day_of_week: dayToUse,
         start_time: '09:00',
         end_time: '10:00',
         is_recurring: true,
@@ -229,7 +230,7 @@ export default function TAAvailabilityScreen() {
                 style={styles.emptyState}
                 onPress={() => {
                   setSelectedDay(day);
-                  addSlot();
+                  addSlot(day);
                 }}
               >
                 <Text style={styles.emptyText}>No availability set</Text>
