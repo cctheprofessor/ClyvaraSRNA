@@ -11,6 +11,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   isAdmin: boolean;
+  isTA: boolean;
   signUp: (email: string, password: string, fullName: string, institution: string, enrollmentDate: string, expectedGraduation: string | null, programTrack: string, role: string, specialtyInterest: string, phone: string | null) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isTA, setIsTA] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -51,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(null);
         setIsAdmin(false);
+        setIsTA(false);
         setLoading(false);
       }
     });
@@ -68,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       setProfile(data);
+      setIsTA(data?.is_ta ?? false);
 
       if (triggerCache && data?.ml_user_id) {
         questionCacheService.preFetchOnAppStart(data.ml_user_id);
@@ -206,6 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    setIsTA(false);
   };
 
   const resetPassword = async (email: string) => {
@@ -252,6 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile,
         loading,
         isAdmin,
+        isTA,
         signUp,
         signIn,
         signOut,

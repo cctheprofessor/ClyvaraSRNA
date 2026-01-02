@@ -12,55 +12,66 @@ import {
   BookOpen,
 } from 'lucide-react-native';
 import PageHeader from '@/components/PageHeader';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ToolsScreen() {
   const router = useRouter();
+  const { isTA } = useAuth();
+
+  const allTools = [
+    {
+      id: 'book-session',
+      title: 'Book a Session',
+      description: 'Get expert help from experienced TAs',
+      icon: Calendar,
+      color: '#4CAF50',
+      route: '/(tabs)/tools/book-ta-session',
+      taOnly: false,
+    },
+    {
+      id: 'my-bookings',
+      title: 'My Bookings',
+      description: 'View and manage your bookings',
+      icon: BookOpen,
+      color: '#2196F3',
+      route: '/(tabs)/tools/my-bookings',
+      taOnly: false,
+    },
+    {
+      id: 'ta-profile',
+      title: 'TA Profile Setup',
+      description: 'Set up your teaching assistant profile',
+      icon: User,
+      color: '#FF9800',
+      route: '/(tabs)/tools/ta-profile-setup',
+      taOnly: true,
+    },
+    {
+      id: 'ta-availability',
+      title: 'Manage Availability',
+      description: 'Set your available times for bookings',
+      icon: Clock,
+      color: '#9C27B0',
+      route: '/(tabs)/tools/ta-availability',
+      taOnly: true,
+    },
+    {
+      id: 'ta-dashboard',
+      title: 'TA Dashboard',
+      description: 'View your bookings and earnings',
+      icon: LayoutDashboard,
+      color: '#F44336',
+      route: '/(tabs)/tools/ta-dashboard',
+      taOnly: true,
+    },
+  ];
+
+  const filteredTools = allTools.filter(tool => !tool.taOnly || isTA);
 
   const categories = [
     {
       title: 'Ask a Teaching Assistant',
-      tools: [
-        {
-          id: 'book-session',
-          title: 'Book a Session',
-          description: 'Get expert help from experienced TAs',
-          icon: Calendar,
-          color: '#4CAF50',
-          route: '/(tabs)/tools/book-ta-session',
-        },
-        {
-          id: 'my-bookings',
-          title: 'My Bookings',
-          description: 'View and manage your bookings',
-          icon: BookOpen,
-          color: '#2196F3',
-          route: '/(tabs)/tools/my-bookings',
-        },
-        {
-          id: 'ta-profile',
-          title: 'TA Profile Setup',
-          description: 'Set up your teaching assistant profile',
-          icon: User,
-          color: '#FF9800',
-          route: '/(tabs)/tools/ta-profile-setup',
-        },
-        {
-          id: 'ta-availability',
-          title: 'Manage Availability',
-          description: 'Set your available times for bookings',
-          icon: Clock,
-          color: '#9C27B0',
-          route: '/(tabs)/tools/ta-availability',
-        },
-        {
-          id: 'ta-dashboard',
-          title: 'TA Dashboard',
-          description: 'View your bookings and earnings',
-          icon: LayoutDashboard,
-          color: '#F44336',
-          route: '/(tabs)/tools/ta-dashboard',
-        },
-      ],
+      tools: filteredTools,
     },
     {
       title: 'Clinical Preference Cards',

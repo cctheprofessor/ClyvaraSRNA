@@ -4,6 +4,7 @@ export interface Profile {
   school: string | null;
   graduation_year: number | null;
   role: string | null;
+  is_ta: boolean;
   specialty_interest: string | null;
   created_at: string;
   updated_at: string;
