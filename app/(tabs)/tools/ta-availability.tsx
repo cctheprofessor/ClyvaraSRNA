@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -14,7 +15,7 @@ import { supabase } from '../../../lib/supabase';
 import { TAAvailability, DAY_NAMES } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Plus, Trash2 } from 'lucide-react-native';
+import { Plus, Trash2, X } from 'lucide-react-native';
 
 interface TimeSlot {
   id?: string;
@@ -41,6 +42,10 @@ export default function TAAvailabilityScreen() {
   const [taId, setTaId] = useState<string | null>(null);
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [selectedDay, setSelectedDay] = useState(1);
+
+  const [timePickerVisible, setTimePickerVisible] = useState(false);
+  const [timePickerType, setTimePickerType] = useState<'start' | 'end'>('start');
+  const [timePickerSlotIndex, setTimePickerSlotIndex] = useState<number>(-1);
 
   useEffect(() => {
     loadAvailability();
@@ -105,6 +110,23 @@ export default function TAAvailabilityScreen() {
 
   function removeSlot(index: number) {
     setSlots(slots.filter((_, i) => i !== index));
+  }
+
+  function openTimePicker(index: number, type: 'start' | 'end') {
+    setTimePickerSlotIndex(index);
+    setTimePickerType(type);
+    setTimePickerVisible(true);
+  }
+
+  function selectTime(time: string) {
+    if (timePickerSlotIndex >= 0) {
+      updateSlot(
+        timePickerSlotIndex,
+        timePickerType === 'start' ? 'start_time' : 'end_time',
+        time
+      );
+    }
+    setTimePickerVisible(false);
   }
 
   async function saveAvailability() {
@@ -210,16 +232,7 @@ export default function TAAvailabilityScreen() {
                         <Text style={styles.timeLabel}>Start</Text>
                         <TouchableOpacity
                           style={styles.timeButton}
-                          onPress={() => {
-                            Alert.alert(
-                              'Select Start Time',
-                              '',
-                              TIME_OPTIONS.map(time => ({
-                                text: time,
-                                onPress: () => updateSlot(globalIndex, 'start_time', time),
-                              }))
-                            );
-                          }}
+                          onPress={() => openTimePicker(globalIndex, 'start')}
                         >
                           <Text style={styles.timeText}>{slot.start_time}</Text>
                         </TouchableOpacity>
@@ -231,16 +244,7 @@ export default function TAAvailabilityScreen() {
                         <Text style={styles.timeLabel}>End</Text>
                         <TouchableOpacity
                           style={styles.timeButton}
-                          onPress={() => {
-                            Alert.alert(
-                              'Select End Time',
-                              '',
-                              TIME_OPTIONS.map(time => ({
-                                text: time,
-                                onPress: () => updateSlot(globalIndex, 'end_time', time),
-                              }))
-                            );
-                          }}
+                          onPress={() => openTimePicker(globalIndex, 'end')}
                         >
                           <Text style={styles.timeText}>{slot.end_time}</Text>
                         </TouchableOpacity>
@@ -274,6 +278,38 @@ export default function TAAvailabilityScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <Modal
+        visible={timePickerVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setTimePickerVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Select {timePickerType === 'start' ? 'Start' : 'End'} Time
+              </Text>
+              <TouchableOpacity onPress={() => setTimePickerVisible(false)}>
+                <X size={24} color={Colors.text.primary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.timeList}>
+              {TIME_OPTIONS.map((time) => (
+                <TouchableOpacity
+                  key={time}
+                  style={styles.timeOption}
+                  onPress={() => selectTime(time)}
+                >
+                  <Text style={styles.timeOptionText}>{time}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -405,5 +441,44 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '70%',
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text.primary,
+  },
+  timeList: {
+    flex: 1,
+  },
+  timeOption: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  timeOptionText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: Colors.text.primary,
+    textAlign: 'center',
   },
 });
