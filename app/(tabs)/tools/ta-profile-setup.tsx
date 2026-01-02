@@ -122,7 +122,7 @@ export default function TAProfileSetup() {
       }
 
       Alert.alert('Success', 'Profile saved successfully', [
-        { text: 'OK', onPress: () => router.back() }
+        { text: 'OK', onPress: () => router.replace('/(tabs)/tools/ta-dashboard') }
       ]);
     } catch (error: any) {
       console.error('Error saving profile:', error);
