@@ -157,17 +157,25 @@ export default function BookTASession() {
   }
 
   function calculateAvailableTimeSlots(date: string) {
-    if (!selectedTA || availability.length === 0) return;
+    if (!selectedTA || availability.length === 0) {
+      console.log('Cannot calculate slots:', { selectedTA: !!selectedTA, availabilityLength: availability.length });
+      return;
+    }
 
     const selectedDateObj = new Date(date + 'T00:00:00');
     const dayOfWeek = selectedDateObj.getDay();
 
+    console.log('Calculating time slots for:', { date, dayOfWeek, availabilityRecords: availability.length });
+
     const dayAvailability = availability.filter(slot => slot.day_of_week === dayOfWeek);
 
     if (dayAvailability.length === 0) {
+      console.log('No availability for this day of week');
       setAvailableTimeSlots([]);
       return;
     }
+
+    console.log('Found availability windows:', dayAvailability);
 
     const slots: TimeSlot[] = [];
 
@@ -195,6 +203,13 @@ export default function BookTASession() {
       new Map(slots.map(slot => [slot.time, slot])).values()
     ).sort((a, b) => a.time.localeCompare(b.time));
 
+    console.log('Final time slots:', {
+      total: uniqueSlots.length,
+      available: uniqueSlots.filter(s => s.available).length,
+      unavailable: uniqueSlots.filter(s => !s.available).length,
+      slots: uniqueSlots
+    });
+
     setAvailableTimeSlots(uniqueSlots);
   }
 
@@ -202,13 +217,20 @@ export default function BookTASession() {
     const now = new Date();
     const slotDateTime = new Date(`${date}T${time}:00`);
 
+    console.log('Checking slot:', { date, time, slotDateTime: slotDateTime.toString(), now: now.toString() });
+
     if (slotDateTime <= now) {
+      console.log('Slot is in the past');
       return false;
     }
 
-    const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-    if (slotDateTime < twoHoursFromNow) {
-      return false;
+    const todayDateString = now.toISOString().split('T')[0];
+    if (date === todayDateString) {
+      const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      if (slotDateTime < twoHoursFromNow) {
+        console.log('Slot is within 2 hours from now (today only)', { twoHoursFromNow: twoHoursFromNow.toString() });
+        return false;
+      }
     }
 
     const [hours, minutes] = time.split(':').map(Number);
@@ -234,17 +256,29 @@ export default function BookTASession() {
     const dayOfWeek = new Date(date + 'T00:00:00').getDay();
     const dayAvailability = availability.filter(slot => slot.day_of_week === dayOfWeek);
 
+    console.log('Day availability check:', { dayOfWeek, dayAvailabilityCount: dayAvailability.length, slotStartMinutes, slotEndMinutes, selectedDuration });
+
     for (const avail of dayAvailability) {
       const [availStartHours, availStartMins] = avail.start_time.split(':').map(Number);
       const [availEndHours, availEndMins] = avail.end_time.split(':').map(Number);
       const availStartMinutes = availStartHours * 60 + availStartMins;
       const availEndMinutes = availEndHours * 60 + availEndMins;
 
+      console.log('Checking availability window:', {
+        availStartMinutes,
+        availEndMinutes,
+        slotStartMinutes,
+        slotEndMinutes,
+        fits: slotStartMinutes >= availStartMinutes && slotEndMinutes <= availEndMinutes
+      });
+
       if (slotStartMinutes >= availStartMinutes && slotEndMinutes <= availEndMinutes) {
+        console.log('Slot is available!');
         return true;
       }
     }
 
+    console.log('Slot does not fit in any availability window');
     return false;
   }
 
