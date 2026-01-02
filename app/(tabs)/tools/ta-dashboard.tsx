@@ -15,7 +15,7 @@ import { supabase } from '../../../lib/supabase';
 import { TAProfile, BookingWithDetails } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Calendar, DollarSign, Star, CheckCircle, XCircle } from 'lucide-react-native';
+import { Calendar, DollarSign, Star, CheckCircle, XCircle, Bell } from 'lucide-react-native';
 
 export default function TADashboard() {
   const router = useRouter();
@@ -29,6 +29,7 @@ export default function TADashboard() {
     totalEarnings: 0,
     upcomingCount: 0,
     completedCount: 0,
+    pendingCount: 0,
   });
 
   useEffect(() => {
@@ -73,12 +74,14 @@ export default function TADashboard() {
       const upcoming = bookingsData?.filter(b =>
         b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) > new Date()
       ) || [];
+      const pending = bookingsData?.filter(b => b.status === 'awaiting_approval') || [];
       const totalEarnings = completed.reduce((sum, b) => sum + Number(b.session_rate), 0);
 
       setStats({
         totalEarnings,
         upcomingCount: upcoming.length,
         completedCount: completed.length,
+        pendingCount: pending.length,
       });
     } catch (error: any) {
       console.error('Error loading dashboard:', error);
@@ -87,6 +90,82 @@ export default function TADashboard() {
       setLoading(false);
       setRefreshing(false);
     }
+  }
+
+  async function approveBooking(bookingId: string) {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('ta_bookings')
+        .update({
+          status: 'approved',
+          approved_at: new Date().toISOString(),
+          approved_by: user.id,
+        })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      Alert.alert('Success', 'Booking request approved! Student will be notified and can now pay.');
+      loadDashboard();
+    } catch (error: any) {
+      console.error('Approve error:', error);
+      Alert.alert('Error', error.message || 'Failed to approve booking');
+    }
+  }
+
+  async function rejectBooking(bookingId: string, reason: string) {
+    try {
+      const { error } = await supabase
+        .from('ta_bookings')
+        .update({
+          status: 'rejected',
+          rejected_at: new Date().toISOString(),
+          rejection_reason: reason,
+        })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      Alert.alert('Success', 'Booking request rejected');
+      loadDashboard();
+    } catch (error: any) {
+      console.error('Reject error:', error);
+      Alert.alert('Error', error.message || 'Failed to reject booking');
+    }
+  }
+
+  function handleApprove(booking: BookingWithDetails) {
+    Alert.alert(
+      'Approve Request',
+      `Approve session on ${booking.session_date} at ${booking.start_time}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Approve', onPress: () => approveBooking(booking.id) },
+      ]
+    );
+  }
+
+  function handleReject(booking: BookingWithDetails) {
+    Alert.prompt(
+      'Reject Request',
+      'Please provide a reason for rejection:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reject',
+          onPress: (reason?: string) => {
+            if (reason && reason.trim()) {
+              rejectBooking(booking.id, reason.trim());
+            } else {
+              Alert.alert('Error', 'Please provide a rejection reason');
+            }
+          },
+        },
+      ],
+      'plain-text'
+    );
   }
 
   async function markComplete(bookingId: string) {
@@ -154,6 +233,8 @@ export default function TADashboard() {
     );
   }
 
+  const pendingBookings = bookings.filter(b => b.status === 'awaiting_approval');
+
   const upcomingBookings = bookings.filter(
     b => b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) > new Date()
   );
@@ -161,6 +242,20 @@ export default function TADashboard() {
   const pastBookings = bookings.filter(
     b => b.status === 'completed' || new Date(`${b.session_date}T${b.start_time}`) <= new Date()
   );
+
+  function getStatusBadgeColor(status: string) {
+    const colorMap: Record<string, string> = {
+      'completed': '#4CAF50',
+      'cancelled': '#ff4444',
+      'refunded': '#ff9800',
+      'confirmed': Colors.primary,
+      'pending': '#FFA500',
+      'awaiting_approval': '#FFA500',
+      'approved': '#4CAF50',
+      'rejected': '#ff4444',
+    };
+    return colorMap[status] || '#FFA500';
+  }
 
   return (
     <View style={styles.container}>
@@ -178,9 +273,9 @@ export default function TADashboard() {
       >
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
-            <DollarSign size={24} color={Colors.primary} />
-            <Text style={styles.statValue}>${stats.totalEarnings.toFixed(2)}</Text>
-            <Text style={styles.statLabel}>Total Earnings</Text>
+            <Bell size={24} color="#FFA500" />
+            <Text style={styles.statValue}>{stats.pendingCount}</Text>
+            <Text style={styles.statLabel}>Pending</Text>
           </View>
 
           <View style={styles.statCard}>
@@ -196,9 +291,9 @@ export default function TADashboard() {
           </View>
 
           <View style={styles.statCard}>
-            <Star size={24} color="#FFD700" fill="#FFD700" />
-            <Text style={styles.statValue}>{profile.average_rating.toFixed(1)}</Text>
-            <Text style={styles.statLabel}>Rating</Text>
+            <DollarSign size={24} color="#4CAF50" />
+            <Text style={styles.statValue}>${stats.totalEarnings.toFixed(2)}</Text>
+            <Text style={styles.statLabel}>Earned</Text>
           </View>
         </View>
 
@@ -217,6 +312,55 @@ export default function TADashboard() {
             <Text style={styles.actionButtonText}>Manage Availability</Text>
           </TouchableOpacity>
         </View>
+
+        {pendingBookings.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Pending Approval Requests</Text>
+
+            {pendingBookings.map((booking) => (
+              <View key={booking.id} style={[styles.bookingCard, styles.pendingCard]}>
+                <View style={styles.bookingHeader}>
+                  <View style={styles.dateTime}>
+                    <Bell size={16} color="#FFA500" />
+                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                  </View>
+                  <Text style={styles.bookingDuration}>{booking.duration_minutes} min</Text>
+                </View>
+
+                {booking.notes && (
+                  <Text style={styles.bookingNotes} numberOfLines={3}>
+                    {booking.notes}
+                  </Text>
+                )}
+
+                <View style={styles.bookingFooter}>
+                  <Text style={styles.bookingRate}>
+                    You'll earn: ${booking.session_rate}
+                  </Text>
+                </View>
+
+                <View style={styles.approvalActions}>
+                  <TouchableOpacity
+                    style={styles.rejectButton}
+                    onPress={() => handleReject(booking)}
+                  >
+                    <XCircle size={16} color="#fff" />
+                    <Text style={styles.rejectButtonText}>Reject</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.approveButton}
+                    onPress={() => handleApprove(booking)}
+                  >
+                    <CheckCircle size={16} color="#fff" />
+                    <Text style={styles.approveButtonText}>Approve</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
 
         <Text style={styles.sectionTitle}>Upcoming Sessions</Text>
 
@@ -276,7 +420,7 @@ export default function TADashboard() {
                   <Text style={styles.bookingDate}>{booking.session_date}</Text>
                   <Text style={styles.bookingTime}>{booking.start_time}</Text>
                 </View>
-                <View style={[styles.statusBadge, styles[`status${booking.status}`]]}>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusBadgeColor(booking.status) }]}>
                   <Text style={styles.statusText}>{booking.status}</Text>
                 </View>
               </View>
@@ -454,5 +598,45 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'capitalize',
+  },
+  pendingCard: {
+    borderWidth: 2,
+    borderColor: '#FFA500',
+    backgroundColor: '#FFFAF0',
+  },
+  approvalActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  approveButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#4CAF50',
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  approveButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  rejectButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#ff4444',
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  rejectButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

@@ -311,7 +311,7 @@ export default function BookTASession() {
     return false;
   }
 
-  async function proceedToCheckout() {
+  async function submitBookingRequest() {
     if (!selectedTA || !selectedDate || !selectedTime || !user) return;
 
     const isAvailable = checkTimeSlotAvailability(selectedDate, selectedTime);
@@ -335,53 +335,36 @@ export default function BookTASession() {
       const sessionRate = calculateSessionRate(selectedTA.base_rate_30min, selectedDuration);
       const totalAmount = calculateTotalAmount(selectedTA.base_rate_30min, selectedDuration);
 
-      const { EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY } = process.env;
-      const apiUrl = `${EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ta-booking-checkout`;
-
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { error: insertError } = await supabase
+        .from('ta_bookings')
+        .insert({
           ta_id: selectedTA.id,
+          student_id: user.id,
           session_date: selectedDate,
           start_time: selectedTime,
           duration_minutes: selectedDuration,
+          session_rate: sessionRate,
+          service_charge: SERVICE_CHARGE,
+          total_amount: totalAmount,
+          status: 'awaiting_approval',
           notes: notes.trim() || null,
-          success_url: `${EXPO_PUBLIC_SUPABASE_URL}`,
-          cancel_url: `${EXPO_PUBLIC_SUPABASE_URL}`,
-        }),
-      });
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create checkout');
-      }
-
-      const { url } = await response.json();
+      if (insertError) throw insertError;
 
       Alert.alert(
-        'Proceed to Payment',
-        'You will be redirected to Stripe to complete your booking.',
+        'Request Sent!',
+        `Your session request has been sent to ${selectedTA.display_name}. You'll be notified when they approve it, and then you can proceed with payment.`,
         [
-          { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Continue',
-            onPress: () => {
-              Alert.alert('Success', 'Booking created! Check your email for payment link.');
-              router.back();
-            },
+            text: 'OK',
+            onPress: () => router.back(),
           },
         ]
       );
     } catch (error: any) {
       console.error('Booking error:', error);
-      Alert.alert('Error', error.message || 'Failed to create booking');
+      Alert.alert('Error', error.message || 'Failed to submit booking request');
     } finally {
       setBooking(false);
     }
@@ -737,13 +720,13 @@ export default function BookTASession() {
 
             <TouchableOpacity
               style={[styles.bookButton, booking && styles.bookButtonDisabled]}
-              onPress={proceedToCheckout}
+              onPress={submitBookingRequest}
               disabled={booking}
             >
               {booking ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.bookButtonText}>Proceed to Payment</Text>
+                <Text style={styles.bookButtonText}>Submit Request</Text>
               )}
             </TouchableOpacity>
           </>

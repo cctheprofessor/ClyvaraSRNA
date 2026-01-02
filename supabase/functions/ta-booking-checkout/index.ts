@@ -21,7 +21,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
 };
 
-const SERVICE_CHARGE = 2.50; // Platform service charge in dollars
+const SERVICE_CHARGE = 2.50;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -39,7 +39,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Authenticate user
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
@@ -58,62 +57,98 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Parse request body
-    const { ta_id, session_date, start_time, duration_minutes, notes, success_url, cancel_url } = await req.json();
+    const { booking_id, ta_id, session_date, start_time, duration_minutes, notes, success_url, cancel_url } = await req.json();
 
-    // Validate required fields
-    if (!ta_id || !session_date || !start_time || !duration_minutes || !success_url || !cancel_url) {
+    if (!success_url || !cancel_url) {
+      return new Response(JSON.stringify({ error: 'Missing success_url or cancel_url' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!booking_id && (!ta_id || !session_date || !start_time || !duration_minutes)) {
       return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Validate duration
-    if (![30, 60, 90].includes(duration_minutes)) {
-      return new Response(JSON.stringify({ error: 'Duration must be 30, 60, or 90 minutes' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Get TA profile and calculate session rate
-    const { data: taProfile, error: taError } = await supabase
-      .from('ta_profiles')
-      .select('id, user_id, base_rate_30min, is_active')
-      .eq('id', ta_id)
-      .maybeSingle();
-
-    if (taError || !taProfile) {
-      return new Response(JSON.stringify({ error: 'TA profile not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (!taProfile.is_active) {
-      return new Response(JSON.stringify({ error: 'TA is not accepting bookings' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Calculate session rate based on duration
+    let booking: any;
     let sessionRate: number;
-    const baseRate = Number(taProfile.base_rate_30min);
-    
-    if (duration_minutes === 30) {
-      sessionRate = baseRate;
-    } else if (duration_minutes === 60) {
-      sessionRate = baseRate * 1.8;
-    } else { // 90 minutes
-      sessionRate = baseRate * 2.5;
+    let totalAmount: number;
+    let finalTaId: string;
+    let finalSessionDate: string;
+    let finalStartTime: string;
+    let finalDurationMinutes: number;
+
+    if (booking_id) {
+      const { data: existingBooking, error: fetchError } = await supabase
+        .from('ta_bookings')
+        .select('*, ta_profiles(*)')
+        .eq('id', booking_id)
+        .eq('student_id', user.id)
+        .eq('status', 'approved')
+        .maybeSingle();
+
+      if (fetchError || !existingBooking) {
+        return new Response(JSON.stringify({ error: 'Booking not found or not approved' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      booking = existingBooking;
+      sessionRate = Number(existingBooking.session_rate);
+      totalAmount = Number(existingBooking.total_amount);
+      finalTaId = existingBooking.ta_id;
+      finalSessionDate = existingBooking.session_date;
+      finalStartTime = existingBooking.start_time;
+      finalDurationMinutes = existingBooking.duration_minutes;
+    } else {
+      if (![30, 60, 90].includes(duration_minutes)) {
+        return new Response(JSON.stringify({ error: 'Duration must be 30, 60, or 90 minutes' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data: taProfile, error: taError } = await supabase
+        .from('ta_profiles')
+        .select('id, user_id, base_rate_30min, is_active')
+        .eq('id', ta_id)
+        .maybeSingle();
+
+      if (taError || !taProfile) {
+        return new Response(JSON.stringify({ error: 'TA profile not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (!taProfile.is_active) {
+        return new Response(JSON.stringify({ error: 'TA is not accepting bookings' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const baseRate = Number(taProfile.base_rate_30min);
+
+      if (duration_minutes === 30) {
+        sessionRate = baseRate;
+      } else if (duration_minutes === 60) {
+        sessionRate = baseRate * 1.8;
+      } else {
+        sessionRate = baseRate * 2.5;
+      }
+
+      totalAmount = sessionRate + SERVICE_CHARGE;
+      finalTaId = ta_id;
+      finalSessionDate = session_date;
+      finalStartTime = start_time;
+      finalDurationMinutes = duration_minutes;
     }
 
-    const totalAmount = sessionRate + SERVICE_CHARGE;
-    const amountInCents = Math.round(totalAmount * 100);
-
-    // Get or create Stripe customer
     const { data: existingCustomer } = await supabase
       .from('stripe_customers')
       .select('customer_id')
@@ -141,33 +176,35 @@ Deno.serve(async (req) => {
       customerId = newCustomer.id;
     }
 
-    // Create booking record
-    const { data: booking, error: bookingError } = await supabase
-      .from('ta_bookings')
-      .insert({
-        ta_id: ta_id,
-        student_id: user.id,
-        session_date: session_date,
-        start_time: start_time,
-        duration_minutes: duration_minutes,
-        session_rate: sessionRate,
-        service_charge: SERVICE_CHARGE,
-        total_amount: totalAmount,
-        status: 'pending',
-        notes: notes || null,
-      })
-      .select()
-      .single();
+    if (!booking_id) {
+      const { data: newBooking, error: bookingError } = await supabase
+        .from('ta_bookings')
+        .insert({
+          ta_id: finalTaId,
+          student_id: user.id,
+          session_date: finalSessionDate,
+          start_time: finalStartTime,
+          duration_minutes: finalDurationMinutes,
+          session_rate: sessionRate,
+          service_charge: SERVICE_CHARGE,
+          total_amount: totalAmount,
+          status: 'pending',
+          notes: notes || null,
+        })
+        .select()
+        .single();
 
-    if (bookingError || !booking) {
-      console.error('Booking creation error:', bookingError);
-      return new Response(JSON.stringify({ error: 'Failed to create booking' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      if (bookingError || !newBooking) {
+        console.error('Booking creation error:', bookingError);
+        return new Response(JSON.stringify({ error: 'Failed to create booking' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      booking = newBooking;
     }
 
-    // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
@@ -176,8 +213,8 @@ Deno.serve(async (req) => {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `TA Session - ${duration_minutes} minutes`,
-              description: `Tutoring session on ${session_date} at ${start_time}`,
+              name: `TA Session - ${finalDurationMinutes} minutes`,
+              description: `Tutoring session on ${finalSessionDate} at ${finalStartTime}`,
             },
             unit_amount: Math.round(sessionRate * 100),
           },
@@ -201,11 +238,10 @@ Deno.serve(async (req) => {
       metadata: {
         user_id: user.id,
         booking_id: booking.id,
-        ta_id: ta_id,
+        ta_id: finalTaId,
       },
     });
 
-    // Update booking with Stripe session ID
     await supabase
       .from('ta_bookings')
       .update({ stripe_payment_intent_id: session.id })

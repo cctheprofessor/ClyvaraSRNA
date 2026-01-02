@@ -23,7 +23,7 @@ export interface TAAvailability {
   created_at: string;
 }
 
-export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'refunded';
+export type BookingStatus = 'awaiting_approval' | 'approved' | 'rejected' | 'confirmed' | 'completed' | 'cancelled' | 'refunded';
 
 export interface TABooking {
   id: string;
@@ -40,6 +40,10 @@ export interface TABooking {
   notes: string | null;
   stripe_payment_intent_id: string | null;
   stripe_transfer_id: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
+  rejected_at: string | null;
+  rejection_reason: string | null;
   cancelled_by: string | null;
   cancelled_at: string | null;
   cancellation_reason: string | null;

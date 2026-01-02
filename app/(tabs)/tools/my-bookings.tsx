@@ -15,7 +15,7 @@ import { supabase } from '../../../lib/supabase';
 import { BookingWithDetails } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Calendar, Clock, Star, XCircle } from 'lucide-react-native';
+import { Calendar, Clock, Star, XCircle, Bell, CheckCircle, CreditCard } from 'lucide-react-native';
 
 export default function MyBookings() {
   const router = useRouter();
@@ -115,6 +115,53 @@ export default function MyBookings() {
     ]);
   }
 
+  async function proceedToPayment(bookingId: string) {
+    try {
+      const { EXPO_PUBLIC_SUPABASE_URL } = process.env;
+      const apiUrl = `${EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ta-booking-checkout`;
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          booking_id: bookingId,
+          success_url: `${EXPO_PUBLIC_SUPABASE_URL}`,
+          cancel_url: `${EXPO_PUBLIC_SUPABASE_URL}`,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create checkout');
+      }
+
+      const { url } = await response.json();
+
+      Alert.alert(
+        'Proceed to Payment',
+        'You will be redirected to complete your payment.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Continue',
+            onPress: () => {
+              Alert.alert('Success', 'Check your email for payment link.');
+            },
+          },
+        ]
+      );
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      Alert.alert('Error', error.message || 'Failed to process payment');
+    }
+  }
+
   async function leaveReview(bookingId: string, taId: string) {
     router.push({
       pathname: '/tools/leave-review',
@@ -132,6 +179,10 @@ export default function MyBookings() {
       </View>
     );
   }
+
+  const awaitingApprovalBookings = bookings.filter(b => b.status === 'awaiting_approval');
+  const approvedBookings = bookings.filter(b => b.status === 'approved');
+  const rejectedBookings = bookings.filter(b => b.status === 'rejected');
 
   const upcomingBookings = bookings.filter(
     b => b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) > new Date()
@@ -156,6 +207,136 @@ export default function MyBookings() {
           }} />
         }
       >
+        {awaitingApprovalBookings.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Awaiting TA Approval</Text>
+
+            {awaitingApprovalBookings.map((booking) => (
+              <View key={booking.id} style={[styles.bookingCard, styles.awaitingCard]}>
+                {booking.ta_profiles?.display_name && (
+                  <View style={styles.headerRow}>
+                    <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+                    <View style={styles.statusBadge}>
+                      <Bell size={12} color="#fff" />
+                      <Text style={styles.statusText}>Pending</Text>
+                    </View>
+                  </View>
+                )}
+
+                <View style={styles.bookingHeader}>
+                  <View style={styles.dateTime}>
+                    <Calendar size={16} color={Colors.primary} />
+                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                  </View>
+                  <View style={styles.dateTime}>
+                    <Clock size={16} color={Colors.primary} />
+                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                    <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
+                  </View>
+                </View>
+
+                <View style={styles.infoBox}>
+                  <Text style={styles.infoText}>
+                    Waiting for TA approval. You'll be notified when they respond.
+                  </Text>
+                </View>
+
+                <View style={styles.bookingFooter}>
+                  <Text style={styles.bookingTotal}>${booking.total_amount}</Text>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
+
+        {approvedBookings.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Ready for Payment</Text>
+
+            {approvedBookings.map((booking) => (
+              <View key={booking.id} style={[styles.bookingCard, styles.approvedCard]}>
+                {booking.ta_profiles?.display_name && (
+                  <View style={styles.headerRow}>
+                    <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+                    <View style={[styles.statusBadge, { backgroundColor: '#4CAF50' }]}>
+                      <CheckCircle size={12} color="#fff" />
+                      <Text style={styles.statusText}>Approved</Text>
+                    </View>
+                  </View>
+                )}
+
+                <View style={styles.bookingHeader}>
+                  <View style={styles.dateTime}>
+                    <Calendar size={16} color={Colors.primary} />
+                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                  </View>
+                  <View style={styles.dateTime}>
+                    <Clock size={16} color={Colors.primary} />
+                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                    <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.infoBox, { backgroundColor: '#E8F5E9' }]}>
+                  <Text style={styles.infoText}>
+                    TA approved! Complete payment to confirm your session.
+                  </Text>
+                </View>
+
+                <View style={styles.bookingFooter}>
+                  <Text style={styles.bookingTotal}>${booking.total_amount}</Text>
+
+                  <TouchableOpacity
+                    style={styles.payButton}
+                    onPress={() => proceedToPayment(booking.id)}
+                  >
+                    <CreditCard size={16} color="#fff" />
+                    <Text style={styles.payButtonText}>Pay Now</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
+
+        {rejectedBookings.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Declined Requests</Text>
+
+            {rejectedBookings.map((booking) => (
+              <View key={booking.id} style={[styles.bookingCard, styles.rejectedCard]}>
+                {booking.ta_profiles?.display_name && (
+                  <View style={styles.headerRow}>
+                    <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+                    <View style={[styles.statusBadge, { backgroundColor: '#ff4444' }]}>
+                      <XCircle size={12} color="#fff" />
+                      <Text style={styles.statusText}>Declined</Text>
+                    </View>
+                  </View>
+                )}
+
+                <View style={styles.bookingHeader}>
+                  <View style={styles.dateTime}>
+                    <Calendar size={16} color={Colors.text.tertiary} />
+                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                  </View>
+                  <View style={styles.dateTime}>
+                    <Clock size={16} color={Colors.text.tertiary} />
+                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                  </View>
+                </View>
+
+                {booking.rejection_reason && (
+                  <View style={[styles.infoBox, { backgroundColor: '#FFEBEE' }]}>
+                    <Text style={styles.infoLabel}>Reason:</Text>
+                    <Text style={styles.infoText}>{booking.rejection_reason}</Text>
+                  </View>
+                )}
+              </View>
+            ))}
+          </>
+        )}
+
         <Text style={styles.sectionTitle}>Upcoming Sessions</Text>
 
         {upcomingBookings.length === 0 ? (
@@ -457,10 +638,69 @@ const styles = StyleSheet.create({
   statuspending: {
     backgroundColor: '#FFA500',
   },
+  statusawaiting_approval: {
+    backgroundColor: '#FFA500',
+  },
+  statusapproved: {
+    backgroundColor: '#4CAF50',
+  },
+  statusrejected: {
+    backgroundColor: '#ff4444',
+  },
   statusText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'capitalize',
+  },
+  awaitingCard: {
+    borderColor: '#FFA500',
+    backgroundColor: '#FFFAF0',
+  },
+  approvedCard: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#F1F8F4',
+  },
+  rejectedCard: {
+    borderColor: '#ff4444',
+    backgroundColor: '#FFF5F5',
+    opacity: 0.9,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  infoBox: {
+    backgroundColor: '#F5F5F5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  infoLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.text.tertiary,
+    marginBottom: 4,
+  },
+  infoText: {
+    fontSize: 13,
+    color: Colors.text.primary,
+    lineHeight: 18,
+  },
+  payButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  payButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
