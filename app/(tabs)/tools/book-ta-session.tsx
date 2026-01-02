@@ -25,6 +25,14 @@ import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
 import { Star, Calendar, Clock, ChevronDown, ChevronUp } from 'lucide-react-native';
 
+function jsToIsoDay(jsDay: number): number {
+  return jsDay === 0 ? 7 : jsDay;
+}
+
+function isoToJsDay(isoDay: number): number {
+  return isoDay === 7 ? 0 : isoDay;
+}
+
 type Step = 'select-ta' | 'select-time' | 'select-duration' | 'confirm';
 
 interface AvailableDate {
@@ -143,13 +151,14 @@ export default function BookTASession() {
     for (let i = 1; i <= daysToShow; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      const dayOfWeek = date.getDay();
+      const jsDay = date.getDay();
+      const isoDay = jsToIsoDay(jsDay);
       const dateString = date.toISOString().split('T')[0];
 
       dates.push({
         date: dateString,
-        dayOfWeek,
-        hasAvailability: availableDaysOfWeek.has(dayOfWeek),
+        dayOfWeek: jsDay,
+        hasAvailability: availableDaysOfWeek.has(isoDay),
       });
     }
 
@@ -163,11 +172,12 @@ export default function BookTASession() {
     }
 
     const selectedDateObj = new Date(date + 'T00:00:00');
-    const dayOfWeek = selectedDateObj.getDay();
+    const jsDay = selectedDateObj.getDay();
+    const isoDay = jsToIsoDay(jsDay);
 
-    console.log('Calculating time slots for:', { date, dayOfWeek, availabilityRecords: availability.length });
+    console.log('Calculating time slots for:', { date, jsDay, isoDay, availabilityRecords: availability.length });
 
-    const dayAvailability = availability.filter(slot => slot.day_of_week === dayOfWeek);
+    const dayAvailability = availability.filter(slot => slot.day_of_week === isoDay);
 
     if (dayAvailability.length === 0) {
       console.log('No availability for this day of week');
@@ -253,10 +263,11 @@ export default function BookTASession() {
       }
     }
 
-    const dayOfWeek = new Date(date + 'T00:00:00').getDay();
-    const dayAvailability = availability.filter(slot => slot.day_of_week === dayOfWeek);
+    const jsDay = new Date(date + 'T00:00:00').getDay();
+    const isoDay = jsToIsoDay(jsDay);
+    const dayAvailability = availability.filter(slot => slot.day_of_week === isoDay);
 
-    console.log('Day availability check:', { dayOfWeek, dayAvailabilityCount: dayAvailability.length, slotStartMinutes, slotEndMinutes, selectedDuration });
+    console.log('Day availability check:', { jsDay, isoDay, dayAvailabilityCount: dayAvailability.length, slotStartMinutes, slotEndMinutes, selectedDuration });
 
     for (const avail of dayAvailability) {
       const [availStartHours, availStartMins] = avail.start_time.split(':').map(Number);
@@ -497,7 +508,7 @@ export default function BookTASession() {
                 <View style={styles.availabilityInfo}>
                   <Text style={styles.availabilityInfoText}>
                     {selectedTA.display_name || 'This TA'} is available on:{' '}
-                    {Array.from(new Set(availability.map(a => DAY_NAMES[a.day_of_week])))
+                    {Array.from(new Set(availability.map(a => DAY_NAMES[isoToJsDay(a.day_of_week)])))
                       .join(', ')}
                   </Text>
                 </View>
