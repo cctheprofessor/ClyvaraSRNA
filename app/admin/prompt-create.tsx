@@ -20,7 +20,7 @@ export default function CreatePromptScreen() {
   const { session, isAdmin } = useAuth();
   const [promptText, setPromptText] = useState('');
   const [promptType, setPromptType] = useState<'image' | 'storytime'>('image');
-  const [isActive, setIsActive] = useState(true);
+  const [isActive, setIsActive] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
