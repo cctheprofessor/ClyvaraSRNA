@@ -539,6 +539,7 @@ export default function BookTASession() {
                     {availableDates.filter(d => d.hasAvailability).slice(0, 30).map((dateOption) => {
                       const dateObj = new Date(dateOption.date + 'T00:00:00');
                       const isSelected = selectedDate === dateOption.date;
+                      const fullDayName = DAY_NAMES[dateOption.dayOfWeek];
 
                       return (
                         <TouchableOpacity
@@ -549,13 +550,14 @@ export default function BookTASession() {
                             !dateOption.hasAvailability && styles.dateCardDisabled,
                           ]}
                           onPress={() => {
+                            console.log('Selected date:', dateOption.date, 'Day:', fullDayName);
                             setSelectedDate(dateOption.date);
                             setSelectedTime('');
                           }}
                           disabled={!dateOption.hasAvailability}
                         >
                           <Text style={[styles.dateDayName, isSelected && styles.dateTextSelected]}>
-                            {DAY_NAMES[dateOption.dayOfWeek].slice(0, 3)}
+                            {fullDayName.slice(0, 3)}
                           </Text>
                           <Text style={[styles.dateDay, isSelected && styles.dateTextSelected]}>
                             {dateObj.getDate()}
