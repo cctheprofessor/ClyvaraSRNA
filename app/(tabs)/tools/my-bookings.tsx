@@ -171,6 +171,10 @@ export default function MyBookings() {
         ) : (
           upcomingBookings.map((booking) => (
             <View key={booking.id} style={styles.bookingCard}>
+              {booking.ta_profiles?.display_name && (
+                <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+              )}
+
               <View style={styles.bookingHeader}>
                 <View style={styles.dateTime}>
                   <Calendar size={16} color={Colors.primary} />
@@ -231,6 +235,10 @@ export default function MyBookings() {
         ) : (
           pastBookings.map((booking) => (
             <View key={booking.id} style={[styles.bookingCard, styles.pastBookingCard]}>
+              {booking.ta_profiles?.display_name && (
+                <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+              )}
+
               <View style={styles.bookingHeader}>
                 <View style={styles.dateTime}>
                   <Calendar size={16} color={Colors.text.tertiary} />
@@ -321,6 +329,12 @@ const styles = StyleSheet.create({
   pastBookingCard: {
     borderColor: 'transparent',
     opacity: 0.8,
+  },
+  bookingTAName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text.primary,
+    marginBottom: 8,
   },
   bookingHeader: {
     flexDirection: 'row',

@@ -161,6 +161,10 @@ export default function BookTASession() {
                     setStep('select-time');
                   }}
                 >
+                  {ta.display_name && (
+                    <Text style={styles.taName}>{ta.display_name}</Text>
+                  )}
+
                   <View style={styles.taHeader}>
                     <View style={styles.taInfo}>
                       <View style={styles.ratingBadge}>
@@ -301,6 +305,10 @@ export default function BookTASession() {
 
             <Text style={styles.stepTitle}>Confirm Booking</Text>
 
+            {selectedTA.display_name && (
+              <Text style={styles.confirmTAName}>with {selectedTA.display_name}</Text>
+            )}
+
             <View style={styles.summaryCard}>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Date:</Text>
@@ -386,6 +394,12 @@ const styles = StyleSheet.create({
     color: '#000000',
     marginBottom: 20,
   },
+  confirmTAName: {
+    fontSize: 16,
+    color: Colors.text.tertiary,
+    marginTop: -12,
+    marginBottom: 20,
+  },
   backButton: {
     marginBottom: 16,
   },
@@ -413,6 +427,12 @@ const styles = StyleSheet.create({
   taCardSelected: {
     borderColor: Colors.primary,
     backgroundColor: '#f0f8ff',
+  },
+  taName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text.primary,
+    marginBottom: 8,
   },
   taHeader: {
     flexDirection: 'row',

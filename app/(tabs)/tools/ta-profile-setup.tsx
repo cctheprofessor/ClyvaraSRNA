@@ -38,6 +38,7 @@ export default function TAProfileSetup() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<TAProfile | null>(null);
+  const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [baseRate, setBaseRate] = useState('25.00');
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
@@ -61,6 +62,7 @@ export default function TAProfileSetup() {
 
       if (data) {
         setProfile(data);
+        setDisplayName(data.display_name || '');
         setBio(data.bio || '');
         setBaseRate(data.base_rate_30min.toString());
         setSelectedSpecialties(data.specialties || []);
@@ -100,6 +102,7 @@ export default function TAProfileSetup() {
     try {
       const profileData = {
         user_id: user.id,
+        display_name: displayName.trim(),
         bio: bio.trim(),
         base_rate_30min: rateNum,
         specialties: selectedSpecialties,
@@ -149,6 +152,15 @@ export default function TAProfileSetup() {
       <PageHeader title="TA Profile Setup" />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.sectionTitle, styles.firstSection]}>Display Name</Text>
+        <TextInput
+          style={styles.nameInput}
+          placeholder="Enter your name (e.g., John Smith)"
+          value={displayName}
+          onChangeText={setDisplayName}
+          placeholderTextColor={Colors.text.tertiary}
+        />
+
         <Text style={styles.sectionTitle}>About You</Text>
         <TextInput
           style={styles.bioInput}
@@ -266,10 +278,20 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 12,
   },
+  firstSection: {
+    marginTop: 0,
+  },
   subtitle: {
     fontSize: 14,
     color: Colors.text.tertiary,
     marginBottom: 12,
+  },
+  nameInput: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: Colors.text.primary,
   },
   bioInput: {
     backgroundColor: '#f5f5f5',

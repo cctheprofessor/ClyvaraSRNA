@@ -1,6 +1,7 @@
 export interface TAProfile {
   id: string;
   user_id: string;
+  display_name: string;
   bio: string;
   base_rate_30min: number;
   specialties: string[];
