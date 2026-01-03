@@ -115,7 +115,7 @@ export default function MyBookings() {
     ]);
   }
 
-  function handleCancelAwaitingBooking(bookingId: string) {
+  async function handleCancelAwaitingBooking(bookingId: string) {
     Alert.alert(
       'Cancel Request',
       'Are you sure you want to cancel this booking request?',
