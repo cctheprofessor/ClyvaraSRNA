@@ -13,7 +13,7 @@ import {
   FlatList,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings, RefreshCw, ClipboardCheck } from 'lucide-react-native';
+import { User, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings, RefreshCw, ClipboardCheck, Mail } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { ROLES, PROGRAM_TRACKS, CRNA_SCHOOLS } from '@/constants/crna-schools';
 import PageHeader from '@/components/PageHeader';
@@ -414,6 +414,18 @@ export default function ProfileScreen() {
                 value={formData.full_name}
                 onChangeText={(text) => setFormData({ ...formData, full_name: text })}
                 editable={editing}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <View style={styles.inputLabel}>
+                <Mail color="#64748b" size={18} />
+                <Text style={styles.label}>Email</Text>
+              </View>
+              <TextInput
+                style={[styles.input, styles.inputDisabled]}
+                value={profile?.email || user?.email || 'Not set'}
+                editable={false}
               />
             </View>
 

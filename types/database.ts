@@ -1,5 +1,6 @@
 export interface Profile {
   id: string;
+  email: string | null;
   full_name: string;
   graduation_year: number | null;
   role: string | null;

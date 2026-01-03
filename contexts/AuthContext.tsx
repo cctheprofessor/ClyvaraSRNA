@@ -119,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
+          email: email,
           full_name: fullName,
           first_name: firstName,
           last_name: lastName,
