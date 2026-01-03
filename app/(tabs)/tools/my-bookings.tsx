@@ -115,6 +115,38 @@ export default function MyBookings() {
     ]);
   }
 
+  function handleCancelAwaitingBooking(bookingId: string) {
+    Alert.alert(
+      'Cancel Request',
+      'Are you sure you want to cancel this booking request?',
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Yes',
+          onPress: async () => {
+            try {
+              const { error } = await supabase
+                .from('ta_bookings')
+                .update({
+                  status: 'cancelled',
+                  cancellation_reason: 'Cancelled by student before approval'
+                })
+                .eq('id', bookingId);
+
+              if (error) throw error;
+
+              Alert.alert('Success', 'Booking request cancelled successfully');
+              loadBookings();
+            } catch (error: any) {
+              console.error('Cancel error:', error);
+              Alert.alert('Error', error.message || 'Failed to cancel booking');
+            }
+          },
+        },
+      ]
+    );
+  }
+
   async function proceedToPayment(bookingId: string) {
     try {
       const { EXPO_PUBLIC_SUPABASE_URL } = process.env;
@@ -243,6 +275,14 @@ export default function MyBookings() {
 
                 <View style={styles.bookingFooter}>
                   <Text style={styles.bookingTotal}>${booking.total_amount}</Text>
+
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => handleCancelAwaitingBooking(booking.id)}
+                  >
+                    <XCircle size={16} color="#ff4444" />
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             ))}
@@ -286,13 +326,23 @@ export default function MyBookings() {
                 <View style={styles.bookingFooter}>
                   <Text style={styles.bookingTotal}>${booking.total_amount}</Text>
 
-                  <TouchableOpacity
-                    style={styles.payButton}
-                    onPress={() => proceedToPayment(booking.id)}
-                  >
-                    <CreditCard size={16} color="#fff" />
-                    <Text style={styles.payButtonText}>Pay Now</Text>
-                  </TouchableOpacity>
+                  <View style={styles.actionButtons}>
+                    <TouchableOpacity
+                      style={styles.cancelButton}
+                      onPress={() => handleCancelAwaitingBooking(booking.id)}
+                    >
+                      <XCircle size={16} color="#ff4444" />
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.payButton}
+                      onPress={() => proceedToPayment(booking.id)}
+                    >
+                      <CreditCard size={16} color="#fff" />
+                      <Text style={styles.payButtonText}>Pay Now</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             ))}
@@ -702,5 +752,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
   },
 });
