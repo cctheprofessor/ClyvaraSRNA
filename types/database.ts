@@ -1,7 +1,6 @@
 export interface Profile {
   id: string;
   full_name: string;
-  school: string | null;
   graduation_year: number | null;
   role: string | null;
   is_admin: boolean;

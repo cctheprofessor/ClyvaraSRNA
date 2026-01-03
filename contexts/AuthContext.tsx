@@ -115,10 +115,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         expectedGradDate = gradDate.toISOString().substring(0, 7);
       }
 
+      // Note: Profile is auto-created by database trigger, so we UPDATE instead of INSERT
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({
-          id: data.user.id,
+        .update({
           full_name: fullName,
           first_name: firstName,
           last_name: lastName,
@@ -126,13 +126,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           enrollment_date: enrollmentDate + '-01',
           expected_graduation: expectedGradDate + '-01',
           cohort_year: cohortYear,
+          graduation_year: new Date(expectedGradDate + '-01').getFullYear(),
           program_name: 'Nurse Anesthesia Program',
           program_track: programTrack,
           role: role,
           specialty_interest: specialtyInterest,
           phone: phone,
           is_active: true,
-        });
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', data.user.id);
 
       if (profileError) return { error: profileError };
 
