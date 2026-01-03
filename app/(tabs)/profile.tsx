@@ -30,6 +30,8 @@ export default function ProfileScreen() {
   const [showProgramTrackPicker, setShowProgramTrackPicker] = useState(false);
   const [showStudyTimePicker, setShowStudyTimePicker] = useState(false);
   const [showSchoolPicker, setShowSchoolPicker] = useState(false);
+  const [showEnrollmentDatePicker, setShowEnrollmentDatePicker] = useState(false);
+  const [showExpectedGraduationPicker, setShowExpectedGraduationPicker] = useState(false);
   const [donationLoading, setDonationLoading] = useState(false);
   const [mlSyncLoading, setMlSyncLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -37,6 +39,8 @@ export default function ProfileScreen() {
     first_name: profile?.first_name || '',
     last_name: profile?.last_name || '',
     institution: profile?.institution || '',
+    enrollment_date: profile?.enrollment_date || '',
+    expected_graduation: profile?.expected_graduation || '',
     phone: profile?.phone || '',
     program_track: profile?.program_track || 'Full-time',
     current_semester: profile?.current_semester || 1,
@@ -57,6 +61,8 @@ export default function ProfileScreen() {
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
         institution: profile.institution || '',
+        enrollment_date: profile.enrollment_date || '',
+        expected_graduation: profile.expected_graduation || '',
         phone: profile.phone || '',
         program_track: profile.program_track || 'Full-time',
         current_semester: profile.current_semester || 1,
@@ -81,6 +87,8 @@ export default function ProfileScreen() {
       first_name: formData.first_name || null,
       last_name: formData.last_name || null,
       institution: formData.institution || null,
+      enrollment_date: formData.enrollment_date || null,
+      expected_graduation: formData.expected_graduation || null,
       phone: formData.phone || null,
       program_track: formData.program_track,
       current_semester: formData.current_semester,
@@ -186,6 +194,8 @@ export default function ProfileScreen() {
       first_name: profile?.first_name || '',
       last_name: profile?.last_name || '',
       institution: profile?.institution || '',
+      enrollment_date: profile?.enrollment_date || '',
+      expected_graduation: profile?.expected_graduation || '',
       phone: profile?.phone || '',
       program_track: profile?.program_track || 'Full-time',
       current_semester: profile?.current_semester || 1,
@@ -199,6 +209,29 @@ export default function ProfileScreen() {
       specialty_interest: profile?.specialty_interest || '',
     });
     setEditing(false);
+  };
+
+  const generateDateOptions = () => {
+    const dates = [];
+    const currentYear = new Date().getFullYear();
+    const startYear = currentYear - 5;
+    const endYear = currentYear + 10;
+
+    for (let year = startYear; year <= endYear; year++) {
+      for (let month = 1; month <= 12; month++) {
+        const monthStr = month.toString().padStart(2, '0');
+        dates.push(`${year}-${monthStr}`);
+      }
+    }
+    return dates.reverse();
+  };
+
+  const formatDateDisplay = (dateStr: string) => {
+    if (!dateStr) return '';
+    const [year, month] = dateStr.split('-');
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    return `${monthNames[parseInt(month) - 1]} ${year}`;
   };
 
   const handleMLSync = async () => {
@@ -449,16 +482,46 @@ export default function ProfileScreen() {
                 />
               )}
             </View>
-            {profile?.enrollment_date && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Enrollment Date</Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Enrollment Date</Text>
+              {editing ? (
+                <Pressable
+                  style={styles.dropdownButton}
+                  onPress={() => setShowEnrollmentDatePicker(true)}
+                >
+                  <Text style={[styles.dropdownText, !formData.enrollment_date && styles.placeholderText]}>
+                    {formData.enrollment_date ? formatDateDisplay(formData.enrollment_date) : 'Select enrollment date'}
+                  </Text>
+                  <ChevronDown color={Colors.text.tertiary} size={20} />
+                </Pressable>
+              ) : (
                 <TextInput
                   style={[styles.input, styles.inputDisabled]}
-                  value={new Date(profile.enrollment_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                  value={formData.enrollment_date ? formatDateDisplay(formData.enrollment_date) : 'Not set'}
                   editable={false}
                 />
-              </View>
-            )}
+              )}
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Expected Graduation Date</Text>
+              {editing ? (
+                <Pressable
+                  style={styles.dropdownButton}
+                  onPress={() => setShowExpectedGraduationPicker(true)}
+                >
+                  <Text style={[styles.dropdownText, !formData.expected_graduation && styles.placeholderText]}>
+                    {formData.expected_graduation ? formatDateDisplay(formData.expected_graduation) : 'Select expected graduation'}
+                  </Text>
+                  <ChevronDown color={Colors.text.tertiary} size={20} />
+                </Pressable>
+              ) : (
+                <TextInput
+                  style={[styles.input, styles.inputDisabled]}
+                  value={formData.expected_graduation ? formatDateDisplay(formData.expected_graduation) : 'Not set'}
+                  editable={false}
+                />
+              )}
+            </View>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Program Track</Text>
               {editing ? (
@@ -824,6 +887,71 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      <Modal visible={showEnrollmentDatePicker} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Enrollment Date</Text>
+              <Pressable onPress={() => setShowEnrollmentDatePicker(false)}>
+                <Text style={styles.modalClose}>Done</Text>
+              </Pressable>
+            </View>
+            <FlatList
+              data={generateDateOptions()}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={styles.pickerItem}
+                  onPress={() => {
+                    setFormData({ ...formData, enrollment_date: item });
+                    setShowEnrollmentDatePicker(false);
+                  }}
+                >
+                  <Text style={styles.pickerItemText}>{formatDateDisplay(item)}</Text>
+                </Pressable>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showExpectedGraduationPicker} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Expected Graduation</Text>
+              <Pressable onPress={() => setShowExpectedGraduationPicker(false)}>
+                <Text style={styles.modalClose}>Done</Text>
+              </Pressable>
+            </View>
+            <Pressable
+              style={[styles.pickerItem, styles.clearOption]}
+              onPress={() => {
+                setFormData({ ...formData, expected_graduation: '' });
+                setShowExpectedGraduationPicker(false);
+              }}
+            >
+              <Text style={[styles.pickerItemText, styles.clearText]}>Clear Selection</Text>
+            </Pressable>
+            <FlatList
+              data={generateDateOptions()}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={styles.pickerItem}
+                  onPress={() => {
+                    setFormData({ ...formData, expected_graduation: item });
+                    setShowExpectedGraduationPicker(false);
+                  }}
+                >
+                  <Text style={styles.pickerItemText}>{formatDateDisplay(item)}</Text>
+                </Pressable>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1132,5 +1260,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: Colors.primary,
+  },
+  clearOption: {
+    backgroundColor: Colors.backgroundSecondary,
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.border.dark,
+  },
+  clearText: {
+    color: Colors.error,
+    fontWeight: '600',
   },
 });
