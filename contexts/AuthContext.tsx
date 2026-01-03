@@ -105,14 +105,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
 
-      const enrollmentDateObj = new Date(enrollmentDate + '-01');
+      const enrollmentDateObj = new Date(enrollmentDate);
       const cohortYear = enrollmentDateObj.getFullYear();
 
       let expectedGradDate = expectedGraduation;
       if (!expectedGradDate) {
         const gradDate = new Date(enrollmentDateObj);
         gradDate.setMonth(gradDate.getMonth() + 36);
-        expectedGradDate = gradDate.toISOString().substring(0, 7);
+        expectedGradDate = gradDate.toISOString().substring(0, 10);
       }
 
       // Note: Profile is auto-created by database trigger, so we UPDATE instead of INSERT
@@ -124,10 +124,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           first_name: firstName,
           last_name: lastName,
           institution: institution,
-          enrollment_date: enrollmentDate + '-01',
-          expected_graduation: expectedGradDate + '-01',
+          enrollment_date: enrollmentDate,
+          expected_graduation: expectedGradDate,
           cohort_year: cohortYear,
-          graduation_year: new Date(expectedGradDate + '-01').getFullYear(),
+          graduation_year: new Date(expectedGradDate).getFullYear(),
           program_name: 'Nurse Anesthesia Program',
           program_track: programTrack,
           role: role,
@@ -147,10 +147,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           external_user_id: data.user.id,
           email: email,
           username: email.split('@')[0],
-          enrollment_date: enrollmentDate + '-01',
+          enrollment_date: enrollmentDate,
           program_name: 'Nurse Anesthesia Program',
           institution: institution,
-          expected_graduation: expectedGradDate + '-01',
+          expected_graduation: expectedGradDate,
         });
 
         await supabase
