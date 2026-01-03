@@ -116,31 +116,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Wait for the trigger to create the profile (with retries)
+      console.log('[SignUp] Waiting for trigger to create profile for user:', data.user.id);
       let profileExists = false;
       let retries = 0;
       const maxRetries = 10;
 
       while (!profileExists && retries < maxRetries) {
-        const { data: existingProfile } = await supabase
+        const { data: existingProfile, error: checkError } = await supabase
           .from('profiles')
           .select('id')
           .eq('id', data.user.id)
           .maybeSingle();
 
+        if (checkError) {
+          console.error('[SignUp] Error checking profile existence:', checkError);
+        }
+
         if (existingProfile) {
+          console.log('[SignUp] Profile found after', retries, 'retries');
           profileExists = true;
         } else {
+          console.log('[SignUp] Profile not found yet, retry', retries + 1, 'of', maxRetries);
           await new Promise(resolve => setTimeout(resolve, 500));
           retries++;
         }
       }
 
       if (!profileExists) {
+        console.error('[SignUp] Profile creation timed out after', maxRetries, 'retries');
         return { error: new Error('Profile creation timed out') };
       }
 
       // Update profile with user-provided data
-      const { error: profileError } = await supabase
+      console.log('[SignUp] Updating profile with signup data:', {
+        fullName,
+        institution,
+        role,
+        programTrack,
+      });
+
+      const { data: updateData, error: profileError } = await supabase
         .from('profiles')
         .update({
           email: email,
@@ -160,9 +175,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           is_active: true,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', data.user.id);
+        .eq('id', data.user.id)
+        .select();
 
-      if (profileError) return { error: profileError };
+      if (profileError) {
+        console.error('[SignUp] Profile update failed:', profileError);
+        return { error: profileError };
+      }
+
+      console.log('[SignUp] Profile updated successfully:', updateData);
 
       try {
         const mlClient = new MLBackendClient();
