@@ -36,6 +36,31 @@ export default function SignupScreen() {
   const [showSchoolPicker, setShowSchoolPicker] = useState(false);
   const [showProgramTrackPicker, setShowProgramTrackPicker] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showGraduationDatePicker, setShowGraduationDatePicker] = useState(false);
+
+  const generateDateOptions = () => {
+    const dates = [];
+    const currentYear = new Date().getFullYear();
+    const startYear = currentYear - 5;
+    const endYear = currentYear + 5;
+
+    for (let year = startYear; year <= endYear; year++) {
+      for (let month = 1; month <= 12; month++) {
+        const monthStr = month.toString().padStart(2, '0');
+        dates.push(`${year}-${monthStr}`);
+      }
+    }
+    return dates.reverse();
+  };
+
+  const formatDateDisplay = (dateStr: string) => {
+    if (!dateStr) return '';
+    const [year, month] = dateStr.split('-');
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    return `${monthNames[parseInt(month) - 1]} ${year}`;
+  };
 
   const handleSignup = async () => {
     if (!fullName || !email || !password || !confirmPassword || !institution || !enrollmentDate || !role || !specialtyInterest) {
@@ -164,27 +189,30 @@ export default function SignupScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Program Start Date *</Text>
-            <TextInput
-              style={styles.inputStandalone}
-              placeholder="YYYY-MM (e.g., 2024-08)"
-              placeholderTextColor={Colors.text.tertiary}
-              value={enrollmentDate}
-              onChangeText={setEnrollmentDate}
-              editable={!loading}
-            />
-            <Text style={{fontSize: 12, color: Colors.text.tertiary, marginTop: 4}}>When did you start your program?</Text>
+            <Pressable
+              style={styles.dropdownButton}
+              onPress={() => setShowStartDatePicker(true)}
+              disabled={loading}
+            >
+              <Text style={[styles.dropdownText, !enrollmentDate && styles.placeholderText]}>
+                {enrollmentDate ? formatDateDisplay(enrollmentDate) : 'Select program start date'}
+              </Text>
+              <ChevronDown color={Colors.text.tertiary} size={20} />
+            </Pressable>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Expected Graduation (Optional)</Text>
-            <TextInput
-              style={styles.inputStandalone}
-              placeholder="YYYY-MM (Auto-calculated if blank)"
-              placeholderTextColor={Colors.text.tertiary}
-              value={expectedGraduation}
-              onChangeText={setExpectedGraduation}
-              editable={!loading}
-            />
+            <Pressable
+              style={styles.dropdownButton}
+              onPress={() => setShowGraduationDatePicker(true)}
+              disabled={loading}
+            >
+              <Text style={[styles.dropdownText, !expectedGraduation && styles.placeholderText]}>
+                {expectedGraduation ? formatDateDisplay(expectedGraduation) : 'Select expected graduation'}
+              </Text>
+              <ChevronDown color={Colors.text.tertiary} size={20} />
+            </Pressable>
           </View>
 
           <View style={styles.inputGroup}>
@@ -341,6 +369,71 @@ export default function SignupScreen() {
                 <Text style={styles.pickerItemText}>{item}</Text>
               </Pressable>
             ))}
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showStartDatePicker} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Program Start Date</Text>
+              <Pressable onPress={() => setShowStartDatePicker(false)}>
+                <Text style={styles.modalClose}>Done</Text>
+              </Pressable>
+            </View>
+            <FlatList
+              data={generateDateOptions()}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={styles.pickerItem}
+                  onPress={() => {
+                    setEnrollmentDate(item);
+                    setShowStartDatePicker(false);
+                  }}
+                >
+                  <Text style={styles.pickerItemText}>{formatDateDisplay(item)}</Text>
+                </Pressable>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showGraduationDatePicker} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Expected Graduation</Text>
+              <Pressable onPress={() => setShowGraduationDatePicker(false)}>
+                <Text style={styles.modalClose}>Done</Text>
+              </Pressable>
+            </View>
+            <Pressable
+              style={[styles.pickerItem, styles.clearOption]}
+              onPress={() => {
+                setExpectedGraduation('');
+                setShowGraduationDatePicker(false);
+              }}
+            >
+              <Text style={[styles.pickerItemText, styles.clearText]}>Clear Selection</Text>
+            </Pressable>
+            <FlatList
+              data={generateDateOptions()}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={styles.pickerItem}
+                  onPress={() => {
+                    setExpectedGraduation(item);
+                    setShowGraduationDatePicker(false);
+                  }}
+                >
+                  <Text style={styles.pickerItemText}>{formatDateDisplay(item)}</Text>
+                </Pressable>
+              )}
+            />
           </View>
         </View>
       </Modal>
@@ -514,5 +607,14 @@ const styles = StyleSheet.create({
   pickerItemText: {
     fontSize: 16,
     color: Colors.text.primary,
+  },
+  clearOption: {
+    backgroundColor: Colors.background,
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.border.dark,
+  },
+  clearText: {
+    color: Colors.error,
+    fontWeight: '600',
   },
 });
