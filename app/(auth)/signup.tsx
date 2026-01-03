@@ -150,19 +150,15 @@ export default function SignupScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Institution *</Text>
-            <TextInput
-              style={styles.inputStandalone}
-              placeholder="Your university name (e.g., Duke University)"
-              placeholderTextColor={Colors.text.tertiary}
-              value={institution}
-              onChangeText={setInstitution}
-              editable={!loading}
-            />
             <Pressable
-              style={{marginTop: 4}}
+              style={styles.dropdownButton}
               onPress={() => setShowSchoolPicker(true)}
+              disabled={loading}
             >
-              <Text style={{fontSize: 12, color: Colors.primary}}>Or select from CRNA schools list</Text>
+              <Text style={[styles.dropdownText, !institution && styles.placeholderText]}>
+                {institution || 'Select your institution'}
+              </Text>
+              <ChevronDown color={Colors.text.tertiary} size={20} />
             </Pressable>
           </View>
 
