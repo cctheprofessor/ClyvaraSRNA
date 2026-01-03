@@ -352,16 +352,14 @@ export default function BookTASession() {
 
       if (insertError) throw insertError;
 
-      Alert.alert(
-        'Request Sent!',
-        `Your session request has been sent to ${selectedTA.display_name}. You'll be notified when they approve it, and then you can proceed with payment.`,
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/(tabs)/tools/my-bookings'),
-          },
-        ]
-      );
+      router.replace('/(tabs)/tools/my-bookings');
+
+      setTimeout(() => {
+        Alert.alert(
+          'Request Sent!',
+          `Your session request has been sent to ${selectedTA.display_name}. You'll be notified when they approve it, and then you can proceed with payment.`
+        );
+      }, 300);
     } catch (error: any) {
       console.error('Booking error:', error);
       Alert.alert('Error', error.message || 'Failed to submit booking request');
