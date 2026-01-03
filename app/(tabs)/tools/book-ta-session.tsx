@@ -358,7 +358,7 @@ export default function BookTASession() {
         [
           {
             text: 'OK',
-            onPress: () => router.back(),
+            onPress: () => router.push('/tools/my-bookings'),
           },
         ]
       );
