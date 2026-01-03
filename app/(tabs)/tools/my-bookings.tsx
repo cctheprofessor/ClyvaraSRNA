@@ -125,21 +125,28 @@ export default function MyBookings() {
           text: 'Yes',
           onPress: async () => {
             try {
-              const { error } = await supabase
+              console.log('Attempting to cancel booking:', bookingId);
+              const { data, error } = await supabase
                 .from('ta_bookings')
                 .update({
                   status: 'cancelled',
                   cancellation_reason: 'Cancelled by student before approval'
                 })
-                .eq('id', bookingId);
+                .eq('id', bookingId)
+                .select();
 
-              if (error) throw error;
+              console.log('Update result:', { data, error });
+
+              if (error) {
+                console.error('Database error:', error);
+                throw error;
+              }
 
               Alert.alert('Success', 'Booking request cancelled successfully');
               loadBookings();
             } catch (error: any) {
-              console.error('Cancel error:', error);
-              Alert.alert('Error', error.message || 'Failed to cancel booking');
+              console.error('Cancel error full:', JSON.stringify(error, null, 2));
+              Alert.alert('Error', `Failed to cancel: ${error.message}\n\nDetails: ${error.details || 'none'}\nHint: ${error.hint || 'none'}`);
             }
           },
         },
