@@ -115,7 +115,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         expectedGradDate = gradDate.toISOString().substring(0, 10);
       }
 
-      // Note: Profile is auto-created by database trigger, so we UPDATE instead of INSERT
+      // Wait for the trigger to create the profile (with retries)
+      let profileExists = false;
+      let retries = 0;
+      const maxRetries = 10;
+
+      while (!profileExists && retries < maxRetries) {
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .maybeSingle();
+
+        if (existingProfile) {
+          profileExists = true;
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          retries++;
+        }
+      }
+
+      if (!profileExists) {
+        return { error: new Error('Profile creation timed out') };
+      }
+
+      // Update profile with user-provided data
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
