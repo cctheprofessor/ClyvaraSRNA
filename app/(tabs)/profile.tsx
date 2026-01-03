@@ -10,11 +10,12 @@ import {
   Modal,
   Linking,
   ActivityIndicator,
+  FlatList,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { User, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings, RefreshCw, ClipboardCheck } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
-import { ROLES, PROGRAM_TRACKS } from '@/constants/crna-schools';
+import { ROLES, PROGRAM_TRACKS, CRNA_SCHOOLS } from '@/constants/crna-schools';
 import PageHeader from '@/components/PageHeader';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -28,6 +29,7 @@ export default function ProfileScreen() {
   const [showRolePicker, setShowRolePicker] = useState(false);
   const [showProgramTrackPicker, setShowProgramTrackPicker] = useState(false);
   const [showStudyTimePicker, setShowStudyTimePicker] = useState(false);
+  const [showSchoolPicker, setShowSchoolPicker] = useState(false);
   const [donationLoading, setDonationLoading] = useState(false);
   const [mlSyncLoading, setMlSyncLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -78,6 +80,7 @@ export default function ProfileScreen() {
       full_name: formData.full_name,
       first_name: formData.first_name || null,
       last_name: formData.last_name || null,
+      institution: formData.institution || null,
       phone: formData.phone || null,
       program_track: formData.program_track,
       current_semester: formData.current_semester,
@@ -426,16 +429,26 @@ export default function ProfileScreen() {
             <Text style={styles.sectionTitle}>Program Information</Text>
           </View>
           <View style={styles.form}>
-            {profile?.institution && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Institution</Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Institution</Text>
+              {editing ? (
+                <Pressable
+                  style={styles.dropdownButton}
+                  onPress={() => setShowSchoolPicker(true)}
+                >
+                  <Text style={[styles.dropdownText, !formData.institution && styles.placeholderText]}>
+                    {formData.institution || 'Select your institution'}
+                  </Text>
+                  <ChevronDown color={Colors.text.tertiary} size={20} />
+                </Pressable>
+              ) : (
                 <TextInput
                   style={[styles.input, styles.inputDisabled]}
-                  value={profile.institution}
+                  value={formData.institution || 'Not set'}
                   editable={false}
                 />
-              </View>
-            )}
+              )}
+            </View>
             {profile?.enrollment_date && (
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Enrollment Date</Text>
@@ -780,6 +793,34 @@ export default function ProfileScreen() {
                 <Text style={styles.pickerItemText}>{item.charAt(0).toUpperCase() + item.slice(1)}</Text>
               </Pressable>
             ))}
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showSchoolPicker} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Institution</Text>
+              <Pressable onPress={() => setShowSchoolPicker(false)}>
+                <Text style={styles.modalClose}>Done</Text>
+              </Pressable>
+            </View>
+            <FlatList
+              data={CRNA_SCHOOLS}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={styles.pickerItem}
+                  onPress={() => {
+                    setFormData({ ...formData, institution: item });
+                    setShowSchoolPicker(false);
+                  }}
+                >
+                  <Text style={styles.pickerItemText}>{item}</Text>
+                </Pressable>
+              )}
+            />
           </View>
         </View>
       </Modal>
