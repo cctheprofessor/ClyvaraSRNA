@@ -9,7 +9,7 @@ import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
 import { CheckCircle, AlertCircle, Send, ArrowRight } from 'lucide-react-native';
 import { Question, AnswerFormat } from '@/types/question';
-import { validateAnswer } from '@/lib/answer-validator';
+import { validateAnswer, ValidationResult } from '@/lib/answer-validator';
 import { rationaleCacheService } from '@/lib/rationale-cache-service';
 
 interface DiagnosticAnswer {
@@ -24,7 +24,21 @@ interface AnswerResult {
   rationale?: string;
   option_rationales?: Record<string, string>;
   correct_answers?: string[];
+  correct_pairs?: Record<string, string>;
 }
+
+const formatCorrectPairs = (question: Question, correctPairs: Record<string, string>): string[] => {
+  if (question.question_type !== 'drag_drop_matching') {
+    return [];
+  }
+
+  return Object.entries(correctPairs).map(([aId, bId]) => {
+    const aItem = question.options.column_a.find(item => item.id === aId);
+    const bItem = question.options.column_b.find(item => item.id === bId);
+    if (!aItem || !bItem) return '';
+    return `${aItem.text} → ${bItem.text}`;
+  }).filter(Boolean);
+};
 
 export default function DiagnosticExamScreen() {
   const router = useRouter();
@@ -143,13 +157,30 @@ export default function DiagnosticExamScreen() {
       });
 
       if (backendResult.success && backendResult.rationale) {
+        console.log('[DiagnosticExam] Backend result:', {
+          is_correct: backendResult.is_correct,
+          has_rationale: !!backendResult.rationale,
+          has_option_rationales: !!backendResult.option_rationales,
+          correct_answers: backendResult.correct_answers,
+          validation_correct_answers: validationResult.correct_answers,
+          validation_correct_pairs: validationResult.correct_pairs,
+          question_type: currentQuestion.question_type,
+        });
+
+        const correctAnswersForDisplay = backendResult.correct_answers ||
+          validationResult.correct_answers ||
+          (validationResult.correct_pairs && currentQuestion.question_type === 'drag_drop_matching'
+            ? formatCorrectPairs(currentQuestion, validationResult.correct_pairs)
+            : undefined);
+
         setAnswerResults(prev => ({
           ...prev,
           [currentIndex]: {
             is_correct: backendResult.is_correct ?? validationResult.is_correct,
             rationale: backendResult.rationale,
             option_rationales: backendResult.option_rationales,
-            correct_answers: backendResult.correct_answers || validationResult.correct_answers,
+            correct_answers: correctAnswersForDisplay,
+            correct_pairs: validationResult.correct_pairs,
           },
         }));
         setRationaleLoading(false);
@@ -157,7 +188,7 @@ export default function DiagnosticExamScreen() {
         await rationaleCacheService.setRationale(currentQuestion.id, {
           rationale: backendResult.rationale,
           option_rationales: backendResult.option_rationales,
-          correct_answers: backendResult.correct_answers || validationResult.correct_answers,
+          correct_answers: correctAnswersForDisplay,
         });
         return;
       }
@@ -167,6 +198,11 @@ export default function DiagnosticExamScreen() {
 
     const cachedRationale = await rationaleCacheService.getRationale(currentQuestion.id);
 
+    const correctAnswersForDisplay = validationResult.correct_answers ||
+      (validationResult.correct_pairs && currentQuestion.question_type === 'drag_drop_matching'
+        ? formatCorrectPairs(currentQuestion, validationResult.correct_pairs)
+        : undefined);
+
     if (cachedRationale) {
       setAnswerResults(prev => ({
         ...prev,
@@ -174,7 +210,8 @@ export default function DiagnosticExamScreen() {
           is_correct: validationResult.is_correct,
           rationale: cachedRationale.rationale || validationResult.explanation || validationResult.rationale,
           option_rationales: cachedRationale.option_rationales,
-          correct_answers: cachedRationale.correct_answers || validationResult.correct_answers,
+          correct_answers: cachedRationale.correct_answers || correctAnswersForDisplay,
+          correct_pairs: validationResult.correct_pairs,
         },
       }));
       setRationaleLoading(false);
@@ -184,7 +221,8 @@ export default function DiagnosticExamScreen() {
         [currentIndex]: {
           is_correct: validationResult.is_correct,
           rationale: validationResult.explanation || validationResult.rationale,
-          correct_answers: validationResult.correct_answers,
+          correct_answers: correctAnswersForDisplay,
+          correct_pairs: validationResult.correct_pairs,
         },
       }));
       setRationaleLoading(false);
