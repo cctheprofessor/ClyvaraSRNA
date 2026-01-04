@@ -77,6 +77,7 @@ export interface BookingWithDetails extends TABooking {
     email?: string;
     full_name?: string;
   };
+  has_review?: boolean;
 }
 
 export interface DurationOption {

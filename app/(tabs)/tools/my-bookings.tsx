@@ -36,16 +36,30 @@ export default function MyBookings() {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: bookingsData, error: bookingsError } = await supabase
         .from('ta_bookings')
         .select('*, ta_profiles(*)')
         .eq('student_id', user.id)
         .order('session_date', { ascending: false })
         .order('start_time', { ascending: false });
 
-      if (error) throw error;
+      if (bookingsError) throw bookingsError;
 
-      setBookings(data || []);
+      const { data: reviewsData, error: reviewsError } = await supabase
+        .from('booking_reviews')
+        .select('booking_id')
+        .eq('student_id', user.id);
+
+      if (reviewsError) throw reviewsError;
+
+      const reviewedBookingIds = new Set(reviewsData?.map(r => r.booking_id) || []);
+
+      const bookingsWithReviewStatus = (bookingsData || []).map(booking => ({
+        ...booking,
+        has_review: reviewedBookingIds.has(booking.id),
+      }));
+
+      setBookings(bookingsWithReviewStatus);
     } catch (error: any) {
       console.error('[MyBookings] Error loading bookings:', error);
     } finally {
@@ -607,7 +621,7 @@ export default function MyBookings() {
                   ${booking.total_amount}
                 </Text>
 
-                {booking.status === 'completed' && (
+                {booking.status === 'completed' && !booking.has_review && (
                   <TouchableOpacity
                     style={styles.reviewButton}
                     onPress={() => leaveReview(booking.id, booking.ta_id)}
@@ -615,6 +629,13 @@ export default function MyBookings() {
                     <Star size={16} color="#FFD700" />
                     <Text style={styles.reviewButtonText}>Leave Review</Text>
                   </TouchableOpacity>
+                )}
+
+                {booking.status === 'completed' && booking.has_review && (
+                  <View style={styles.reviewedBadge}>
+                    <Star size={14} color="#FFD700" fill="#FFD700" />
+                    <Text style={styles.reviewedText}>Reviewed</Text>
+                  </View>
                 )}
               </View>
             </View>
@@ -810,6 +831,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  reviewedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFF9E6',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#FFD700',
+  },
+  reviewedText: {
+    color: Colors.text.primary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
   statusBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -892,10 +929,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 8,
   },
   confirmationBox: {
     backgroundColor: '#fff',
