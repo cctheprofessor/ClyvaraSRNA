@@ -184,18 +184,48 @@ export default function MyBookings() {
     );
   }
 
-  const awaitingApprovalBookings = bookings.filter(b => b.status === 'awaiting_approval');
-  const approvedBookings = bookings.filter(b => b.status === 'approved');
-  const rejectedBookings = bookings.filter(b => b.status === 'rejected');
+  const awaitingApprovalBookings = bookings
+    .filter(b => b.status === 'awaiting_approval')
+    .sort((a, b) => {
+      const dateA = new Date(`${a.session_date}T${a.start_time}`);
+      const dateB = new Date(`${b.session_date}T${b.start_time}`);
+      return dateB.getTime() - dateA.getTime();
+    });
 
-  const upcomingBookings = bookings.filter(
-    b => b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) > new Date()
-  );
+  const approvedBookings = bookings
+    .filter(b => b.status === 'approved')
+    .sort((a, b) => {
+      const dateA = new Date(`${a.session_date}T${a.start_time}`);
+      const dateB = new Date(`${b.session_date}T${b.start_time}`);
+      return dateB.getTime() - dateA.getTime();
+    });
 
-  const pastBookings = bookings.filter(
-    b => b.status === 'completed' || b.status === 'cancelled' || b.status === 'refunded' ||
+  const rejectedBookings = bookings
+    .filter(b => b.status === 'rejected')
+    .sort((a, b) => {
+      const dateA = new Date(`${a.session_date}T${a.start_time}`);
+      const dateB = new Date(`${b.session_date}T${b.start_time}`);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+  const upcomingBookings = bookings
+    .filter(b => b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) > new Date())
+    .sort((a, b) => {
+      const dateA = new Date(`${a.session_date}T${a.start_time}`);
+      const dateB = new Date(`${b.session_date}T${b.start_time}`);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+  const pastBookings = bookings
+    .filter(b =>
+      b.status === 'completed' || b.status === 'refunded' ||
       (b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) <= new Date())
-  );
+    )
+    .sort((a, b) => {
+      const dateA = new Date(`${a.session_date}T${a.start_time}`);
+      const dateB = new Date(`${b.session_date}T${b.start_time}`);
+      return dateB.getTime() - dateA.getTime();
+    });
 
   return (
     <View style={styles.container}>
@@ -515,15 +545,9 @@ export default function MyBookings() {
             <Text style={styles.sectionTitle}>Declined Requests</Text>
 
             {rejectedBookings.map((booking) => (
-              <View key={booking.id} style={[styles.bookingCard, styles.rejectedCard]}>
+              <View key={booking.id} style={[styles.bookingCard, styles.pastBookingCard]}>
                 {booking.ta_profiles?.display_name && (
-                  <View style={styles.headerRow}>
-                    <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: '#ff4444' }]}>
-                      <XCircle size={12} color="#fff" />
-                      <Text style={styles.statusText}>Declined</Text>
-                    </View>
-                  </View>
+                  <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
                 )}
 
                 <View style={styles.bookingHeader}>
@@ -534,11 +558,18 @@ export default function MyBookings() {
                   <View style={styles.dateTime}>
                     <Clock size={16} color={Colors.text.tertiary} />
                     <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                    <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.bookingHeader, { marginBottom: 0 }]}>
+                  <View style={[styles.statusBadge, { backgroundColor: '#ff4444' }]}>
+                    <Text style={styles.statusText}>Declined</Text>
                   </View>
                 </View>
 
                 {booking.rejection_reason && (
-                  <View style={[styles.infoBox, { backgroundColor: '#FFEBEE' }]}>
+                  <View style={[styles.infoBox, { backgroundColor: '#FFEBEE', marginTop: 12 }]}>
                     <Text style={styles.infoLabel}>Reason:</Text>
                     <Text style={styles.infoText}>{booking.rejection_reason}</Text>
                   </View>
@@ -821,11 +852,6 @@ const styles = StyleSheet.create({
   approvedCard: {
     borderColor: '#4CAF50',
     backgroundColor: '#F1F8F4',
-  },
-  rejectedCard: {
-    borderColor: '#ff4444',
-    backgroundColor: '#FFF5F5',
-    opacity: 0.9,
   },
   headerRow: {
     flexDirection: 'row',
