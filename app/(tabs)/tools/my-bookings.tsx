@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Linking,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -24,6 +26,7 @@ export default function MyBookings() {
   const [refreshing, setRefreshing] = useState(false);
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
   const [cancelingBookingId, setCancelingBookingId] = useState<string | null>(null);
+  const [payingBookingId, setPayingBookingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadBookings();
@@ -114,6 +117,8 @@ export default function MyBookings() {
   }
 
   async function proceedToPayment(bookingId: string) {
+    setPayingBookingId(bookingId);
+
     try {
       const { EXPO_PUBLIC_SUPABASE_URL } = process.env;
       const apiUrl = `${EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ta-booking-checkout`;
@@ -140,9 +145,24 @@ export default function MyBookings() {
       }
 
       const { url } = await response.json();
-      console.log('[MyBookings] Payment checkout created. Check email for payment link.');
+
+      if (url) {
+        console.log('[MyBookings] Opening payment checkout:', url);
+        const supported = await Linking.canOpenURL(url);
+
+        if (supported) {
+          await Linking.openURL(url);
+        } else {
+          Alert.alert('Error', 'Unable to open payment link. Please try again.');
+        }
+      } else {
+        throw new Error('No payment URL returned');
+      }
     } catch (error: any) {
       console.error('[MyBookings] Payment error:', error);
+      Alert.alert('Payment Error', error.message || 'Failed to proceed to payment. Please try again.');
+    } finally {
+      setPayingBookingId(null);
     }
   }
 
@@ -273,6 +293,7 @@ export default function MyBookings() {
 
             {approvedBookings.map((booking) => {
               const isCanceling = cancelingBookingId === booking.id;
+              const isPaying = payingBookingId === booking.id;
               return (
                 <View key={booking.id} style={[styles.bookingCard, styles.approvedCard]}>
                   {booking.ta_profiles?.display_name && (
@@ -311,17 +332,25 @@ export default function MyBookings() {
                         <TouchableOpacity
                           style={styles.cancelButton}
                           onPress={() => setCancelingBookingId(booking.id)}
+                          disabled={isPaying}
                         >
                           <XCircle size={16} color="#ff4444" />
                           <Text style={styles.cancelButtonText}>Cancel</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                          style={styles.payButton}
+                          style={[styles.payButton, isPaying && styles.payButtonDisabled]}
                           onPress={() => proceedToPayment(booking.id)}
+                          disabled={isPaying}
                         >
-                          <CreditCard size={16} color="#fff" />
-                          <Text style={styles.payButtonText}>Pay Now</Text>
+                          {isPaying ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <>
+                              <CreditCard size={16} color="#fff" />
+                              <Text style={styles.payButtonText}>Pay Now</Text>
+                            </>
+                          )}
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -784,6 +813,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
+  },
+  payButtonDisabled: {
+    opacity: 0.6,
   },
   payButtonText: {
     color: '#fff',

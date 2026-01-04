@@ -100,7 +100,7 @@ export default function TADashboard() {
       const { data, error } = await supabase
         .from('ta_bookings')
         .update({
-          status: 'confirmed',
+          status: 'approved',
           approved_at: new Date().toISOString(),
           approved_by: user.id,
         })
