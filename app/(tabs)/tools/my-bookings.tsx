@@ -16,7 +16,7 @@ import { supabase } from '../../../lib/supabase';
 import { BookingWithDetails } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Calendar, Clock, Star, XCircle, Bell, CheckCircle, CreditCard, Video } from 'lucide-react-native';
+import { Calendar, Clock, Star, XCircle, Bell, CheckCircle, CreditCard, Video, MessageCircle } from 'lucide-react-native';
 
 export default function MyBookings() {
   const router = useRouter();
@@ -463,13 +463,23 @@ export default function MyBookings() {
                       ${booking.total_amount}
                     </Text>
 
-                    <TouchableOpacity
-                      style={styles.cancelButton}
-                      onPress={() => setCancelingBookingId(booking.id)}
-                    >
-                      <XCircle size={16} color="#ff4444" />
-                      <Text style={styles.cancelButtonText}>Cancel</Text>
-                    </TouchableOpacity>
+                    <View style={styles.actionButtons}>
+                      <TouchableOpacity
+                        style={styles.messageButton}
+                        onPress={() => router.push(`/booking-messages/${booking.id}`)}
+                      >
+                        <MessageCircle size={16} color={Colors.primary} />
+                        <Text style={styles.messageButtonText}>Message</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => setCancelingBookingId(booking.id)}
+                      >
+                        <XCircle size={16} color="#ff4444" />
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 ) : (
                   <View style={styles.confirmationBox}>
@@ -708,14 +718,34 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   bookingFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
+    gap: 12,
   },
   bookingTotal: {
     fontSize: 18,
     fontWeight: '700',
     color: Colors.text.primary,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'flex-end',
+  },
+  messageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+  },
+  messageButtonText: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '600',
   },
   cancelButton: {
     flexDirection: 'row',

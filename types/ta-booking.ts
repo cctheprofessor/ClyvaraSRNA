@@ -113,3 +113,12 @@ export function calculateTotalAmount(baseRate: number, duration: 30 | 60 | 90): 
   const sessionRate = calculateSessionRate(baseRate, duration);
   return sessionRate + SERVICE_CHARGE;
 }
+
+export interface BookingMessage {
+  id: string;
+  booking_id: string;
+  sender_id: string;
+  message_text: string;
+  read_at: string | null;
+  created_at: string;
+}

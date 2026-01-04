@@ -14,7 +14,7 @@ import { supabase } from '../../../lib/supabase';
 import { TAProfile, BookingWithDetails } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Calendar, DollarSign, Star, CircleCheck as CheckCircle, Circle as XCircle, Bell, CreditCard } from 'lucide-react-native';
+import { Calendar, DollarSign, Star, CircleCheck as CheckCircle, Circle as XCircle, Bell, CreditCard, MessageCircle } from 'lucide-react-native';
 
 export default function TADashboard() {
   const router = useRouter();
@@ -405,6 +405,10 @@ export default function TADashboard() {
                 <Text style={styles.bookingDuration}>{booking.duration_minutes} min</Text>
               </View>
 
+              {booking.student?.full_name && (
+                <Text style={styles.studentName}>Student: {booking.student.full_name}</Text>
+              )}
+
               {booking.notes && (
                 <Text style={styles.bookingNotes} numberOfLines={2}>
                   {booking.notes}
@@ -416,15 +420,25 @@ export default function TADashboard() {
                   You earn: ${booking.session_rate}
                 </Text>
 
-                {booking.status === 'confirmed' && (
+                <View style={styles.actionButtons}>
                   <TouchableOpacity
-                    style={styles.completeButton}
-                    onPress={() => markComplete(booking.id)}
+                    style={styles.messageButton}
+                    onPress={() => router.push(`/booking-messages/${booking.id}`)}
                   >
-                    <CheckCircle size={16} color="#fff" />
-                    <Text style={styles.completeButtonText}>Mark Complete</Text>
+                    <MessageCircle size={16} color={Colors.primary} />
+                    <Text style={styles.messageButtonText}>Message</Text>
                   </TouchableOpacity>
-                )}
+
+                  {booking.status === 'confirmed' && (
+                    <TouchableOpacity
+                      style={styles.completeButton}
+                      onPress={() => markComplete(booking.id)}
+                    >
+                      <CheckCircle size={16} color="#fff" />
+                      <Text style={styles.completeButtonText}>Mark Complete</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </View>
           ))
@@ -619,14 +633,34 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   bookingFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
+    gap: 12,
   },
   bookingRate: {
     fontSize: 16,
     fontWeight: '700',
     color: Colors.text.primary,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'flex-end',
+  },
+  messageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+  },
+  messageButtonText: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '600',
   },
   completeButton: {
     flexDirection: 'row',
