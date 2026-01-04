@@ -396,7 +396,7 @@ export default function DiagnosticExamScreen() {
     }
   };
 
-  if (loading) {
+  if (loading || resumeDialogVisible) {
     return (
       <View style={styles.container}>
         <PageHeader title="Diagnostic Assessment" subtitle="Loading your exam" />
@@ -404,6 +404,38 @@ export default function DiagnosticExamScreen() {
           <ActivityIndicator size="large" color={Colors.primary} />
           <Text style={styles.loadingText}>Loading your diagnostic exam...</Text>
         </View>
+
+        <Modal
+          visible={resumeDialogVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setResumeDialogVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Resume Diagnostic Exam?</Text>
+              <Text style={styles.modalMessage}>
+                You have an exam in progress with {existingSession ? existingSession.submittedQuestions.length : 0} of{' '}
+                {existingSession ? existingSession.questions.length : 0} questions completed.
+              </Text>
+              <Text style={styles.modalSubMessage}>
+                Would you like to continue from where you left off or start a new exam?
+              </Text>
+
+              <View style={styles.modalButtons}>
+                <Pressable style={styles.modalButtonSecondary} onPress={handleStartNewSession}>
+                  <RotateCcw size={20} color={Colors.text.primary} />
+                  <Text style={styles.modalButtonSecondaryText}>Start New</Text>
+                </Pressable>
+
+                <Pressable style={styles.modalButtonPrimary} onPress={handleResumeSession}>
+                  <PlayCircle size={20} color={Colors.white} />
+                  <Text style={styles.modalButtonPrimaryText}>Resume</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -418,6 +450,18 @@ export default function DiagnosticExamScreen() {
           <Pressable style={styles.retryButton} onPress={loadDiagnosticQuestions}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  if (questions.length === 0 || currentIndex >= questions.length) {
+    return (
+      <View style={styles.container}>
+        <PageHeader title="Diagnostic Assessment" subtitle="Loading exam" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading exam...</Text>
         </View>
       </View>
     );
@@ -497,38 +541,6 @@ export default function DiagnosticExamScreen() {
           </Pressable>
         )}
       </View>
-
-      <Modal
-        visible={resumeDialogVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setResumeDialogVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Resume Diagnostic Exam?</Text>
-            <Text style={styles.modalMessage}>
-              You have an exam in progress with {existingSession ? existingSession.submittedQuestions.length : 0} of{' '}
-              {existingSession ? existingSession.questions.length : 0} questions completed.
-            </Text>
-            <Text style={styles.modalSubMessage}>
-              Would you like to continue from where you left off or start a new exam?
-            </Text>
-
-            <View style={styles.modalButtons}>
-              <Pressable style={styles.modalButtonSecondary} onPress={handleStartNewSession}>
-                <RotateCcw size={20} color={Colors.text.primary} />
-                <Text style={styles.modalButtonSecondaryText}>Start New</Text>
-              </Pressable>
-
-              <Pressable style={styles.modalButtonPrimary} onPress={handleResumeSession}>
-                <PlayCircle size={20} color={Colors.white} />
-                <Text style={styles.modalButtonPrimaryText}>Resume</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
