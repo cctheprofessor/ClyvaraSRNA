@@ -168,9 +168,25 @@ export default function QuestionRenderer({
     }
   };
 
+  console.log('[QuestionRenderer] Rendering question:', {
+    id: question.id,
+    type: question.question_type,
+    hasQuestionText: !!question.question_text,
+    questionTextLength: question.question_text?.length,
+    questionText: question.question_text?.substring(0, 100),
+    showResult,
+    isCorrect,
+  });
+
   return (
     <View style={styles.container}>
-      <Text style={styles.questionText}>{question.question_text}</Text>
+      {question.question_text ? (
+        <Text style={styles.questionText}>{question.question_text}</Text>
+      ) : (
+        <Text style={[styles.questionText, { color: Colors.error }]}>
+          [No question text available]
+        </Text>
+      )}
       <View style={styles.contentContainer}>{renderQuestionContent()}</View>
 
       {showResult && isCorrect !== undefined && (
@@ -192,12 +208,14 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     padding: Spacing.lg,
     gap: Spacing.md,
+    minHeight: 200,
   },
   questionText: {
     fontSize: 16,
     fontWeight: '500',
     color: Colors.text.primary,
     lineHeight: 24,
+    marginBottom: Spacing.sm,
   },
   contentContainer: {
     gap: Spacing.md,
