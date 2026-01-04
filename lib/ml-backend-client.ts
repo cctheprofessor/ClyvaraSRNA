@@ -573,72 +573,84 @@ export class MLBackendClient {
       count: count.toString(),
     });
 
-    const response = await this.fetchWithRetry(
-      `${EDGE_FUNCTION_URL}?${params}`,
-      {
-        method: 'GET',
-        headers,
+    try {
+      const response = await this.fetchWithRetry(
+        `${EDGE_FUNCTION_URL}?${params}`,
+        {
+          method: 'GET',
+          headers,
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: response.statusText }));
+        const errorMessage = errorData.error || response.statusText;
+
+        if (response.status >= 500) {
+          console.warn('[MLBackendClient] ML Backend service unavailable (500+ error). Returning empty set. The app will continue to function normally.');
+          return [];
+        }
+
+        throw new Error(errorMessage);
       }
-    );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: response.statusText }));
-      throw new Error(errorData.error || `Failed to download questions: ${response.statusText}`);
-    }
+      const data = await response.json();
+      const questions = data.questions || [];
 
-    const data = await response.json();
-    const questions = data.questions || [];
+      const preFilteredQuestions = questions.filter((q: any) => {
+        const result = QuestionRepairService.preFilter(q);
+        if (!result.shouldKeep) {
+          console.log(`[MLBackendClient] PRE-FILTERED offline question ${q.question_id || q.id} (type: ${q.question_type}): ${result.reason}`);
+        }
+        return result.shouldKeep;
+      });
 
-    const preFilteredQuestions = questions.filter((q: any) => {
-      const result = QuestionRepairService.preFilter(q);
-      if (!result.shouldKeep) {
-        console.log(`[MLBackendClient] PRE-FILTERED offline question ${q.question_id || q.id} (type: ${q.question_type}): ${result.reason}`);
-      }
-      return result.shouldKeep;
-    });
+      const transformedQuestions = preFilteredQuestions.map((q: any) => this.transformQuestion(q));
 
-    const transformedQuestions = preFilteredQuestions.map((q: any) => this.transformQuestion(q));
+      const { validQuestions, rejectedQuestions } = filterValidQuestions(transformedQuestions);
 
-    const { validQuestions, rejectedQuestions } = filterValidQuestions(transformedQuestions);
+      const repairedQuestions: Question[] = [];
+      const unreparableQuestions: Array<{ question: any; errors: string[] }> = [];
 
-    const repairedQuestions: Question[] = [];
-    const unreparableQuestions: Array<{ question: any; errors: string[] }> = [];
+      for (const { question, errors } of rejectedQuestions) {
+        const repaired = QuestionRepairService.repairQuestion(question);
 
-    for (const { question, errors } of rejectedQuestions) {
-      const repaired = QuestionRepairService.repairQuestion(question);
-
-      if (repaired) {
-        const validation = validateQuestion(repaired);
-        if (validation.isValid) {
-          repairedQuestions.push(repaired as Question);
+        if (repaired) {
+          const validation = validateQuestion(repaired);
+          if (validation.isValid) {
+            repairedQuestions.push(repaired as Question);
+          } else {
+            unreparableQuestions.push({ question, errors });
+          }
         } else {
           unreparableQuestions.push({ question, errors });
         }
-      } else {
-        unreparableQuestions.push({ question, errors });
       }
-    }
 
-    const preFilteredCount = questions.length - preFilteredQuestions.length;
+      const preFilteredCount = questions.length - preFilteredQuestions.length;
 
-    if (preFilteredCount > 0 || unreparableQuestions.length > 0 || repairedQuestions.length > 0) {
-      console.log(
-        `[MLBackendClient] Offline download summary:
-        - Pre-filtered: ${preFilteredCount}
-        - Valid: ${validQuestions.length}
-        - Repaired: ${repairedQuestions.length}
-        - Rejected: ${unreparableQuestions.length}
-        - Final usable: ${validQuestions.length + repairedQuestions.length}`
-      );
+      if (preFilteredCount > 0 || unreparableQuestions.length > 0 || repairedQuestions.length > 0) {
+        console.log(
+          `[MLBackendClient] Offline download summary:
+          - Pre-filtered: ${preFilteredCount}
+          - Valid: ${validQuestions.length}
+          - Repaired: ${repairedQuestions.length}
+          - Rejected: ${unreparableQuestions.length}
+          - Final usable: ${validQuestions.length + repairedQuestions.length}`
+        );
 
-      if (unreparableQuestions.length > 0) {
-        const summary = QuestionRepairService.getrejectionSummary(unreparableQuestions);
-        console.warn(`[MLBackendClient] Offline rejection breakdown:`, summary);
-        await this.logRejectedQuestions(unreparableQuestions, userId);
+        if (unreparableQuestions.length > 0) {
+          const summary = QuestionRepairService.getrejectionSummary(unreparableQuestions);
+          console.warn(`[MLBackendClient] Offline rejection breakdown:`, summary);
+          await this.logRejectedQuestions(unreparableQuestions, userId);
+        }
       }
-    }
 
-    return [...validQuestions, ...repairedQuestions];
+      return [...validQuestions, ...repairedQuestions];
+    } catch (networkError) {
+      console.warn('[MLBackendClient] Network error during question download. Returning empty set. The app will continue to function normally.');
+      return [];
+    }
   }
 
   async syncOfflineResponses(
