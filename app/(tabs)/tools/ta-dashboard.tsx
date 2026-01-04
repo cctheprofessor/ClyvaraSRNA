@@ -14,7 +14,7 @@ import { supabase } from '../../../lib/supabase';
 import { TAProfile, BookingWithDetails } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Calendar, DollarSign, Star, CheckCircle, XCircle, Bell } from 'lucide-react-native';
+import { Calendar, DollarSign, Star, CircleCheck as CheckCircle, Circle as XCircle, Bell } from 'lucide-react-native';
 
 export default function TADashboard() {
   const router = useRouter();
