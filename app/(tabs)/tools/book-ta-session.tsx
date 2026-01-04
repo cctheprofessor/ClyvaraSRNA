@@ -131,7 +131,7 @@ export default function BookTASession() {
         .from('ta_bookings')
         .select('session_date, start_time, duration_minutes')
         .eq('ta_id', taId)
-        .in('status', ['pending', 'confirmed'])
+        .in('status', ['pending', 'awaiting_approval', 'approved', 'confirmed'])
         .gte('session_date', new Date().toISOString().split('T')[0]);
 
       if (bookingsError) {
