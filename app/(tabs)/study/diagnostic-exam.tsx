@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { mlClient } from '@/lib/ml-backend-client';
@@ -7,10 +7,11 @@ import { supabase } from '@/lib/supabase';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
-import { CheckCircle, AlertCircle, Send, ArrowRight } from 'lucide-react-native';
+import { CheckCircle, AlertCircle, Send, ArrowRight, RotateCcw, PlayCircle } from 'lucide-react-native';
 import { Question, AnswerFormat } from '@/types/question';
 import { validateAnswer, ValidationResult } from '@/lib/answer-validator';
 import { rationaleCacheService } from '@/lib/rationale-cache-service';
+import { sessionPersistenceService, SessionState } from '@/lib/session-persistence-service';
 
 interface DiagnosticAnswer {
   question_id: string;
@@ -50,11 +51,14 @@ export default function DiagnosticExamScreen() {
   const [answerResults, setAnswerResults] = useState<Record<number, AnswerResult>>({});
   const [currentAnswerSubmitted, setCurrentAnswerSubmitted] = useState(false);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<DiagnosticAnswer[]>([]);
-  const [startTime] = useState<number>(Date.now());
+  const [startTime, setStartTime] = useState<number>(Date.now());
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [submitting, setSubmitting] = useState(false);
   const [rationaleLoading, setRationaleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resumeDialogVisible, setResumeDialogVisible] = useState(false);
+  const [existingSession, setExistingSession] = useState<SessionState | null>(null);
+  const [submittedQuestions, setSubmittedQuestions] = useState<number[]>([]);
 
   useEffect(() => {
     loadDiagnosticQuestions();
@@ -71,6 +75,16 @@ export default function DiagnosticExamScreen() {
         return;
       }
 
+      const savedSession = await sessionPersistenceService.getActiveSession('diagnostic');
+
+      if (savedSession && savedSession.questions.length > 0) {
+        console.log('[DiagnosticExam] Found existing session, showing resume dialog');
+        setExistingSession(savedSession);
+        setResumeDialogVisible(true);
+        setLoading(false);
+        return;
+      }
+
       const diagnosticQuestions = await mlClient.getDiagnosticQuestions(profile.ml_user_id);
 
       if (diagnosticQuestions.length === 0) {
@@ -80,11 +94,104 @@ export default function DiagnosticExamScreen() {
       }
 
       setQuestions(diagnosticQuestions);
+      setStartTime(Date.now());
       setQuestionStartTime(Date.now());
       setLoading(false);
+
+      await saveSessionState(diagnosticQuestions, 0, {}, {}, []);
     } catch (err: any) {
       console.error('[DiagnosticExam] Error loading questions:', err);
       setError(err.message || 'Failed to load diagnostic exam. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  const saveSessionState = async (
+    questionsArray: Question[],
+    index: number,
+    answersMap: Record<number, string>,
+    resultsMap: Record<number, AnswerResult>,
+    submittedList: number[]
+  ) => {
+    try {
+      const state: SessionState = {
+        id: existingSession?.id || '',
+        sessionType: 'diagnostic',
+        questions: questionsArray,
+        currentIndex: index,
+        answers: answersMap,
+        answerResults: resultsMap,
+        submittedQuestions: submittedList,
+        startTime: startTime,
+        lastUpdated: Date.now(),
+      };
+
+      await sessionPersistenceService.saveSession(state);
+    } catch (error) {
+      console.error('[DiagnosticExam] Failed to save session:', error);
+    }
+  };
+
+  const handleResumeSession = () => {
+    if (!existingSession) return;
+
+    console.log('[DiagnosticExam] Resuming session from question', existingSession.currentIndex);
+    sessionPersistenceService.setCurrentSessionId(existingSession.id);
+    setQuestions(existingSession.questions);
+    setCurrentIndex(existingSession.currentIndex);
+    setAnswers(existingSession.answers);
+    setAnswerResults(existingSession.answerResults);
+    setSubmittedQuestions(existingSession.submittedQuestions);
+    setStartTime(existingSession.startTime);
+    setQuestionStartTime(Date.now());
+
+    const reconstructedAnswers: DiagnosticAnswer[] = existingSession.submittedQuestions.map(index => ({
+      question_id: existingSession.questions[index].id,
+      answer: existingSession.answers[index],
+      response_time_ms: 0,
+      is_correct: existingSession.answerResults[index]?.is_correct,
+    }));
+    setDiagnosticAnswers(reconstructedAnswers);
+
+    const isCurrentQuestionSubmitted = existingSession.submittedQuestions.includes(existingSession.currentIndex);
+    setCurrentAnswerSubmitted(isCurrentQuestionSubmitted);
+
+    setResumeDialogVisible(false);
+  };
+
+  const handleStartNewSession = async () => {
+    try {
+      if (existingSession) {
+        await sessionPersistenceService.deleteSession(existingSession.id);
+      }
+
+      setResumeDialogVisible(false);
+      setExistingSession(null);
+      setLoading(true);
+
+      const diagnosticQuestions = await mlClient.getDiagnosticQuestions(profile!.ml_user_id!);
+
+      if (diagnosticQuestions.length === 0) {
+        setError('No diagnostic questions available. Please try again later.');
+        setLoading(false);
+        return;
+      }
+
+      setQuestions(diagnosticQuestions);
+      setCurrentIndex(0);
+      setAnswers({});
+      setAnswerResults({});
+      setSubmittedQuestions([]);
+      setCurrentAnswerSubmitted(false);
+      setDiagnosticAnswers([]);
+      setStartTime(Date.now());
+      setQuestionStartTime(Date.now());
+      setLoading(false);
+
+      await saveSessionState(diagnosticQuestions, 0, {}, {}, []);
+    } catch (err: any) {
+      console.error('[DiagnosticExam] Error starting new session:', err);
+      setError(err.message || 'Failed to start new exam. Please try again.');
       setLoading(false);
     }
   };
@@ -147,6 +254,9 @@ export default function DiagnosticExamScreen() {
     setDiagnosticAnswers(prev => [...prev, diagnosticAnswer]);
     setCurrentAnswerSubmitted(true);
     setRationaleLoading(true);
+
+    const newSubmittedQuestions = [...submittedQuestions, currentIndex];
+    setSubmittedQuestions(newSubmittedQuestions);
 
     try {
       const backendResult = await mlClient.submitDiagnosticAnswer({
@@ -227,13 +337,20 @@ export default function DiagnosticExamScreen() {
       }));
       setRationaleLoading(false);
     }
+
+    await saveSessionState(questions, currentIndex, answers, answerResults, newSubmittedQuestions);
   };
 
   const handleNext = async () => {
     if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
       setQuestionStartTime(Date.now());
-      setCurrentAnswerSubmitted(false);
+
+      const isNextQuestionSubmitted = submittedQuestions.includes(nextIndex);
+      setCurrentAnswerSubmitted(isNextQuestionSubmitted);
+
+      await saveSessionState(questions, nextIndex, answers, answerResults, submittedQuestions);
     } else {
       await completeDiagnostic();
     }
@@ -266,6 +383,8 @@ export default function DiagnosticExamScreen() {
       } catch (err) {
         console.log('[DiagnosticExam] Backend completion failed, continuing with local data');
       }
+
+      await sessionPersistenceService.completeSession();
 
       await refreshProfile();
 
@@ -378,6 +497,38 @@ export default function DiagnosticExamScreen() {
           </Pressable>
         )}
       </View>
+
+      <Modal
+        visible={resumeDialogVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setResumeDialogVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Resume Diagnostic Exam?</Text>
+            <Text style={styles.modalMessage}>
+              You have an exam in progress with {existingSession ? existingSession.submittedQuestions.length : 0} of{' '}
+              {existingSession ? existingSession.questions.length : 0} questions completed.
+            </Text>
+            <Text style={styles.modalSubMessage}>
+              Would you like to continue from where you left off or start a new exam?
+            </Text>
+
+            <View style={styles.modalButtons}>
+              <Pressable style={styles.modalButtonSecondary} onPress={handleStartNewSession}>
+                <RotateCcw size={20} color={Colors.text.primary} />
+                <Text style={styles.modalButtonSecondaryText}>Start New</Text>
+              </Pressable>
+
+              <Pressable style={styles.modalButtonPrimary} onPress={handleResumeSession}>
+                <PlayCircle size={20} color={Colors.white} />
+                <Text style={styles.modalButtonPrimaryText}>Resume</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -498,6 +649,76 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     color: Colors.white,
+    fontSize: Typography.body.fontSize,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: Colors.overlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    width: '100%',
+    maxWidth: 400,
+    gap: Spacing.md,
+  },
+  modalTitle: {
+    fontSize: Typography.h2.fontSize,
+    fontWeight: '700',
+    color: Colors.text.primary,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: Typography.body.fontSize,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalSubMessage: {
+    fontSize: Typography.small.fontSize,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginTop: Spacing.md,
+  },
+  modalButtonPrimary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+  },
+  modalButtonPrimaryText: {
+    color: Colors.white,
+    fontSize: Typography.body.fontSize,
+    fontWeight: '600',
+  },
+  modalButtonSecondary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border.medium,
+  },
+  modalButtonSecondaryText: {
+    color: Colors.text.primary,
     fontSize: Typography.body.fontSize,
     fontWeight: '600',
   },

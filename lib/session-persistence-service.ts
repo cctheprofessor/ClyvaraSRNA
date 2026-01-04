@@ -3,7 +3,7 @@ import { Question, AnswerFormat } from '@/types/question';
 
 export interface SessionState {
   id: string;
-  sessionType: '25' | '50' | 'focused';
+  sessionType: '25' | '50' | 'focused' | 'diagnostic';
   topicIds?: number[];
   questions: Question[];
   currentIndex: number;
@@ -36,7 +36,7 @@ class SessionPersistenceService {
   /**
    * Check if there's an active session to resume
    */
-  async getActiveSession(sessionType: '25' | '50' | 'focused'): Promise<SessionState | null> {
+  async getActiveSession(sessionType: '25' | '50' | 'focused' | 'diagnostic'): Promise<SessionState | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -285,7 +285,7 @@ class SessionPersistenceService {
   private deserializeSession(saved: SavedSession): SessionState {
     return {
       id: saved.id,
-      sessionType: saved.session_type as '25' | '50' | 'focused',
+      sessionType: saved.session_type as '25' | '50' | 'focused' | 'diagnostic',
       topicIds: saved.topic_ids,
       questions: saved.questions as Question[],
       currentIndex: saved.current_index,
