@@ -14,7 +14,7 @@ import { supabase } from '../../../lib/supabase';
 import { TAProfile, BookingWithDetails } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Calendar, DollarSign, Star, CircleCheck as CheckCircle, Circle as XCircle, Bell } from 'lucide-react-native';
+import { Calendar, DollarSign, Star, CircleCheck as CheckCircle, Circle as XCircle, Bell, CreditCard } from 'lucide-react-native';
 
 export default function TADashboard() {
   const router = useRouter();
@@ -30,6 +30,7 @@ export default function TADashboard() {
     upcomingCount: 0,
     completedCount: 0,
     pendingCount: 0,
+    awaitingPaymentCount: 0,
   });
 
   useEffect(() => {
@@ -75,6 +76,7 @@ export default function TADashboard() {
         b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) > new Date()
       ) || [];
       const pending = bookingsData?.filter(b => b.status === 'awaiting_approval') || [];
+      const awaitingPayment = bookingsData?.filter(b => b.status === 'approved') || [];
       const totalEarnings = completed.reduce((sum, b) => sum + Number(b.session_rate), 0);
 
       setStats({
@@ -82,6 +84,7 @@ export default function TADashboard() {
         upcomingCount: upcoming.length,
         completedCount: completed.length,
         pendingCount: pending.length,
+        awaitingPaymentCount: awaitingPayment.length,
       });
     } catch (error: any) {
       console.error('[TADashboard] Error loading dashboard:', error);
@@ -206,6 +209,8 @@ export default function TADashboard() {
 
   const pendingBookings = bookings.filter(b => b.status === 'awaiting_approval');
 
+  const awaitingPaymentBookings = bookings.filter(b => b.status === 'approved');
+
   const upcomingBookings = bookings.filter(
     b => b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) > new Date()
   );
@@ -247,6 +252,12 @@ export default function TADashboard() {
             <Bell size={24} color="#FFA500" />
             <Text style={styles.statValue}>{stats.pendingCount}</Text>
             <Text style={styles.statLabel}>Pending</Text>
+          </View>
+
+          <View style={styles.statCard}>
+            <CreditCard size={24} color="#4CAF50" />
+            <Text style={styles.statValue}>{stats.awaitingPaymentCount}</Text>
+            <Text style={styles.statLabel}>Awaiting Payment</Text>
           </View>
 
           <View style={styles.statCard}>
@@ -417,6 +428,50 @@ export default function TADashboard() {
               </View>
             </View>
           ))
+        )}
+
+        {awaitingPaymentBookings.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Awaiting Payment</Text>
+
+            {awaitingPaymentBookings.map((booking) => (
+              <View key={booking.id} style={[styles.bookingCard, styles.awaitingPaymentCard]}>
+                <View style={styles.bookingHeader}>
+                  <View style={styles.dateTime}>
+                    <CreditCard size={16} color="#4CAF50" />
+                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                  </View>
+                  <Text style={styles.bookingDuration}>{booking.duration_minutes} min</Text>
+                </View>
+
+                {booking.student?.full_name && (
+                  <Text style={styles.studentName}>Student: {booking.student.full_name}</Text>
+                )}
+
+                {booking.notes && (
+                  <Text style={styles.bookingNotes} numberOfLines={2}>
+                    {booking.notes}
+                  </Text>
+                )}
+
+                <View style={[styles.infoBox, { backgroundColor: '#E8F5E9' }]}>
+                  <Text style={styles.infoText}>
+                    Approved by you. Waiting for student to complete payment.
+                  </Text>
+                </View>
+
+                <View style={styles.bookingFooter}>
+                  <Text style={styles.bookingRate}>
+                    You'll earn: ${booking.session_rate}
+                  </Text>
+                  <View style={[styles.statusBadge, { backgroundColor: '#4CAF50' }]}>
+                    <Text style={styles.statusText}>Approved</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </>
         )}
 
         <Text style={styles.sectionTitle}>Past Sessions</Text>
@@ -617,6 +672,22 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FFA500',
     backgroundColor: '#FFFAF0',
+  },
+  awaitingPaymentCard: {
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    backgroundColor: '#F1F8F4',
+  },
+  infoBox: {
+    backgroundColor: '#F5F5F5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  infoText: {
+    fontSize: 13,
+    color: Colors.text.primary,
+    lineHeight: 18,
   },
   approvalActions: {
     flexDirection: 'row',
