@@ -118,12 +118,10 @@ export default function AnalyticsScreen() {
               <Text style={styles.cardTitle}>Learning Velocity</Text>
             </View>
             <Text style={styles.velocityValue}>
-              {insights.learning_velocity.toFixed(2)}x
+              {(insights.learning_velocity * 100).toFixed(0)}%
             </Text>
             <Text style={styles.cardSubtext}>
-              {insights.learning_velocity > 1.0
-                ? 'You are learning faster than average'
-                : 'Keep practicing to improve your pace'}
+              Learning velocity measures how quickly you master new concepts compared to your baseline. Higher percentages indicate faster progress and better retention.
             </Text>
           </View>
         )}
