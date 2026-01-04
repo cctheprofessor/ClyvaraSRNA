@@ -11,11 +11,11 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
-import { BookingMessage } from '../../types/ta-booking';
-import { Colors } from '../../constants/theme';
-import PageHeader from '../../components/PageHeader';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { supabase } from '../../../../lib/supabase';
+import { BookingMessage } from '../../../../types/ta-booking';
+import { Colors } from '../../../../constants/theme';
+import PageHeader from '../../../../components/PageHeader';
 import { Send } from 'lucide-react-native';
 
 interface BookingDetails {
@@ -315,6 +315,7 @@ const styles = StyleSheet.create({
   messagesContent: {
     padding: 16,
     gap: 12,
+    paddingBottom: 120,
   },
   emptyState: {
     flex: 1,

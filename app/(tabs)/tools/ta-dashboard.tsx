@@ -423,7 +423,7 @@ export default function TADashboard() {
                 <View style={styles.actionButtons}>
                   <TouchableOpacity
                     style={styles.messageButton}
-                    onPress={() => router.push(`/booking-messages/${booking.id}`)}
+                    onPress={() => router.push(`/tools/booking-messages/${booking.id}`)}
                   >
                     <MessageCircle size={16} color={Colors.primary} />
                     <Text style={styles.messageButtonText}>Message</Text>
