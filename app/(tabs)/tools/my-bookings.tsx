@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -24,6 +23,7 @@ export default function MyBookings() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
+  const [cancelingBookingId, setCancelingBookingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadBookings();
@@ -44,8 +44,7 @@ export default function MyBookings() {
 
       setBookings(data || []);
     } catch (error: any) {
-      console.error('Error loading bookings:', error);
-      Alert.alert('Error', 'Failed to load bookings');
+      console.error('[MyBookings] Error loading bookings:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -53,124 +52,65 @@ export default function MyBookings() {
   }
 
   async function cancelBooking(bookingId: string) {
-    Alert.prompt(
-      'Cancel Booking',
-      'Please provide a reason for cancellation:',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm',
-          onPress: async (reason?: string) => {
-            try {
-              const { EXPO_PUBLIC_SUPABASE_URL } = process.env;
-              const apiUrl = `${EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ta-booking-management`;
+    try {
+      const { EXPO_PUBLIC_SUPABASE_URL } = process.env;
+      const apiUrl = `${EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ta-booking-management`;
 
-              const { data: sessionData } = await supabase.auth.getSession();
-              const token = sessionData.session?.access_token;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
 
-              const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  action: 'cancel',
-                  booking_id: bookingId,
-                  cancellation_reason: reason || 'No reason provided',
-                }),
-              });
-
-              if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to cancel booking');
-              }
-
-              const result = await response.json();
-              Alert.alert('Success', result.message);
-              loadBookings();
-            } catch (error: any) {
-              console.error('Cancel error:', error);
-              Alert.alert('Error', error.message || 'Failed to cancel booking');
-            }
-          },
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-      ],
-      'plain-text'
-    );
+        body: JSON.stringify({
+          action: 'cancel',
+          booking_id: bookingId,
+          cancellation_reason: 'Cancelled by student',
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to cancel booking');
+      }
+
+      console.log('[MyBookings] Confirmed booking cancelled successfully');
+      setCancelingBookingId(null);
+      loadBookings();
+    } catch (error: any) {
+      console.error('[MyBookings] Cancel error:', error);
+      setCancelingBookingId(null);
+    }
   }
 
-  function handleCancel(booking: BookingWithDetails) {
-    const sessionDateTime = new Date(`${booking.session_date}T${booking.start_time}`);
-    const now = new Date();
-    const hoursUntil = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+  async function cancelAwaitingBooking(bookingId: string) {
+    try {
+      console.log('[MyBookings] Cancelling booking:', bookingId);
 
-    const message = hoursUntil >= 24
-      ? 'You will receive a full refund. Are you sure you want to cancel?'
-      : 'No refund will be issued (less than 24 hours notice). Continue?';
+      const { data, error } = await supabase
+        .from('ta_bookings')
+        .update({
+          status: 'cancelled',
+          cancellation_reason: 'Cancelled by student before approval'
+        })
+        .eq('id', bookingId)
+        .select();
 
-    Alert.alert('Cancel Booking', message, [
-      { text: 'No', style: 'cancel' },
-      { text: 'Yes', onPress: () => cancelBooking(booking.id) },
-    ]);
-  }
+      if (error) {
+        console.error('[MyBookings] Cancel error:', error);
+        throw error;
+      }
 
-  async function handleCancelAwaitingBooking(bookingId: string) {
-    console.log('=== CANCEL BUTTON CLICKED ===');
-    console.log('Booking ID:', bookingId);
-
-    Alert.alert(
-      'Cancel Request',
-      'Are you sure you want to cancel this booking request?',
-      [
-        { text: 'No', style: 'cancel', onPress: () => console.log('User cancelled the cancel dialog') },
-        {
-          text: 'Yes',
-          onPress: async () => {
-            try {
-              console.log('=== USER CONFIRMED CANCELLATION ===');
-
-              const { data: { session } } = await supabase.auth.getSession();
-              console.log('Current user ID:', session?.user?.id);
-
-              const { data: currentBooking, error: fetchError } = await supabase
-                .from('ta_bookings')
-                .select('*')
-                .eq('id', bookingId)
-                .single();
-
-              console.log('Current booking data:', currentBooking);
-              console.log('Fetch error:', fetchError);
-
-              console.log('Attempting to update booking to cancelled...');
-              const { data, error } = await supabase
-                .from('ta_bookings')
-                .update({
-                  status: 'cancelled',
-                  cancellation_reason: 'Cancelled by student before approval'
-                })
-                .eq('id', bookingId)
-                .select();
-
-              console.log('=== UPDATE RESULT ===');
-              console.log('Data:', data);
-              console.log('Error:', error);
-
-              if (error) {
-                console.error('=== DATABASE ERROR ===', error);
-                throw error;
-              }
-
-              Alert.alert('Success', 'Booking request cancelled successfully');
-              loadBookings();
-            } catch (error: any) {
-              console.error('=== CANCEL ERROR FULL ===', error);
-              Alert.alert('Error', `Failed to cancel: ${error.message}\n\nCode: ${error.code || 'none'}\nDetails: ${error.details || 'none'}\nHint: ${error.hint || 'none'}`);
-            }
-          },
-        },
-      ]
-    );
+      console.log('[MyBookings] Booking cancelled:', data);
+      setCancelingBookingId(null);
+      loadBookings();
+    } catch (error: any) {
+      console.error('[MyBookings] Cancel error:', error);
+      setCancelingBookingId(null);
+    }
   }
 
   async function proceedToPayment(bookingId: string) {
@@ -200,23 +140,9 @@ export default function MyBookings() {
       }
 
       const { url } = await response.json();
-
-      Alert.alert(
-        'Proceed to Payment',
-        'You will be redirected to complete your payment.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Continue',
-            onPress: () => {
-              Alert.alert('Success', 'Check your email for payment link.');
-            },
-          },
-        ]
-      );
+      console.log('[MyBookings] Payment checkout created. Check email for payment link.');
     } catch (error: any) {
-      console.error('Payment error:', error);
-      Alert.alert('Error', error.message || 'Failed to process payment');
+      console.error('[MyBookings] Payment error:', error);
     }
   }
 
@@ -269,49 +195,75 @@ export default function MyBookings() {
           <>
             <Text style={styles.sectionTitle}>Awaiting TA Approval</Text>
 
-            {awaitingApprovalBookings.map((booking) => (
-              <View key={booking.id} style={[styles.bookingCard, styles.awaitingCard]}>
-                {booking.ta_profiles?.display_name && (
-                  <View style={styles.headerRow}>
-                    <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
-                    <View style={styles.statusBadge}>
-                      <Bell size={12} color="#fff" />
-                      <Text style={styles.statusText}>Pending</Text>
+            {awaitingApprovalBookings.map((booking) => {
+              const isCanceling = cancelingBookingId === booking.id;
+              return (
+                <View key={booking.id} style={[styles.bookingCard, styles.awaitingCard]}>
+                  {booking.ta_profiles?.display_name && (
+                    <View style={styles.headerRow}>
+                      <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+                      <View style={styles.statusBadge}>
+                        <Bell size={12} color="#fff" />
+                        <Text style={styles.statusText}>Pending</Text>
+                      </View>
+                    </View>
+                  )}
+
+                  <View style={styles.bookingHeader}>
+                    <View style={styles.dateTime}>
+                      <Calendar size={16} color={Colors.primary} />
+                      <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                    </View>
+                    <View style={styles.dateTime}>
+                      <Clock size={16} color={Colors.primary} />
+                      <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                      <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
                     </View>
                   </View>
-                )}
 
-                <View style={styles.bookingHeader}>
-                  <View style={styles.dateTime}>
-                    <Calendar size={16} color={Colors.primary} />
-                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                  <View style={styles.infoBox}>
+                    <Text style={styles.infoText}>
+                      Waiting for TA approval. You'll be notified when they respond.
+                    </Text>
                   </View>
-                  <View style={styles.dateTime}>
-                    <Clock size={16} color={Colors.primary} />
-                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
-                    <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
-                  </View>
-                </View>
 
-                <View style={styles.infoBox}>
-                  <Text style={styles.infoText}>
-                    Waiting for TA approval. You'll be notified when they respond.
-                  </Text>
-                </View>
+                  {!isCanceling ? (
+                    <View style={styles.bookingFooter}>
+                      <Text style={styles.bookingTotal}>${booking.total_amount}</Text>
 
-                <View style={styles.bookingFooter}>
-                  <Text style={styles.bookingTotal}>${booking.total_amount}</Text>
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => setCancelingBookingId(booking.id)}
+                      >
+                        <XCircle size={16} color="#ff4444" />
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={styles.confirmationBox}>
+                      <Text style={styles.confirmationText}>
+                        Cancel this booking request?
+                      </Text>
+                      <View style={styles.confirmationActions}>
+                        <TouchableOpacity
+                          style={styles.confirmCancelButton}
+                          onPress={() => setCancelingBookingId(null)}
+                        >
+                          <Text style={styles.confirmCancelButtonText}>No</Text>
+                        </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => handleCancelAwaitingBooking(booking.id)}
-                  >
-                    <XCircle size={16} color="#ff4444" />
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.confirmButton}
+                          onPress={() => cancelAwaitingBooking(booking.id)}
+                        >
+                          <Text style={styles.confirmButtonText}>Yes, Cancel</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </>
         )}
 
@@ -319,59 +271,85 @@ export default function MyBookings() {
           <>
             <Text style={styles.sectionTitle}>Ready for Payment</Text>
 
-            {approvedBookings.map((booking) => (
-              <View key={booking.id} style={[styles.bookingCard, styles.approvedCard]}>
-                {booking.ta_profiles?.display_name && (
-                  <View style={styles.headerRow}>
-                    <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: '#4CAF50' }]}>
-                      <CheckCircle size={12} color="#fff" />
-                      <Text style={styles.statusText}>Approved</Text>
+            {approvedBookings.map((booking) => {
+              const isCanceling = cancelingBookingId === booking.id;
+              return (
+                <View key={booking.id} style={[styles.bookingCard, styles.approvedCard]}>
+                  {booking.ta_profiles?.display_name && (
+                    <View style={styles.headerRow}>
+                      <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: '#4CAF50' }]}>
+                        <CheckCircle size={12} color="#fff" />
+                        <Text style={styles.statusText}>Approved</Text>
+                      </View>
+                    </View>
+                  )}
+
+                  <View style={styles.bookingHeader}>
+                    <View style={styles.dateTime}>
+                      <Calendar size={16} color={Colors.primary} />
+                      <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                    </View>
+                    <View style={styles.dateTime}>
+                      <Clock size={16} color={Colors.primary} />
+                      <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                      <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
                     </View>
                   </View>
-                )}
 
-                <View style={styles.bookingHeader}>
-                  <View style={styles.dateTime}>
-                    <Calendar size={16} color={Colors.primary} />
-                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                  <View style={[styles.infoBox, { backgroundColor: '#E8F5E9' }]}>
+                    <Text style={styles.infoText}>
+                      TA approved! Complete payment to confirm your session.
+                    </Text>
                   </View>
-                  <View style={styles.dateTime}>
-                    <Clock size={16} color={Colors.primary} />
-                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
-                    <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
-                  </View>
+
+                  {!isCanceling ? (
+                    <View style={styles.bookingFooter}>
+                      <Text style={styles.bookingTotal}>${booking.total_amount}</Text>
+
+                      <View style={styles.actionButtons}>
+                        <TouchableOpacity
+                          style={styles.cancelButton}
+                          onPress={() => setCancelingBookingId(booking.id)}
+                        >
+                          <XCircle size={16} color="#ff4444" />
+                          <Text style={styles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.payButton}
+                          onPress={() => proceedToPayment(booking.id)}
+                        >
+                          <CreditCard size={16} color="#fff" />
+                          <Text style={styles.payButtonText}>Pay Now</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.confirmationBox}>
+                      <Text style={styles.confirmationText}>
+                        Cancel this booking request?
+                      </Text>
+                      <View style={styles.confirmationActions}>
+                        <TouchableOpacity
+                          style={styles.confirmCancelButton}
+                          onPress={() => setCancelingBookingId(null)}
+                        >
+                          <Text style={styles.confirmCancelButtonText}>No</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.confirmButton}
+                          onPress={() => cancelAwaitingBooking(booking.id)}
+                        >
+                          <Text style={styles.confirmButtonText}>Yes, Cancel</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
                 </View>
-
-                <View style={[styles.infoBox, { backgroundColor: '#E8F5E9' }]}>
-                  <Text style={styles.infoText}>
-                    TA approved! Complete payment to confirm your session.
-                  </Text>
-                </View>
-
-                <View style={styles.bookingFooter}>
-                  <Text style={styles.bookingTotal}>${booking.total_amount}</Text>
-
-                  <View style={styles.actionButtons}>
-                    <TouchableOpacity
-                      style={styles.cancelButton}
-                      onPress={() => handleCancelAwaitingBooking(booking.id)}
-                    >
-                      <XCircle size={16} color="#ff4444" />
-                      <Text style={styles.cancelButtonText}>Cancel</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.payButton}
-                      onPress={() => proceedToPayment(booking.id)}
-                    >
-                      <CreditCard size={16} color="#fff" />
-                      <Text style={styles.payButtonText}>Pay Now</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </>
         )}
 
@@ -426,61 +404,94 @@ export default function MyBookings() {
             </TouchableOpacity>
           </View>
         ) : (
-          upcomingBookings.map((booking) => (
-            <View key={booking.id} style={styles.bookingCard}>
-              {booking.ta_profiles?.display_name && (
-                <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
-              )}
+          upcomingBookings.map((booking) => {
+            const isCanceling = cancelingBookingId === booking.id;
+            const sessionDateTime = new Date(`${booking.session_date}T${booking.start_time}`);
+            const now = new Date();
+            const hoursUntil = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+            const willRefund = hoursUntil >= 24;
 
-              <View style={styles.bookingHeader}>
-                <View style={styles.dateTime}>
-                  <Calendar size={16} color={Colors.primary} />
-                  <Text style={styles.bookingDate}>{booking.session_date}</Text>
-                </View>
-                <View style={styles.dateTime}>
-                  <Clock size={16} color={Colors.primary} />
-                  <Text style={styles.bookingTime}>{booking.start_time}</Text>
-                  <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
-                </View>
-              </View>
+            return (
+              <View key={booking.id} style={styles.bookingCard}>
+                {booking.ta_profiles?.display_name && (
+                  <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+                )}
 
-              {booking.ta_profiles && (
-                <View style={styles.taInfo}>
-                  <View style={styles.taRating}>
-                    <Star size={14} color="#FFD700" fill="#FFD700" />
-                    <Text style={styles.ratingText}>
-                      {booking.ta_profiles.average_rating.toFixed(1)}
-                    </Text>
+                <View style={styles.bookingHeader}>
+                  <View style={styles.dateTime}>
+                    <Calendar size={16} color={Colors.primary} />
+                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
                   </View>
-                  {booking.ta_profiles.specialties && booking.ta_profiles.specialties.length > 0 && (
-                    <Text style={styles.taSpecialties} numberOfLines={1}>
-                      {booking.ta_profiles.specialties.join(', ')}
-                    </Text>
-                  )}
+                  <View style={styles.dateTime}>
+                    <Clock size={16} color={Colors.primary} />
+                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                    <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
+                  </View>
                 </View>
-              )}
 
-              {booking.notes && (
-                <Text style={styles.bookingNotes} numberOfLines={2}>
-                  {booking.notes}
-                </Text>
-              )}
+                {booking.ta_profiles && (
+                  <View style={styles.taInfo}>
+                    <View style={styles.taRating}>
+                      <Star size={14} color="#FFD700" fill="#FFD700" />
+                      <Text style={styles.ratingText}>
+                        {booking.ta_profiles.average_rating.toFixed(1)}
+                      </Text>
+                    </View>
+                    {booking.ta_profiles.specialties && booking.ta_profiles.specialties.length > 0 && (
+                      <Text style={styles.taSpecialties} numberOfLines={1}>
+                        {booking.ta_profiles.specialties.join(', ')}
+                      </Text>
+                    )}
+                  </View>
+                )}
 
-              <View style={styles.bookingFooter}>
-                <Text style={styles.bookingTotal}>
-                  ${booking.total_amount}
-                </Text>
+                {booking.notes && (
+                  <Text style={styles.bookingNotes} numberOfLines={2}>
+                    {booking.notes}
+                  </Text>
+                )}
 
-                <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={() => handleCancel(booking)}
-                >
-                  <XCircle size={16} color="#ff4444" />
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
+                {!isCanceling ? (
+                  <View style={styles.bookingFooter}>
+                    <Text style={styles.bookingTotal}>
+                      ${booking.total_amount}
+                    </Text>
+
+                    <TouchableOpacity
+                      style={styles.cancelButton}
+                      onPress={() => setCancelingBookingId(booking.id)}
+                    >
+                      <XCircle size={16} color="#ff4444" />
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.confirmationBox}>
+                    <Text style={styles.confirmationText}>
+                      {willRefund
+                        ? 'Cancel this booking? You will receive a full refund.'
+                        : 'Cancel this booking? No refund will be issued (less than 24 hours notice).'}
+                    </Text>
+                    <View style={styles.confirmationActions}>
+                      <TouchableOpacity
+                        style={styles.confirmCancelButton}
+                        onPress={() => setCancelingBookingId(null)}
+                      >
+                        <Text style={styles.confirmCancelButtonText}>No</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.confirmButton}
+                        onPress={() => cancelBooking(booking.id)}
+                      >
+                        <Text style={styles.confirmButtonText}>Yes, Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
               </View>
-            </View>
-          ))
+            );
+          })
         )}
 
         <Text style={styles.sectionTitle}>Past Sessions</Text>
@@ -782,5 +793,48 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     gap: 8,
+  },
+  confirmationBox: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  confirmationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  confirmationActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  confirmCancelButton: {
+    flex: 1,
+    backgroundColor: '#e0e0e0',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  confirmCancelButtonText: {
+    color: Colors.text.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  confirmButton: {
+    flex: 1,
+    backgroundColor: '#ff4444',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
