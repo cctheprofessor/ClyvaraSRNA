@@ -358,13 +358,20 @@ Deno.serve(async (req: Request) => {
 
       case 'submit_diagnostic_answer': {
         const body = await req.json();
-        const submitUrl = `${ML_BACKEND_URL}/api/diagnostic-exam/submit-answer`;
-        console.log('[ml-backend-proxy] Submitting diagnostic answer:', { url: submitUrl, body });
+        const params = new URLSearchParams({
+          user_id: String(body.user_id),
+          question_id: String(body.question_id),
+          user_answer: Array.isArray(body.user_answer)
+            ? JSON.stringify(body.user_answer)
+            : String(body.user_answer),
+          elapsed_time: String(body.elapsed_time),
+        });
+        const submitUrl = `${ML_BACKEND_URL}/api/diagnostic-exam/submit-answer?${params}`;
+        console.log('[ml-backend-proxy] Submitting diagnostic answer:', { url: submitUrl });
 
         mlResponse = await fetch(submitUrl, {
           method: 'POST',
-          headers: getMLBackendHeaders(true),
-          body: JSON.stringify(body),
+          headers: getMLBackendHeaders(),
         });
 
         console.log('[ml-backend-proxy] Submit answer response:', mlResponse.status);
