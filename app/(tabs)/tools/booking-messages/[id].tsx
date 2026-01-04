@@ -109,7 +109,14 @@ export default function BookingMessages() {
         },
         (payload) => {
           const newMessage = payload.new as BookingMessage;
-          setMessages((prev) => [...prev, newMessage]);
+
+          setMessages((prev) => {
+            const messageExists = prev.some(msg => msg.id === newMessage.id);
+            if (messageExists) {
+              return prev;
+            }
+            return [...prev, newMessage];
+          });
 
           if (newMessage.sender_id !== user?.id) {
             markMessagesAsRead();
@@ -146,13 +153,21 @@ export default function BookingMessages() {
     setSending(true);
 
     try {
-      const { error } = await supabase.from('booking_messages').insert({
-        booking_id: bookingId as string,
-        sender_id: user.id,
-        message_text: messageText.trim(),
-      });
+      const { data, error } = await supabase
+        .from('booking_messages')
+        .insert({
+          booking_id: bookingId as string,
+          sender_id: user.id,
+          message_text: messageText.trim(),
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      if (data) {
+        setMessages((prev) => [...prev, data]);
+      }
 
       setMessageText('');
 
