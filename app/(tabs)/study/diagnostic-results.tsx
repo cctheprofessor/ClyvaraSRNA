@@ -65,7 +65,16 @@ export default function DiagnosticResultsScreen() {
       try {
         if (profile.ml_user_id) {
           const diagnosticResults = await mlClient.getDiagnosticResults(profile.ml_user_id);
-          setResults(diagnosticResults);
+          const sanitizedResults: DiagnosticResults = {
+            ...diagnosticResults,
+            section_scores: diagnosticResults.section_scores || [],
+            bloom_scores: diagnosticResults.bloom_scores || [],
+            type_scores: diagnosticResults.type_scores || [],
+            strengths: diagnosticResults.strengths || [],
+            weaknesses: diagnosticResults.weaknesses || [],
+            recommended_topics: diagnosticResults.recommended_topics || [],
+          };
+          setResults(sanitizedResults);
           setLoading(false);
           return;
         }
@@ -169,7 +178,7 @@ export default function DiagnosticResultsScreen() {
           </Text>
         </View>
 
-        {results.section_scores.length > 0 && (
+        {results.section_scores && results.section_scores.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>NCE Section Performance</Text>
             {results.section_scores.map((section, index) => (
@@ -193,7 +202,7 @@ export default function DiagnosticResultsScreen() {
           </View>
         )}
 
-        {results.bloom_scores.length > 0 && (
+        {results.bloom_scores && results.bloom_scores.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Bloom's Taxonomy Levels</Text>
             {results.bloom_scores.map((bloom, index) => (
@@ -217,7 +226,7 @@ export default function DiagnosticResultsScreen() {
           </View>
         )}
 
-        {results.type_scores.length > 0 && (
+        {results.type_scores && results.type_scores.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Question Type Performance</Text>
             {results.type_scores.map((type, index) => (
@@ -241,7 +250,7 @@ export default function DiagnosticResultsScreen() {
           </View>
         )}
 
-        {results.strengths.length > 0 && (
+        {results.strengths && results.strengths.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeaderWithIcon}>
               <TrendingUp size={24} color={Colors.success} />
@@ -256,7 +265,7 @@ export default function DiagnosticResultsScreen() {
           </View>
         )}
 
-        {results.weaknesses.length > 0 && (
+        {results.weaknesses && results.weaknesses.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeaderWithIcon}>
               <TrendingDown size={24} color={Colors.warning} />
@@ -271,7 +280,7 @@ export default function DiagnosticResultsScreen() {
           </View>
         )}
 
-        {results.recommended_topics.length > 0 && (
+        {results.recommended_topics && results.recommended_topics.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Recommended Focus Topics</Text>
             <Text style={styles.sectionDescription}>
