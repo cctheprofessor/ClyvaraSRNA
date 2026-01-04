@@ -16,7 +16,7 @@ import { supabase } from '../../../lib/supabase';
 import { BookingWithDetails } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Calendar, Clock, Star, XCircle, Bell, CheckCircle, CreditCard } from 'lucide-react-native';
+import { Calendar, Clock, Star, XCircle, Bell, CheckCircle, CreditCard, Video } from 'lucide-react-native';
 
 export default function MyBookings() {
   const router = useRouter();
@@ -434,6 +434,21 @@ export default function MyBookings() {
                       </Text>
                     )}
                   </View>
+                )}
+
+                {booking.ta_profiles?.meeting_link && (
+                  <TouchableOpacity
+                    style={styles.meetingLinkBox}
+                    onPress={() => Linking.openURL(booking.ta_profiles!.meeting_link!)}
+                  >
+                    <Video size={20} color={Colors.primary} />
+                    <View style={styles.meetingLinkContent}>
+                      <Text style={styles.meetingLinkLabel}>Join Session</Text>
+                      <Text style={styles.meetingLinkUrl} numberOfLines={1}>
+                        {booking.ta_profiles.meeting_link}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
                 )}
 
                 {booking.notes && (
@@ -868,5 +883,29 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  meetingLinkBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#E3F2FD',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+  },
+  meetingLinkContent: {
+    flex: 1,
+  },
+  meetingLinkLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.primary,
+    marginBottom: 2,
+  },
+  meetingLinkUrl: {
+    fontSize: 12,
+    color: Colors.text.tertiary,
   },
 });

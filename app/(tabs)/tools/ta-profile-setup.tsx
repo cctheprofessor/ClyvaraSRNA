@@ -40,6 +40,7 @@ export default function TAProfileSetup() {
   const [profile, setProfile] = useState<TAProfile | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
+  const [meetingLink, setMeetingLink] = useState('');
   const [baseRate, setBaseRate] = useState('25.00');
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(true);
@@ -64,6 +65,7 @@ export default function TAProfileSetup() {
         setProfile(data);
         setDisplayName(data.display_name || '');
         setBio(data.bio || '');
+        setMeetingLink(data.meeting_link || '');
         setBaseRate(data.base_rate_30min.toString());
         setSelectedSpecialties(data.specialties || []);
         setIsActive(data.is_active);
@@ -104,6 +106,7 @@ export default function TAProfileSetup() {
         user_id: user.id,
         display_name: displayName.trim(),
         bio: bio.trim(),
+        meeting_link: meetingLink.trim() || null,
         base_rate_30min: rateNum,
         specialties: selectedSpecialties,
         is_active: isActive,
@@ -170,6 +173,20 @@ export default function TAProfileSetup() {
           multiline
           numberOfLines={4}
           placeholderTextColor={Colors.text.tertiary}
+        />
+
+        <Text style={styles.sectionTitle}>Meeting Link</Text>
+        <Text style={styles.subtitle}>
+          Add your Google Meet or Zoom link. This will be shared with students after payment.
+        </Text>
+        <TextInput
+          style={styles.nameInput}
+          placeholder="https://meet.google.com/xxx-xxxx-xxx"
+          value={meetingLink}
+          onChangeText={setMeetingLink}
+          placeholderTextColor={Colors.text.tertiary}
+          autoCapitalize="none"
+          keyboardType="url"
         />
 
         <Text style={styles.sectionTitle}>Base Rate (30 minutes)</Text>

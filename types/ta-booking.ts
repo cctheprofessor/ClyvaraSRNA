@@ -7,6 +7,7 @@ export interface TAProfile {
   specialties: string[];
   is_active: boolean;
   stripe_account_id: string | null;
+  meeting_link: string | null;
   total_sessions: number;
   average_rating: number;
   created_at: string;

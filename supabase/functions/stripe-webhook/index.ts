@@ -99,11 +99,33 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (bookingId) {
     console.log('Processing TA booking payment:', bookingId);
 
+    const { data: booking, error: fetchError } = await supabase
+      .from('ta_bookings')
+      .select('ta_id')
+      .eq('id', bookingId)
+      .maybeSingle();
+
+    if (fetchError || !booking) {
+      console.error('Failed to fetch booking:', fetchError);
+      return;
+    }
+
+    const { data: taProfile, error: profileError } = await supabase
+      .from('ta_profiles')
+      .select('meeting_link')
+      .eq('id', booking.ta_id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('Failed to fetch TA profile:', profileError);
+    }
+
     const { error } = await supabase
       .from('ta_bookings')
       .update({
         status: 'confirmed',
         stripe_payment_intent_id: session.payment_intent as string,
+        meeting_link: taProfile?.meeting_link || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', bookingId);
