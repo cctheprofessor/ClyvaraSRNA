@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -25,6 +24,7 @@ export default function TADashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [profile, setProfile] = useState<TAProfile | null>(null);
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
+  const [confirmingAction, setConfirmingAction] = useState<{bookingId: string, action: 'approve' | 'reject'} | null>(null);
   const [stats, setStats] = useState({
     totalEarnings: 0,
     upcomingCount: 0,
@@ -49,11 +49,8 @@ export default function TADashboard() {
       if (profileError) throw profileError;
 
       if (!profileData) {
-        Alert.alert(
-          'Profile Required',
-          'Please set up your TA profile first',
-          [{ text: 'OK', onPress: () => router.push('/tools/ta-profile-setup') }]
-        );
+        console.log('[TADashboard] No TA profile found, redirecting to setup');
+        router.push('/tools/ta-profile-setup');
         return;
       }
 
@@ -61,7 +58,10 @@ export default function TADashboard() {
 
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('ta_bookings')
-        .select('*')
+        .select(`
+          *,
+          student:profiles!ta_bookings_student_id_fkey(id, email, full_name)
+        `)
         .eq('ta_id', profileData.id)
         .order('session_date', { ascending: true })
         .order('start_time', { ascending: true });
@@ -84,8 +84,7 @@ export default function TADashboard() {
         pendingCount: pending.length,
       });
     } catch (error: any) {
-      console.error('Error loading dashboard:', error);
-      Alert.alert('Error', 'Failed to load dashboard');
+      console.error('[TADashboard] Error loading dashboard:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -115,11 +114,11 @@ export default function TADashboard() {
       }
 
       console.log('[TADashboard] Booking approved:', data);
-      Alert.alert('Success', 'Booking request approved! Student will be notified and can now pay.');
+      setConfirmingAction(null);
       loadDashboard();
     } catch (error: any) {
       console.error('[TADashboard] Approve error:', error);
-      Alert.alert('Error', error.message || 'Failed to approve booking');
+      setConfirmingAction(null);
     }
   }
 
@@ -144,38 +143,12 @@ export default function TADashboard() {
       }
 
       console.log('[TADashboard] Booking rejected:', data);
-      Alert.alert('Success', 'Booking request rejected. Student has been notified.');
+      setConfirmingAction(null);
       loadDashboard();
     } catch (error: any) {
       console.error('[TADashboard] Reject error:', error);
-      Alert.alert('Error', error.message || 'Failed to reject booking');
+      setConfirmingAction(null);
     }
-  }
-
-  function handleApprove(booking: BookingWithDetails) {
-    Alert.alert(
-      'Approve Request',
-      `Approve session on ${booking.session_date} at ${booking.start_time}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Approve', onPress: () => approveBooking(booking.id) },
-      ]
-    );
-  }
-
-  function handleReject(booking: BookingWithDetails) {
-    Alert.alert(
-      'Reject Request',
-      'Are you sure you want to reject this booking request? The student will be notified.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reject',
-          style: 'destructive',
-          onPress: () => rejectBooking(booking.id, 'Time slot no longer available'),
-        },
-      ]
-    );
   }
 
   async function markComplete(bookingId: string) {
@@ -202,23 +175,11 @@ export default function TADashboard() {
         throw new Error(error.error || 'Failed to complete booking');
       }
 
-      Alert.alert('Success', 'Session marked as completed');
+      console.log('[TADashboard] Session marked as completed');
       loadDashboard();
     } catch (error: any) {
-      console.error('Complete error:', error);
-      Alert.alert('Error', error.message || 'Failed to mark as completed');
+      console.error('[TADashboard] Complete error:', error);
     }
-  }
-
-  function handleMarkComplete(booking: BookingWithDetails) {
-    Alert.alert(
-      'Mark as Completed',
-      'Mark this session as completed?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Complete', onPress: () => markComplete(booking.id) },
-      ]
-    );
   }
 
   if (loading) {
@@ -327,48 +288,91 @@ export default function TADashboard() {
           <>
             <Text style={styles.sectionTitle}>Pending Approval Requests</Text>
 
-            {pendingBookings.map((booking) => (
-              <View key={booking.id} style={[styles.bookingCard, styles.pendingCard]}>
-                <View style={styles.bookingHeader}>
-                  <View style={styles.dateTime}>
-                    <Bell size={16} color="#FFA500" />
-                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
-                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
+            {pendingBookings.map((booking) => {
+              const isConfirming = confirmingAction?.bookingId === booking.id;
+              return (
+                <View key={booking.id} style={[styles.bookingCard, styles.pendingCard]}>
+                  <View style={styles.bookingHeader}>
+                    <View style={styles.dateTime}>
+                      <Bell size={16} color="#FFA500" />
+                      <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                      <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                    </View>
+                    <Text style={styles.bookingDuration}>{booking.duration_minutes} min</Text>
                   </View>
-                  <Text style={styles.bookingDuration}>{booking.duration_minutes} min</Text>
+
+                  {booking.student?.full_name && (
+                    <Text style={styles.studentName}>Student: {booking.student.full_name}</Text>
+                  )}
+
+                  {booking.notes && (
+                    <Text style={styles.bookingNotes} numberOfLines={3}>
+                      {booking.notes}
+                    </Text>
+                  )}
+
+                  <View style={styles.bookingFooter}>
+                    <Text style={styles.bookingRate}>
+                      You'll earn: ${booking.session_rate}
+                    </Text>
+                  </View>
+
+                  {!isConfirming ? (
+                    <View style={styles.approvalActions}>
+                      <TouchableOpacity
+                        style={styles.rejectButton}
+                        onPress={() => setConfirmingAction({bookingId: booking.id, action: 'reject'})}
+                      >
+                        <XCircle size={16} color="#fff" />
+                        <Text style={styles.rejectButtonText}>Reject</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.approveButton}
+                        onPress={() => setConfirmingAction({bookingId: booking.id, action: 'approve'})}
+                      >
+                        <CheckCircle size={16} color="#fff" />
+                        <Text style={styles.approveButtonText}>Approve</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={styles.confirmationBox}>
+                      <Text style={styles.confirmationText}>
+                        {confirmingAction.action === 'approve'
+                          ? 'Approve this session request?'
+                          : 'Reject this session request?'}
+                      </Text>
+                      <View style={styles.confirmationActions}>
+                        <TouchableOpacity
+                          style={styles.cancelButton}
+                          onPress={() => setConfirmingAction(null)}
+                        >
+                          <Text style={styles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[
+                            styles.confirmButton,
+                            confirmingAction.action === 'reject' && styles.confirmButtonReject
+                          ]}
+                          onPress={() => {
+                            if (confirmingAction.action === 'approve') {
+                              approveBooking(booking.id);
+                            } else {
+                              rejectBooking(booking.id, 'Time slot no longer available');
+                            }
+                          }}
+                        >
+                          <Text style={styles.confirmButtonText}>
+                            {confirmingAction.action === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
                 </View>
-
-                {booking.notes && (
-                  <Text style={styles.bookingNotes} numberOfLines={3}>
-                    {booking.notes}
-                  </Text>
-                )}
-
-                <View style={styles.bookingFooter}>
-                  <Text style={styles.bookingRate}>
-                    You'll earn: ${booking.session_rate}
-                  </Text>
-                </View>
-
-                <View style={styles.approvalActions}>
-                  <TouchableOpacity
-                    style={styles.rejectButton}
-                    onPress={() => handleReject(booking)}
-                  >
-                    <XCircle size={16} color="#fff" />
-                    <Text style={styles.rejectButtonText}>Reject</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.approveButton}
-                    onPress={() => handleApprove(booking)}
-                  >
-                    <CheckCircle size={16} color="#fff" />
-                    <Text style={styles.approveButtonText}>Approve</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </>
         )}
 
@@ -404,7 +408,7 @@ export default function TADashboard() {
                 {booking.status === 'confirmed' && (
                   <TouchableOpacity
                     style={styles.completeButton}
-                    onPress={() => handleMarkComplete(booking)}
+                    onPress={() => markComplete(booking.id)}
                   >
                     <CheckCircle size={16} color="#fff" />
                     <Text style={styles.completeButtonText}>Mark Complete</Text>
@@ -645,6 +649,58 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   rejectButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  studentName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    marginBottom: 8,
+  },
+  confirmationBox: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  confirmationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  confirmationActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#e0e0e0',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: Colors.text.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  confirmButton: {
+    flex: 1,
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  confirmButtonReject: {
+    backgroundColor: '#ff4444',
+  },
+  confirmButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',

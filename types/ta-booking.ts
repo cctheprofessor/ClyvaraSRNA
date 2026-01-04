@@ -74,6 +74,7 @@ export interface BookingWithDetails extends TABooking {
   student?: {
     id: string;
     email?: string;
+    full_name?: string;
   };
 }
 
