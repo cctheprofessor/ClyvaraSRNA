@@ -382,44 +382,6 @@ export default function MyBookings() {
           </>
         )}
 
-        {rejectedBookings.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Declined Requests</Text>
-
-            {rejectedBookings.map((booking) => (
-              <View key={booking.id} style={[styles.bookingCard, styles.rejectedCard]}>
-                {booking.ta_profiles?.display_name && (
-                  <View style={styles.headerRow}>
-                    <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: '#ff4444' }]}>
-                      <XCircle size={12} color="#fff" />
-                      <Text style={styles.statusText}>Declined</Text>
-                    </View>
-                  </View>
-                )}
-
-                <View style={styles.bookingHeader}>
-                  <View style={styles.dateTime}>
-                    <Calendar size={16} color={Colors.text.tertiary} />
-                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
-                  </View>
-                  <View style={styles.dateTime}>
-                    <Clock size={16} color={Colors.text.tertiary} />
-                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
-                  </View>
-                </View>
-
-                {booking.rejection_reason && (
-                  <View style={[styles.infoBox, { backgroundColor: '#FFEBEE' }]}>
-                    <Text style={styles.infoLabel}>Reason:</Text>
-                    <Text style={styles.infoText}>{booking.rejection_reason}</Text>
-                  </View>
-                )}
-              </View>
-            ))}
-          </>
-        )}
-
         <Text style={styles.sectionTitle}>Upcoming Sessions</Text>
 
         {upcomingBookings.length === 0 ? (
@@ -521,6 +483,44 @@ export default function MyBookings() {
               </View>
             );
           })
+        )}
+
+        {rejectedBookings.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Declined Requests</Text>
+
+            {rejectedBookings.map((booking) => (
+              <View key={booking.id} style={[styles.bookingCard, styles.rejectedCard]}>
+                {booking.ta_profiles?.display_name && (
+                  <View style={styles.headerRow}>
+                    <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+                    <View style={[styles.statusBadge, { backgroundColor: '#ff4444' }]}>
+                      <XCircle size={12} color="#fff" />
+                      <Text style={styles.statusText}>Declined</Text>
+                    </View>
+                  </View>
+                )}
+
+                <View style={styles.bookingHeader}>
+                  <View style={styles.dateTime}>
+                    <Calendar size={16} color={Colors.text.tertiary} />
+                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                  </View>
+                  <View style={styles.dateTime}>
+                    <Clock size={16} color={Colors.text.tertiary} />
+                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                  </View>
+                </View>
+
+                {booking.rejection_reason && (
+                  <View style={[styles.infoBox, { backgroundColor: '#FFEBEE' }]}>
+                    <Text style={styles.infoLabel}>Reason:</Text>
+                    <Text style={styles.infoText}>{booking.rejection_reason}</Text>
+                  </View>
+                )}
+              </View>
+            ))}
+          </>
         )}
 
         <Text style={styles.sectionTitle}>Past Sessions</Text>
