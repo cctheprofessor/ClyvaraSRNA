@@ -17,6 +17,19 @@ export default function RationaleDisplay({
   isCorrect,
   loading = false,
 }: RationaleDisplayProps) {
+  const uniqueCorrectAnswers = correctAnswers
+    ? Array.from(new Set(correctAnswers.filter(a => a && a.trim())))
+    : [];
+
+  console.log('[RationaleDisplay] Rendering with:', {
+    hasRationale: !!rationale,
+    hasOptionRationales: !!optionRationales,
+    correctAnswers,
+    uniqueCorrectAnswers,
+    isCorrect,
+    loading,
+  });
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -39,10 +52,10 @@ export default function RationaleDisplay({
         </View>
       )}
 
-      {correctAnswers && correctAnswers.length > 0 && !isCorrect && (
+      {uniqueCorrectAnswers.length > 0 && !isCorrect && (
         <View style={styles.correctAnswersCard}>
           <Text style={styles.correctAnswersLabel}>Correct answer(s):</Text>
-          {correctAnswers.map((answer, index) => (
+          {uniqueCorrectAnswers.map((answer, index) => (
             <Text key={index} style={styles.correctAnswerText}>• {answer}</Text>
           ))}
         </View>
