@@ -7,7 +7,6 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
-  Platform,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, Spacing } from '@/constants/theme';
@@ -331,26 +330,20 @@ export default function HomeScreen() {
 
   const handleReport = async (postId: string) => {
     if (!session?.user) {
-      if (Platform.OS === 'web') {
-        alert('You must be logged in to report posts');
-      } else {
-        Alert.alert('Error', 'You must be logged in to report posts');
-      }
+      Alert.alert('Error', 'You must be logged in to report posts');
       return;
     }
 
-    const confirmReport = Platform.OS === 'web'
-      ? window.confirm('Report this post? It will be immediately removed from the feed.')
-      : await new Promise<boolean>((resolve) => {
-          Alert.alert(
-            'Report Post',
-            'Report this post? It will be immediately removed from the feed.',
-            [
-              { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
-              { text: 'Report', style: 'destructive', onPress: () => resolve(true) }
-            ]
-          );
-        });
+    const confirmReport = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        'Report Post',
+        'Report this post? It will be immediately removed from the feed.',
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Report', style: 'destructive', onPress: () => resolve(true) }
+        ]
+      );
+    });
 
     if (!confirmReport) return;
 
@@ -364,11 +357,7 @@ export default function HomeScreen() {
 
       if (error) {
         if (error.code === '23505') {
-          if (Platform.OS === 'web') {
-            alert('You have already reported this post');
-          } else {
-            Alert.alert('Info', 'You have already reported this post');
-          }
+          Alert.alert('Info', 'You have already reported this post');
         } else {
           throw error;
         }
@@ -376,19 +365,10 @@ export default function HomeScreen() {
       }
 
       setPosts((prev) => prev.filter((p) => p.id !== postId));
-
-      if (Platform.OS === 'web') {
-        alert('Post reported and removed from feed');
-      } else {
-        Alert.alert('Success', 'Post reported and removed from feed');
-      }
+      Alert.alert('Success', 'Post reported and removed from feed');
     } catch (error: any) {
       console.error('Error reporting post:', error);
-      if (Platform.OS === 'web') {
-        alert(error.message || 'Failed to report post');
-      } else {
-        Alert.alert('Error', error.message || 'Failed to report post');
-      }
+      Alert.alert('Error', error.message || 'Failed to report post');
     }
   };
 

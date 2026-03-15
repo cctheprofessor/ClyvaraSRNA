@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable, Alert } from 'react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { Heart, MessageCircle, Trash2, Flag } from 'lucide-react-native';
 import { FeedPostWithDetails } from '@/types/social-feed';
@@ -37,32 +37,18 @@ export default function ImagePostCard({
   };
 
   const handleDelete = () => {
-    console.log('Delete button pressed for post:', post.id);
-    console.log('onDelete function exists:', !!onDelete);
-
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to delete this post?')) {
-        console.log('Delete confirmed, calling onDelete for:', post.id);
-        onDelete?.(post.id);
-      }
-    } else {
-      const Alert = require('react-native').Alert;
-      Alert.alert(
-        'Delete Post',
-        'Are you sure you want to delete this post?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => {
-              console.log('Delete confirmed, calling onDelete for:', post.id);
-              onDelete?.(post.id);
-            },
-          },
-        ]
-      );
-    }
+    Alert.alert(
+      'Delete Post',
+      'Are you sure you want to delete this post?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => onDelete?.(post.id),
+        },
+      ]
+    );
   };
 
   return (

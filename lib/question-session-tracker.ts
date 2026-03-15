@@ -1,20 +1,25 @@
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const storage = {
   async getItem(key: string): Promise<string | null> {
     if (Platform.OS === 'web') {
       return localStorage.getItem(key);
     }
-    return null;
+    return AsyncStorage.getItem(key);
   },
   async setItem(key: string, value: string): Promise<void> {
     if (Platform.OS === 'web') {
       localStorage.setItem(key, value);
+    } else {
+      await AsyncStorage.setItem(key, value);
     }
   },
   async removeItem(key: string): Promise<void> {
     if (Platform.OS === 'web') {
       localStorage.removeItem(key);
+    } else {
+      await AsyncStorage.removeItem(key);
     }
   }
 };

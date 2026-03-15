@@ -7,7 +7,6 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
-  Platform,
   Switch,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -15,7 +14,7 @@ import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { FeedPrompt } from '@/types/social-feed';
-import { Plus, Edit2, Trash2, ArrowLeft } from 'lucide-react-native';
+import { Plus, CreditCard as Edit2, Trash2, ArrowLeft } from 'lucide-react-native';
 import PageHeader from '@/components/PageHeader';
 
 export default function AdminPromptsScreen() {
@@ -43,11 +42,7 @@ export default function AdminPromptsScreen() {
       setPrompts(data || []);
     } catch (error: any) {
       console.error('Error loading prompts:', error);
-      if (Platform.OS === 'web') {
-        alert('Failed to load prompts');
-      } else {
-        Alert.alert('Error', 'Failed to load prompts');
-      }
+      Alert.alert('Error', 'Failed to load prompts');
     } finally {
       setLoading(false);
     }
@@ -67,50 +62,33 @@ export default function AdminPromptsScreen() {
       );
     } catch (error: any) {
       console.error('Error toggling prompt:', error);
-      if (Platform.OS === 'web') {
-        alert('Failed to update prompt');
-      } else {
-        Alert.alert('Error', 'Failed to update prompt');
-      }
+      Alert.alert('Error', 'Failed to update prompt');
     }
   };
 
-  const handleDelete = async (promptId: string) => {
-    const confirmDelete = Platform.OS === 'web'
-      ? window.confirm('Delete this prompt? This cannot be undone.')
-      : await new Promise<boolean>((resolve) => {
-          Alert.alert(
-            'Delete Prompt',
-            'Delete this prompt? This cannot be undone.',
-            [
-              { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
-              { text: 'Delete', style: 'destructive', onPress: () => resolve(true) }
-            ]
-          );
-        });
-
-    if (!confirmDelete) return;
-
-    try {
-      const { error } = await supabase.from('feed_prompts').delete().eq('id', promptId);
-
-      if (error) throw error;
-
-      setPrompts((prev) => prev.filter((p) => p.id !== promptId));
-
-      if (Platform.OS === 'web') {
-        alert('Prompt deleted');
-      } else {
-        Alert.alert('Success', 'Prompt deleted');
-      }
-    } catch (error: any) {
-      console.error('Error deleting prompt:', error);
-      if (Platform.OS === 'web') {
-        alert('Failed to delete prompt');
-      } else {
-        Alert.alert('Error', 'Failed to delete prompt');
-      }
-    }
+  const handleDelete = (promptId: string) => {
+    Alert.alert(
+      'Delete Prompt',
+      'Delete this prompt? This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { error } = await supabase.from('feed_prompts').delete().eq('id', promptId);
+              if (error) throw error;
+              setPrompts((prev) => prev.filter((p) => p.id !== promptId));
+              Alert.alert('Success', 'Prompt deleted');
+            } catch (error: any) {
+              console.error('Error deleting prompt:', error);
+              Alert.alert('Error', 'Failed to delete prompt');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const renderPrompt = ({ item }: { item: FeedPrompt }) => (

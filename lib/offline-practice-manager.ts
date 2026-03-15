@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { mlClient } from './ml-backend-client';
 import { filterValidQuestions } from './question-validator';
 import { questionSessionTracker } from './question-session-tracker';
@@ -8,16 +9,20 @@ const storage = {
     if (Platform.OS === 'web') {
       return localStorage.getItem(key);
     }
-    return null;
+    return AsyncStorage.getItem(key);
   },
   async setItem(key: string, value: string): Promise<void> {
     if (Platform.OS === 'web') {
       localStorage.setItem(key, value);
+    } else {
+      await AsyncStorage.setItem(key, value);
     }
   },
   async removeItem(key: string): Promise<void> {
     if (Platform.OS === 'web') {
       localStorage.removeItem(key);
+    } else {
+      await AsyncStorage.removeItem(key);
     }
   }
 };

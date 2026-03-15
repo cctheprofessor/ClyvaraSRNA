@@ -119,9 +119,14 @@ export default function ProfileScreen() {
   };
 
   const handleSignOut = () => {
-    if (confirm('Are you sure you want to sign out?')) {
-      signOut();
-    }
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign Out', style: 'destructive', onPress: () => signOut() },
+      ]
+    );
   };
 
   const handleDonation = async (donationType: 'one_time' | 'monthly') => {
@@ -140,9 +145,8 @@ export default function ProfileScreen() {
         return;
       }
 
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-      const successUrl = `${baseUrl}?donation=success`;
-      const cancelUrl = `${baseUrl}?donation=cancelled`;
+      const successUrl = `${process.env.EXPO_PUBLIC_APP_URL || 'https://clyvara.app'}?donation=success`;
+      const cancelUrl = `${process.env.EXPO_PUBLIC_APP_URL || 'https://clyvara.app'}?donation=cancelled`;
 
       const amount = donationType === 'one_time' ? 20 : 7;
 
@@ -153,7 +157,6 @@ export default function ProfileScreen() {
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
           },
           body: JSON.stringify({
             amount,
@@ -172,11 +175,7 @@ export default function ProfileScreen() {
       const { url } = await response.json();
 
       if (url) {
-        if (typeof window !== 'undefined') {
-          window.location.href = url;
-        } else {
-          await Linking.openURL(url);
-        }
+        await Linking.openURL(url);
       } else {
         throw new Error('No checkout URL received');
       }

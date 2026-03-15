@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
@@ -65,35 +65,33 @@ export default function PlanScreen() {
   };
 
   const handleDeletePlan = async (planId: string, procedureName: string) => {
-    const confirmed = window.confirm(`Are you sure you want to delete "${procedureName}"?`);
+    Alert.alert(
+      'Delete Care Plan',
+      `Are you sure you want to delete "${procedureName}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { data, error } = await supabase
+                .from('comprehensive_care_plans')
+                .delete()
+                .eq('id', planId)
+                .select();
 
-    if (!confirmed) {
-      console.log('Delete cancelled by user');
-      return;
-    }
+              if (error) throw error;
 
-    try {
-      console.log('Attempting to delete plan:', planId);
-
-      const { data, error } = await supabase
-        .from('comprehensive_care_plans')
-        .delete()
-        .eq('id', planId)
-        .select();
-
-      console.log('Delete response:', { data, error });
-
-      if (error) {
-        console.error('Delete error details:', error);
-        throw error;
-      }
-
-      setRecentPlans((prev) => prev.filter((plan) => plan.id !== planId));
-      console.log('Plan deleted successfully');
-    } catch (error: any) {
-      console.error('Error deleting plan:', error);
-      window.alert(error?.message || 'Failed to delete care plan. Please try again.');
-    }
+              setRecentPlans((prev) => prev.filter((plan) => plan.id !== planId));
+            } catch (error: any) {
+              console.error('Error deleting plan:', error);
+              Alert.alert('Error', error?.message || 'Failed to delete care plan. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
