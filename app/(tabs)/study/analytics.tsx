@@ -5,8 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { mlClient } from '@/lib/ml-backend-client';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
-import { TrendingUp, TrendingDown, Brain, Target, AlertCircle, BarChart3 } from 'lucide-react-native';
-import Svg, { Circle, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
+import { TrendingUp, TrendingDown, Brain, Target, CircleAlert as AlertCircle, ChartBar as BarChart3 } from 'lucide-react-native';
+import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CHART_WIDTH = SCREEN_WIDTH - (Spacing.md * 4);
@@ -135,69 +135,71 @@ export default function AnalyticsScreen() {
     }
 
     const curve = insights.forgetting_curve;
-    const maxDays = Math.max(...curve.map(p => p.days_since));
-    const chartHeight = 150;
-    const padding = 20;
+    const chartHeight = 220;
+    const paddingLeft = 44;
+    const paddingRight = 16;
+    const paddingTop = 12;
+    const paddingBottom = 36;
+    const plotWidth = CHART_WIDTH - paddingLeft - paddingRight;
+    const plotHeight = chartHeight - paddingTop - paddingBottom;
 
     const points = curve.map((point, i) => {
-      const x = padding + (i / (curve.length - 1)) * (CHART_WIDTH - padding * 2);
-      const y = chartHeight - padding - (point.retention_rate / 100) * (chartHeight - padding * 2);
+      const x = paddingLeft + (curve.length > 1 ? (i / (curve.length - 1)) : 0.5) * plotWidth;
+      const y = paddingTop + (1 - point.retention_rate / 100) * plotHeight;
       return { x, y, retention: point.retention_rate, days: point.days_since };
     });
 
-    const pathData = points
-      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+    const linePath = points
+      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
       .join(' ');
+
+    const areaPath = linePath
+      + ` L ${points[points.length - 1].x.toFixed(1)} ${(paddingTop + plotHeight).toFixed(1)}`
+      + ` L ${points[0].x.toFixed(1)} ${(paddingTop + plotHeight).toFixed(1)} Z`;
+
+    const yLabels = [0, 25, 50, 75, 100];
+    const xLabels = curve.length <= 7
+      ? curve.map((p, i) => ({ i, days: p.days_since }))
+      : [0, Math.floor((curve.length - 1) / 3), Math.floor((curve.length - 1) * 2 / 3), curve.length - 1]
+          .map(i => ({ i, days: curve[i].days_since }));
 
     return (
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Memory Retention Over Time</Text>
-        <Text style={styles.chartSubtitle}>How well you remember concepts over days</Text>
-        <Svg width={CHART_WIDTH} height={chartHeight} style={styles.chart}>
-          {/* Grid lines */}
-          {[0, 25, 50, 75, 100].map((val) => {
-            const y = chartHeight - padding - (val / 100) * (chartHeight - padding * 2);
+        <Text style={styles.chartSubtitle}>How well you retain concepts over days</Text>
+        <Svg width={CHART_WIDTH} height={chartHeight}>
+          <Defs>
+            <LinearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0%" stopColor={Colors.primary} stopOpacity="0.3" />
+              <Stop offset="100%" stopColor={Colors.primary} stopOpacity="0.02" />
+            </LinearGradient>
+          </Defs>
+
+          {yLabels.map((val) => {
+            const y = paddingTop + (1 - val / 100) * plotHeight;
             return (
               <Line
-                key={val}
-                x1={padding}
+                key={`grid-${val}`}
+                x1={paddingLeft}
                 y1={y}
-                x2={CHART_WIDTH - padding}
+                x2={CHART_WIDTH - paddingRight}
                 y2={y}
-                stroke={Colors.border.light}
-                strokeWidth="1"
+                stroke={val === 0 ? Colors.border.dark : Colors.border.light}
+                strokeWidth={val === 0 ? '1.5' : '1'}
+                strokeDasharray={val === 0 ? undefined : '4 3'}
               />
             );
           })}
 
-          {/* Curve line */}
-          <Path
-            d={pathData}
-            stroke={Colors.primary}
-            strokeWidth="3"
-            fill="none"
-          />
-
-          {/* Data points */}
-          {points.map((point, i) => (
-            <Circle
-              key={i}
-              cx={point.x}
-              cy={point.y}
-              r="4"
-              fill={Colors.primary}
-            />
-          ))}
-
-          {/* Y-axis labels */}
-          {[0, 50, 100].map((val) => {
-            const y = chartHeight - padding - (val / 100) * (chartHeight - padding * 2);
+          {yLabels.map((val) => {
+            const y = paddingTop + (1 - val / 100) * plotHeight;
             return (
               <SvgText
-                key={val}
-                x={padding - 10}
+                key={`ylabel-${val}`}
+                x={paddingLeft - 6}
                 y={y + 4}
-                fontSize="10"
+                fontSize="11"
+                fontWeight="600"
                 fill={Colors.text.tertiary}
                 textAnchor="end"
               >
@@ -205,9 +207,55 @@ export default function AnalyticsScreen() {
               </SvgText>
             );
           })}
+
+          <Path d={areaPath} fill="url(#curveGradient)" />
+
+          <Path
+            d={linePath}
+            stroke={Colors.primary}
+            strokeWidth="2.5"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          {points.map((point, i) => (
+            <Circle
+              key={i}
+              cx={point.x}
+              cy={point.y}
+              r="4"
+              fill={Colors.background}
+              stroke={Colors.primary}
+              strokeWidth="2"
+            />
+          ))}
+
+          {xLabels.map(({ i, days }) => {
+            const x = points[i]?.x ?? 0;
+            return (
+              <SvgText
+                key={`xlabel-${i}`}
+                x={x}
+                y={chartHeight - 6}
+                fontSize="11"
+                fontWeight="600"
+                fill={Colors.text.tertiary}
+                textAnchor="middle"
+              >
+                {days === 0 ? 'Day 0' : `Day ${days}`}
+              </SvgText>
+            );
+          })}
         </Svg>
-        <View style={styles.chartLegend}>
-          <Text style={styles.legendText}>Days since learning</Text>
+
+        <View style={styles.retentionCallouts}>
+          {points.map((point, i) => (
+            <View key={i} style={styles.retentionCallout}>
+              <Text style={styles.retentionCalloutValue}>{point.retention.toFixed(0)}%</Text>
+              <Text style={styles.retentionCalloutLabel}>Day {point.days}</Text>
+            </View>
+          )).slice(0, 5)}
         </View>
       </View>
     );
@@ -537,14 +585,24 @@ const styles = StyleSheet.create({
     color: Colors.text.tertiary,
     marginBottom: Spacing.md,
   },
-  chart: {
-    marginVertical: Spacing.sm,
-  },
-  chartLegend: {
-    alignItems: 'center',
+  retentionCallouts: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
   },
-  legendText: {
+  retentionCallout: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  retentionCalloutValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  retentionCalloutLabel: {
     ...Typography.small,
     color: Colors.text.tertiary,
   },
