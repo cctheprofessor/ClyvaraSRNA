@@ -77,8 +77,9 @@ export default function AnalyticsScreen() {
     }
 
     const { overall_performance } = insights;
-    const accuracyColor = overall_performance.accuracy >= 70 ? Colors.success :
-                          overall_performance.accuracy >= 50 ? Colors.warning : Colors.error;
+    const accuracy = overall_performance.accuracy ?? 0;
+    const accuracyColor = accuracy >= 70 ? Colors.success :
+                          accuracy >= 50 ? Colors.warning : Colors.error;
 
     return (
       <View style={styles.cardsContainer}>
@@ -86,13 +87,13 @@ export default function AnalyticsScreen() {
           <View style={styles.cardIcon}>
             <Target color={Colors.primary} size={24} />
           </View>
-          <Text style={styles.cardValue}>{overall_performance.accuracy.toFixed(1)}%</Text>
+          <Text style={styles.cardValue}>{accuracy.toFixed(1)}%</Text>
           <Text style={styles.cardLabel}>Overall Accuracy</Text>
           <View style={[styles.accuracyBar, { backgroundColor: Colors.backgroundTertiary }]}>
             <View
               style={[
                 styles.accuracyBarFill,
-                { width: `${overall_performance.accuracy}%`, backgroundColor: accuracyColor }
+                { width: `${accuracy}%`, backgroundColor: accuracyColor }
               ]}
             />
           </View>
@@ -134,7 +135,13 @@ export default function AnalyticsScreen() {
       return null;
     }
 
-    const curve = insights.forgetting_curve;
+    const curve = insights.forgetting_curve.filter(
+      p => typeof p.retention_rate === 'number' && !isNaN(p.retention_rate) &&
+           typeof p.days_since === 'number' && !isNaN(p.days_since)
+    );
+
+    if (curve.length === 0) return null;
+
     const chartHeight = 220;
     const paddingLeft = 44;
     const paddingRight = 16;
@@ -144,9 +151,10 @@ export default function AnalyticsScreen() {
     const plotHeight = chartHeight - paddingTop - paddingBottom;
 
     const points = curve.map((point, i) => {
+      const retention = point.retention_rate ?? 0;
       const x = paddingLeft + (curve.length > 1 ? (i / (curve.length - 1)) : 0.5) * plotWidth;
-      const y = paddingTop + (1 - point.retention_rate / 100) * plotHeight;
-      return { x, y, retention: point.retention_rate, days: point.days_since };
+      const y = paddingTop + (1 - retention / 100) * plotHeight;
+      return { x, y, retention, days: point.days_since };
     });
 
     const linePath = points
@@ -338,7 +346,7 @@ export default function AnalyticsScreen() {
               </View>
               <View style={styles.weakAreaStats}>
                 <Text style={styles.weakAreaAccuracy}>
-                  {area.accuracy.toFixed(1)}% accuracy
+                  {(area.accuracy ?? 0).toFixed(1)}% accuracy
                 </Text>
                 <View
                   style={[
