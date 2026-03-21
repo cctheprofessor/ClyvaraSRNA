@@ -90,7 +90,7 @@ export default function HomeScreen() {
       if (error) throw error;
       setPrompts(data || []);
     } catch (error) {
-      console.error('Error loading prompts:', error);
+      if (__DEV__) { console.error('Error loading prompts:', error); }
     }
   };
 
@@ -181,7 +181,7 @@ export default function HomeScreen() {
 
       setHasMore(postsWithDetails.length === POSTS_PER_PAGE);
     } catch (error) {
-      console.error('Error loading posts:', error);
+      if (__DEV__) { console.error('Error loading posts:', error); }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -263,7 +263,7 @@ export default function HomeScreen() {
         );
       }
     } catch (error) {
-      console.error('Error toggling like:', error);
+      if (__DEV__) { console.error('Error toggling like:', error); }
     }
   };
 
@@ -279,24 +279,24 @@ export default function HomeScreen() {
   };
 
   const handleDelete = async (postId: string) => {
-    console.log('=== handleDelete called ===');
-    console.log('Post ID:', postId);
-    console.log('Session user:', session?.user?.id);
+    if (__DEV__) { console.log('=== handleDelete called ==='); }
+    if (__DEV__) { console.log('Post ID:', postId); }
+    if (__DEV__) { console.log('Session user:', session?.user?.id); }
 
     if (!session?.user) {
-      console.log('No session user, aborting');
+      if (__DEV__) { console.log('No session user, aborting'); }
       Alert.alert('Error', 'You must be logged in to delete posts');
       return;
     }
 
     const post = posts.find(p => p.id === postId);
-    console.log('Post found in state:', post);
-    console.log('Post user_id:', post?.user_id);
-    console.log('Current user_id:', session.user.id);
-    console.log('User IDs match:', post?.user_id === session.user.id);
+    if (__DEV__) { console.log('Post found in state:', post); }
+    if (__DEV__) { console.log('Post user_id:', post?.user_id); }
+    if (__DEV__) { console.log('Current user_id:', session.user.id); }
+    if (__DEV__) { console.log('User IDs match:', post?.user_id === session.user.id); }
 
     try {
-      console.log('Starting delete operation...');
+      if (__DEV__) { console.log('Starting delete operation...'); }
       const { data, error } = await supabase
         .from('feed_posts')
         .delete()
@@ -304,26 +304,26 @@ export default function HomeScreen() {
         .eq('user_id', session.user.id)
         .select();
 
-      console.log('Delete response:', { data, error });
+      if (__DEV__) { console.log('Delete response:', { data, error }); }
 
       if (error) {
-        console.error('Delete error:', error);
+        if (__DEV__) { console.error('Delete error:', error); }
         Alert.alert('Error', `Failed to delete post: ${error.message}`);
         return;
       }
 
       if (!data || data.length === 0) {
-        console.log('No data returned - post may not exist or user does not own it');
+        if (__DEV__) { console.log('No data returned - post may not exist or user does not own it'); }
         Alert.alert('Error', 'Could not delete post. You may not own this post.');
         return;
       }
 
-      console.log('Delete successful, updating state');
+      if (__DEV__) { console.log('Delete successful, updating state'); }
       setPosts((prev) => prev.filter((p) => p.id !== postId));
-      console.log('State updated');
+      if (__DEV__) { console.log('State updated'); }
       Alert.alert('Success', 'Post deleted successfully');
     } catch (error: any) {
-      console.error('Error deleting post:', error);
+      if (__DEV__) { console.error('Error deleting post:', error); }
       Alert.alert('Error', error.message || 'Failed to delete post');
     }
   };
@@ -367,7 +367,7 @@ export default function HomeScreen() {
       setPosts((prev) => prev.filter((p) => p.id !== postId));
       Alert.alert('Success', 'Post reported and removed from feed');
     } catch (error: any) {
-      console.error('Error reporting post:', error);
+      if (__DEV__) { console.error('Error reporting post:', error); }
       Alert.alert('Error', error.message || 'Failed to report post');
     }
   };

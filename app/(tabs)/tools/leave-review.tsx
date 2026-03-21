@@ -58,7 +58,7 @@ export default function LeaveReview() {
         { text: 'OK', onPress: () => router.back() }
       ]);
     } catch (error: any) {
-      console.error('Review error:', error);
+      if (__DEV__) { console.error('Review error:', error); }
       Alert.alert('Error', error.message || 'Failed to submit review');
     } finally {
       setSubmitting(false);

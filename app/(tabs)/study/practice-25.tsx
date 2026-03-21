@@ -11,7 +11,7 @@ import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
 import DiagnosticRequiredModal from '@/components/study/DiagnosticRequiredModal';
-import { ArrowLeft, ArrowRight, CheckCircle, Send, RotateCcw } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, CircleCheck as CheckCircle, Send, RotateCcw } from 'lucide-react-native';
 import { Question, AnswerFormat } from '@/types/question';
 import { filterValidQuestions } from '@/lib/question-validator';
 import { validateAnswer } from '@/lib/answer-validator';
@@ -68,28 +68,30 @@ export default function Practice25Screen() {
 
   const checkForSavedSession = async () => {
     try {
-      console.log('[Practice25] Checking for saved session...');
+      if (__DEV__) { console.log('[Practice25] Checking for saved session...'); }
       const savedSession = await sessionPersistenceService.getActiveSession('25');
       if (savedSession) {
         const progress = sessionPersistenceService.getProgressSummary(savedSession);
+        if (__DEV__) {
         console.log('[Practice25] Found saved session:', {
           id: savedSession.id,
           progress: `${progress.completed}/${progress.total}`,
         });
+        }
         if (progress.completed > 0 && progress.completed < progress.total) {
           setSavedSessionId(savedSession.id);
           setShowResumeModal(true);
           setLoading(false);
         } else {
-          console.log('[Practice25] Session is empty or complete, starting new');
+          if (__DEV__) { console.log('[Practice25] Session is empty or complete, starting new'); }
           loadQuestions();
         }
       } else {
-        console.log('[Practice25] No saved session found, starting new');
+        if (__DEV__) { console.log('[Practice25] No saved session found, starting new'); }
         loadQuestions();
       }
     } catch (error) {
-      console.error('[Practice25] Failed to check for saved session:', error);
+      if (__DEV__) { console.error('[Practice25] Failed to check for saved session:', error); }
       loadQuestions();
     }
   };
@@ -118,7 +120,7 @@ export default function Practice25Screen() {
         await questionSessionTracker.startNewSession(profile.ml_user_id);
       }
     } catch (error) {
-      console.error('[Practice25] Failed to resume session:', error);
+      if (__DEV__) { console.error('[Practice25] Failed to resume session:', error); }
       setShowResumeModal(false);
       loadQuestions();
     }
@@ -139,11 +141,13 @@ export default function Practice25Screen() {
     try {
       const submittedQuestions = Object.keys(answerResults).map(k => parseInt(k, 10));
 
+      if (__DEV__) {
       console.log('[Practice25] Saving session state:', {
         currentIndex,
         answersCount: Object.keys(answers).length,
         submittedCount: submittedQuestions.length,
       });
+      }
 
       await sessionPersistenceService.saveSession({
         id: savedSessionId || '',
@@ -157,7 +161,7 @@ export default function Practice25Screen() {
         lastUpdated: Date.now(),
       });
     } catch (error) {
-      console.error('[Practice25] Failed to save session state:', error);
+      if (__DEV__) { console.error('[Practice25] Failed to save session state:', error); }
     }
   };
 
@@ -177,7 +181,7 @@ export default function Practice25Screen() {
       const { validQuestions: validCachedQuestions, rejectedQuestions: rejectedCachedQuestions } = filterValidQuestions(cachedQuestions);
 
       if (rejectedCachedQuestions.length > 0) {
-        console.warn(`[Practice25] Filtered ${rejectedCachedQuestions.length} invalid cached questions`);
+        if (__DEV__) { console.warn(`[Practice25] Filtered ${rejectedCachedQuestions.length} invalid cached questions`); }
       }
 
       cachedQuestions = validCachedQuestions;
@@ -185,7 +189,7 @@ export default function Practice25Screen() {
       await questionSessionTracker.startNewSession(profile.ml_user_id);
 
       if (cachedQuestions.length >= 25) {
-        console.log('Loading questions from cache (fast path)');
+        if (__DEV__) { console.log('Loading questions from cache (fast path)'); }
         setQuestions(cachedQuestions);
         setStartTime(Date.now());
         setQuestionStartTime(Date.now());
@@ -193,14 +197,14 @@ export default function Practice25Screen() {
         return;
       }
 
-      console.log('Cache insufficient, fetching from API...');
+      if (__DEV__) { console.log('Cache insufficient, fetching from API...'); }
       try {
         let fetchedQuestions = await mlClient.getNextQuestions(profile.ml_user_id, 25);
 
         const { validQuestions, rejectedQuestions } = filterValidQuestions(fetchedQuestions);
 
         if (rejectedQuestions.length > 0) {
-          console.warn(`[Practice25] Filtered ${rejectedQuestions.length} invalid API questions`);
+          if (__DEV__) { console.warn(`[Practice25] Filtered ${rejectedQuestions.length} invalid API questions`); }
         }
 
         if (validQuestions.length === 0) {
@@ -209,7 +213,7 @@ export default function Practice25Screen() {
 
         setQuestions(validQuestions);
       } catch (apiError) {
-        console.log('API failed, using available cache...');
+        if (__DEV__) { console.log('API failed, using available cache...'); }
         if (cachedQuestions.length > 0) {
           setQuestions(cachedQuestions);
         } else {
@@ -249,7 +253,7 @@ export default function Practice25Screen() {
           return null;
       }
     } catch (error) {
-      console.error('[Practice25] Failed to parse answer:', error);
+      if (__DEV__) { console.error('[Practice25] Failed to parse answer:', error); }
       return null;
     }
   };
@@ -285,11 +289,13 @@ export default function Practice25Screen() {
     const serializedAnswer = answers[questionIndex];
 
     if (!serializedAnswer || !profile?.ml_user_id) {
+      if (__DEV__) {
       console.warn('[Practice25] Cannot submit: missing answer or ml_user_id', {
         hasAnswer: !!serializedAnswer,
         hasMlUserId: !!profile?.ml_user_id,
         mlUserId: profile?.ml_user_id,
       });
+      }
       return;
     }
 
@@ -298,7 +304,7 @@ export default function Practice25Screen() {
 
     const parsedAnswer = parseAnswer(currentQuestion, serializedAnswer);
     if (!parsedAnswer) {
-      console.error('[Practice25] Failed to parse answer');
+      if (__DEV__) { console.error('[Practice25] Failed to parse answer'); }
       return;
     }
 
@@ -334,7 +340,7 @@ export default function Practice25Screen() {
           response_time_seconds: responseTime,
         });
 
-        console.log('[Practice25] Submit answer result:', result);
+        if (__DEV__) { console.log('[Practice25] Submit answer result:', result); }
 
         setAnswerResults(prev => ({
           ...prev,
@@ -354,7 +360,7 @@ export default function Practice25Screen() {
           correct_answers: result.correct_answers,
         });
       } catch (error) {
-        console.warn('[Practice25] API submission failed', error);
+        if (__DEV__) { console.warn('[Practice25] API submission failed', error); }
         await offlinePracticeManager.queueResponse({
           student_id: studentId,
           question_id: currentQuestion.id,
@@ -428,7 +434,7 @@ export default function Practice25Screen() {
 
     if (profile?.ml_user_id) {
       offlinePracticeManager.refreshCacheAfterSession(profile.ml_user_id, 50).catch(error => {
-        console.warn('[Practice25] Failed to refresh cache:', error);
+        if (__DEV__) { console.warn('[Practice25] Failed to refresh cache:', error); }
       });
 
       await questionSessionTracker.endSession(profile.ml_user_id);

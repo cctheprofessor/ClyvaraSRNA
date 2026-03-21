@@ -16,7 +16,7 @@ import { supabase } from '../../../lib/supabase';
 import { BookingWithDetails } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Calendar, Clock, Star, XCircle, Bell, CheckCircle, CreditCard, Video, MessageCircle } from 'lucide-react-native';
+import { Calendar, Clock, Star, Circle as XCircle, Bell, CircleCheck as CheckCircle, CreditCard, Video, MessageCircle } from 'lucide-react-native';
 
 export default function MyBookings() {
   const router = useRouter();
@@ -61,7 +61,7 @@ export default function MyBookings() {
 
       setBookings(bookingsWithReviewStatus);
     } catch (error: any) {
-      console.error('[MyBookings] Error loading bookings:', error);
+      if (__DEV__) { console.error('[MyBookings] Error loading bookings:', error); }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -94,18 +94,18 @@ export default function MyBookings() {
         throw new Error(error.error || 'Failed to cancel booking');
       }
 
-      console.log('[MyBookings] Confirmed booking cancelled successfully');
+      if (__DEV__) { console.log('[MyBookings] Confirmed booking cancelled successfully'); }
       setCancelingBookingId(null);
       loadBookings();
     } catch (error: any) {
-      console.error('[MyBookings] Cancel error:', error);
+      if (__DEV__) { console.error('[MyBookings] Cancel error:', error); }
       setCancelingBookingId(null);
     }
   }
 
   async function cancelAwaitingBooking(bookingId: string) {
     try {
-      console.log('[MyBookings] Cancelling booking:', bookingId);
+      if (__DEV__) { console.log('[MyBookings] Cancelling booking:', bookingId); }
 
       const { data, error } = await supabase
         .from('ta_bookings')
@@ -117,15 +117,15 @@ export default function MyBookings() {
         .select();
 
       if (error) {
-        console.error('[MyBookings] Cancel error:', error);
+        if (__DEV__) { console.error('[MyBookings] Cancel error:', error); }
         throw error;
       }
 
-      console.log('[MyBookings] Booking cancelled:', data);
+      if (__DEV__) { console.log('[MyBookings] Booking cancelled:', data); }
       setCancelingBookingId(null);
       loadBookings();
     } catch (error: any) {
-      console.error('[MyBookings] Cancel error:', error);
+      if (__DEV__) { console.error('[MyBookings] Cancel error:', error); }
       setCancelingBookingId(null);
     }
   }
@@ -161,7 +161,7 @@ export default function MyBookings() {
       const { url } = await response.json();
 
       if (url) {
-        console.log('[MyBookings] Opening payment checkout:', url);
+        if (__DEV__) { console.log('[MyBookings] Opening payment checkout:', url); }
         const supported = await Linking.canOpenURL(url);
 
         if (supported) {
@@ -173,7 +173,7 @@ export default function MyBookings() {
         throw new Error('No payment URL returned');
       }
     } catch (error: any) {
-      console.error('[MyBookings] Payment error:', error);
+      if (__DEV__) { console.error('[MyBookings] Payment error:', error); }
       Alert.alert('Payment Error', error.message || 'Failed to proceed to payment. Please try again.');
     } finally {
       setPayingBookingId(null);

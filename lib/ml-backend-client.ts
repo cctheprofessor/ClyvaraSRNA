@@ -103,7 +103,7 @@ export class MLBackendClient {
     institution: string;
     expected_graduation?: string;
   }): Promise<{ user_id: number }> {
-    console.log('[MLBackendClient] Calling syncUser API with data:', userData);
+    if (__DEV__) { console.log('[MLBackendClient] Calling syncUser API with data:', userData); }
     const headers = await this.getAuthHeaders();
     const response = await this.fetchWithRetry(
       `${EDGE_FUNCTION_URL}?action=sync_user`,
@@ -116,12 +116,12 @@ export class MLBackendClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: response.statusText }));
-      console.error('[MLBackendClient] Sync user API failed:', errorData);
+      if (__DEV__) { console.error('[MLBackendClient] Sync user API failed:', errorData); }
       throw new Error(errorData.error || `Failed to sync user: ${response.statusText}`);
     }
 
     const result = await response.json();
-    console.log('[MLBackendClient] Sync user API response:', result);
+    if (__DEV__) { console.log('[MLBackendClient] Sync user API response:', result); }
     return result;
   }
 
@@ -226,7 +226,7 @@ export class MLBackendClient {
     const preFilteredQuestions = questions.filter((q: any) => {
       const result = QuestionRepairService.preFilter(q);
       if (!result.shouldKeep) {
-        console.log(`[MLBackendClient] PRE-FILTERED question ${q.question_id || q.id} (type: ${q.question_type}): ${result.reason}`);
+        if (__DEV__) { console.log(`[MLBackendClient] PRE-FILTERED question ${q.question_id || q.id} (type: ${q.question_type}): ${result.reason}`); }
       }
       return result.shouldKeep;
     });
@@ -248,7 +248,7 @@ export class MLBackendClient {
         if (validation.isValid) {
           repairedQuestions.push(repaired as Question);
           repairedMetadata.push({ question: repaired, originalErrors: errors });
-          console.log(`[MLBackendClient] Successfully repaired question ${question.id}`);
+          if (__DEV__) { console.log(`[MLBackendClient] Successfully repaired question ${question.id}`); }
         } else {
           unreparableQuestions.push({
             question,
@@ -271,6 +271,7 @@ export class MLBackendClient {
     const totalValid = validQuestions.length;
 
     if (preFilteredCount > 0 || totalRejected > 0 || totalRepaired > 0) {
+      if (__DEV__) {
       console.log(
         `[MLBackendClient] Question processing summary:
         - Pre-filtered (fundamentally broken): ${preFilteredCount}
@@ -279,10 +280,11 @@ export class MLBackendClient {
         - Rejected (unrepairable): ${totalRejected}
         - Final usable questions: ${totalValid + totalRepaired}`
       );
+      }
 
       if (unreparableQuestions.length > 0) {
         const summary = QuestionRepairService.getrejectionSummary(unreparableQuestions);
-        console.warn(`[MLBackendClient] Rejection breakdown:`, summary);
+        if (__DEV__) { console.warn(`[MLBackendClient] Rejection breakdown:`, summary); }
 
         await this.logRejectedQuestions(
           unreparableQuestions.map(({ question, errors, originalErrors }) => ({
@@ -460,7 +462,7 @@ export class MLBackendClient {
                 };
               }
               // If we can't extract text, skip this option
-              console.warn('[MLBackendClient] Skipping malformed option:', opt);
+              if (__DEV__) { console.warn('[MLBackendClient] Skipping malformed option:', opt); }
               return null;
             }
 
@@ -473,12 +475,12 @@ export class MLBackendClient {
             }
 
             // No text found, skip option
-            console.warn('[MLBackendClient] Skipping option without text:', opt);
+            if (__DEV__) { console.warn('[MLBackendClient] Skipping option without text:', opt); }
             return null;
           }
 
           // Unknown format, skip
-          console.warn('[MLBackendClient] Skipping unknown option format:', opt);
+          if (__DEV__) { console.warn('[MLBackendClient] Skipping unknown option format:', opt); }
           return null;
         })
         .filter((opt): opt is { id: string; text: string } => opt !== null);
@@ -551,11 +553,13 @@ export class MLBackendClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      if (__DEV__) {
       console.error('[MLBackendClient] Submit answer failed:', {
         status: response.status,
         error: errorData,
         payload: apiPayload,
       });
+      }
       throw new Error(errorData.error || `Failed to submit answer: ${response.statusText}`);
     }
 
@@ -587,7 +591,7 @@ export class MLBackendClient {
         const errorMessage = errorData.error || response.statusText;
 
         if (response.status >= 500) {
-          console.warn('[MLBackendClient] ML Backend service unavailable (500+ error). Returning empty set. The app will continue to function normally.');
+          if (__DEV__) { console.warn('[MLBackendClient] ML Backend service unavailable (500+ error). Returning empty set. The app will continue to function normally.'); }
           return [];
         }
 
@@ -600,7 +604,7 @@ export class MLBackendClient {
       const preFilteredQuestions = questions.filter((q: any) => {
         const result = QuestionRepairService.preFilter(q);
         if (!result.shouldKeep) {
-          console.log(`[MLBackendClient] PRE-FILTERED offline question ${q.question_id || q.id} (type: ${q.question_type}): ${result.reason}`);
+          if (__DEV__) { console.log(`[MLBackendClient] PRE-FILTERED offline question ${q.question_id || q.id} (type: ${q.question_type}): ${result.reason}`); }
         }
         return result.shouldKeep;
       });
@@ -630,6 +634,7 @@ export class MLBackendClient {
       const preFilteredCount = questions.length - preFilteredQuestions.length;
 
       if (preFilteredCount > 0 || unreparableQuestions.length > 0 || repairedQuestions.length > 0) {
+        if (__DEV__) {
         console.log(
           `[MLBackendClient] Offline download summary:
           - Pre-filtered: ${preFilteredCount}
@@ -638,17 +643,18 @@ export class MLBackendClient {
           - Rejected: ${unreparableQuestions.length}
           - Final usable: ${validQuestions.length + repairedQuestions.length}`
         );
+        }
 
         if (unreparableQuestions.length > 0) {
           const summary = QuestionRepairService.getrejectionSummary(unreparableQuestions);
-          console.warn(`[MLBackendClient] Offline rejection breakdown:`, summary);
+          if (__DEV__) { console.warn(`[MLBackendClient] Offline rejection breakdown:`, summary); }
           await this.logRejectedQuestions(unreparableQuestions, userId);
         }
       }
 
       return [...validQuestions, ...repairedQuestions];
     } catch (networkError) {
-      console.warn('[MLBackendClient] Network error during question download. Returning empty set. The app will continue to function normally.');
+      if (__DEV__) { console.warn('[MLBackendClient] Network error during question download. Returning empty set. The app will continue to function normally.'); }
       return [];
     }
   }
@@ -960,7 +966,7 @@ export class MLBackendClient {
 
       await supabase.from('rejected_questions_log').insert(records);
     } catch (error) {
-      console.error('[MLBackendClient] Failed to log rejected questions:', error);
+      if (__DEV__) { console.error('[MLBackendClient] Failed to log rejected questions:', error); }
     }
   }
 
@@ -991,7 +997,7 @@ export class MLBackendClient {
 
       await supabase.from('rejected_questions_log').insert(records);
     } catch (error) {
-      console.error('[MLBackendClient] Failed to log repaired questions:', error);
+      if (__DEV__) { console.error('[MLBackendClient] Failed to log repaired questions:', error); }
     }
   }
 
@@ -1016,15 +1022,17 @@ export class MLBackendClient {
         }
 
         if (attempt < maxRetries) {
+          if (__DEV__) {
           console.log(
             `[MLBackendClient] Got ${questions.length}/${count} valid questions. Retrying for ${remainingCount} more...`
           );
+          }
           await this.delay(1000);
         }
 
         attempt++;
       } catch (error) {
-        console.error(`[MLBackendClient] Retry attempt ${attempt} failed:`, error);
+        if (__DEV__) { console.error(`[MLBackendClient] Retry attempt ${attempt} failed:`, error); }
         if (attempt >= maxRetries) {
           throw error;
         }
@@ -1063,7 +1071,7 @@ export class MLBackendClient {
       .maybeSingle();
 
     if (error) {
-      console.error('[MLBackendClient] Error fetching diagnostic status:', error);
+      if (__DEV__) { console.error('[MLBackendClient] Error fetching diagnostic status:', error); }
     }
 
     if (!data) {
@@ -1085,7 +1093,7 @@ export class MLBackendClient {
   }
 
   async getDiagnosticQuestions(userId: number): Promise<Question[]> {
-    console.log('[MLBackendClient] Fetching diagnostic questions from dedicated endpoint');
+    if (__DEV__) { console.log('[MLBackendClient] Fetching diagnostic questions from dedicated endpoint'); }
     const headers = await this.getAuthHeaders();
     const response = await this.fetchWithRetry(
       `${EDGE_FUNCTION_URL}?action=diagnostic_questions&user_id=${userId}`,
@@ -1102,7 +1110,7 @@ export class MLBackendClient {
 
     const data = await response.json();
     const questions = data.questions || [];
-    console.log(`[MLBackendClient] Received ${questions.length} diagnostic questions from backend`);
+    if (__DEV__) { console.log(`[MLBackendClient] Received ${questions.length} diagnostic questions from backend`); }
 
     const typeDistribution: Record<string, number> = {};
     const preFilterReasons: Record<string, number> = {};
@@ -1112,7 +1120,7 @@ export class MLBackendClient {
       const type = q.question_type || 'unknown';
       typeDistribution[type] = (typeDistribution[type] || 0) + 1;
     });
-    console.log('[MLBackendClient] Question types received:', typeDistribution);
+    if (__DEV__) { console.log('[MLBackendClient] Question types received:', typeDistribution); }
 
     const preFilteredQuestions = questions.filter((q: any) => {
       const result = QuestionRepairService.preFilter(q);
@@ -1125,22 +1133,22 @@ export class MLBackendClient {
         }
         reasonsByType[type][result.reason!] = (reasonsByType[type][result.reason!] || 0) + 1;
 
-        console.log(`[MLBackendClient] PRE-FILTERED question ${q.question_id || q.id} (type: ${q.question_type}): ${result.reason}`);
+        if (__DEV__) { console.log(`[MLBackendClient] PRE-FILTERED question ${q.question_id || q.id} (type: ${q.question_type}): ${result.reason}`); }
       }
       return result.shouldKeep;
     });
 
     if (Object.keys(preFilterReasons).length > 0) {
-      console.log('[MLBackendClient] Pre-filter rejections by type:', preFilterReasons);
-      console.log('[MLBackendClient] Pre-filter rejection reasons by type:');
+      if (__DEV__) { console.log('[MLBackendClient] Pre-filter rejections by type:', preFilterReasons); }
+      if (__DEV__) { console.log('[MLBackendClient] Pre-filter rejection reasons by type:'); }
       Object.entries(reasonsByType).forEach(([type, reasons]) => {
-        console.log(`  ${type}:`);
+        if (__DEV__) { console.log(`  ${type}:`); }
         Object.entries(reasons).forEach(([reason, count]) => {
-          console.log(`    - ${reason}: ${count} questions`);
+          if (__DEV__) { console.log(`    - ${reason}: ${count} questions`); }
         });
       });
     }
-    console.log(`[MLBackendClient] After pre-filtering: ${preFilteredQuestions.length}/${questions.length} questions remaining`);
+    if (__DEV__) { console.log(`[MLBackendClient] After pre-filtering: ${preFilteredQuestions.length}/${questions.length} questions remaining`); }
 
     const transformedQuestions = preFilteredQuestions.map((q: any) => this.transformQuestion(q));
     const { validQuestions, rejectedQuestions } = filterValidQuestions(transformedQuestions);
@@ -1149,7 +1157,7 @@ export class MLBackendClient {
     const unreparableQuestions: Array<{ question: any; errors: string[]; originalErrors: string[] }> = [];
 
     for (const { question, errors } of rejectedQuestions) {
-      console.log(`[MLBackendClient] Attempting to repair question ${question.id} (${question.question_type})`);
+      if (__DEV__) { console.log(`[MLBackendClient] Attempting to repair question ${question.id} (${question.question_type})`); }
       const repaired = QuestionRepairService.repairQuestion(question);
 
       if (repaired) {
@@ -1157,9 +1165,9 @@ export class MLBackendClient {
 
         if (validation.isValid) {
           repairedQuestions.push(repaired as Question);
-          console.log(`[MLBackendClient] Successfully repaired question ${question.id}`);
+          if (__DEV__) { console.log(`[MLBackendClient] Successfully repaired question ${question.id}`); }
         } else {
-          console.warn(`[MLBackendClient] Repair failed for question ${question.id}: ${validation.errors.join(', ')}`);
+          if (__DEV__) { console.warn(`[MLBackendClient] Repair failed for question ${question.id}: ${validation.errors.join(', ')}`); }
           unreparableQuestions.push({
             question,
             errors: validation.errors,
@@ -1167,7 +1175,7 @@ export class MLBackendClient {
           });
         }
       } else {
-        console.warn(`[MLBackendClient] Could not repair question ${question.id}`);
+        if (__DEV__) { console.warn(`[MLBackendClient] Could not repair question ${question.id}`); }
         unreparableQuestions.push({
           question,
           errors,
@@ -1177,16 +1185,16 @@ export class MLBackendClient {
     }
 
     if (unreparableQuestions.length > 0) {
-      console.warn(`[MLBackendClient] VALIDATION REJECTED ${unreparableQuestions.length} unrepairable questions:`);
+      if (__DEV__) { console.warn(`[MLBackendClient] VALIDATION REJECTED ${unreparableQuestions.length} unrepairable questions:`); }
       unreparableQuestions.forEach(({ question, errors }) => {
-        console.warn(`  - Question ${question.id} (${question.question_type}): ${errors.join(', ')}`);
+        if (__DEV__) { console.warn(`  - Question ${question.id} (${question.question_type}): ${errors.join(', ')}`); }
       });
 
       await this.logRejectedQuestions(unreparableQuestions, userId);
     }
 
     if (repairedQuestions.length > 0) {
-      console.log(`[MLBackendClient] Successfully repaired ${repairedQuestions.length} questions`);
+      if (__DEV__) { console.log(`[MLBackendClient] Successfully repaired ${repairedQuestions.length} questions`); }
       await this.logRepairedQuestions(
         repairedQuestions.map(q => ({
           question: q,
@@ -1197,7 +1205,7 @@ export class MLBackendClient {
     }
 
     const finalQuestions = [...validQuestions, ...repairedQuestions];
-    console.log(`[MLBackendClient] FINAL: ${finalQuestions.length} valid questions (${validQuestions.length} originally valid + ${repairedQuestions.length} repaired)`);
+    if (__DEV__) { console.log(`[MLBackendClient] FINAL: ${finalQuestions.length} valid questions (${validQuestions.length} originally valid + ${repairedQuestions.length} repaired)`); }
 
     return finalQuestions;
   }
@@ -1235,10 +1243,12 @@ export class MLBackendClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: response.statusText }));
+        if (__DEV__) {
         console.error('[MLBackendClient] Submit diagnostic answer failed:', {
           status: response.status,
           error: errorData,
         });
+        }
         throw new Error(errorData.error || `Failed to submit diagnostic answer: ${response.statusText}`);
       }
 
@@ -1251,7 +1261,7 @@ export class MLBackendClient {
         correct_answers: data.correct_answers,
       };
     } catch (error) {
-      console.log('[MLBackendClient] Diagnostic answer submission failed, continuing with local tracking:', error);
+      if (__DEV__) { console.log('[MLBackendClient] Diagnostic answer submission failed, continuing with local tracking:', error); }
       return { success: false };
     }
   }

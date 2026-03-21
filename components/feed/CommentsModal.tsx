@@ -71,7 +71,7 @@ export default function CommentsModal({
 
       setComments(commentsWithProfiles);
     } catch (error: any) {
-      console.error('Error loading comments:', error);
+      if (__DEV__) { console.error('Error loading comments:', error); }
     } finally {
       setLoading(false);
     }
@@ -109,7 +109,7 @@ export default function CommentsModal({
         setCommentText('');
       }
     } catch (error: any) {
-      console.error('Error adding comment:', error);
+      if (__DEV__) { console.error('Error adding comment:', error); }
       Alert.alert('Error', error.message || 'Failed to add comment');
     } finally {
       setPosting(false);

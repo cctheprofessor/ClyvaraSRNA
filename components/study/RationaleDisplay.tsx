@@ -21,6 +21,7 @@ export default function RationaleDisplay({
     ? Array.from(new Set(correctAnswers.filter(a => a && a.trim())))
     : [];
 
+  if (__DEV__) {
   console.log('[RationaleDisplay] Rendering with:', {
     hasRationale: !!rationale,
     hasOptionRationales: !!optionRationales,
@@ -29,6 +30,7 @@ export default function RationaleDisplay({
     isCorrect,
     loading,
   });
+  }
 
   return (
     <View style={styles.container}>

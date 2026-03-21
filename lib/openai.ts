@@ -80,7 +80,7 @@ Make the plan realistic, achievable, and evidence-based. Include spaced repetiti
         Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5-nano-2025-08-07',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -112,7 +112,7 @@ Make the plan realistic, achievable, and evidence-based. Include spaced repetiti
       fullPlan,
     };
   } catch (error) {
-    console.error('OpenAI API Error:', error);
+    if (__DEV__) { console.error('OpenAI API Error:', error); }
     throw error;
   }
 }
@@ -159,7 +159,7 @@ EXPLANATION: [detailed explanation]`;
         Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5-nano-2025-08-07',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -185,7 +185,7 @@ EXPLANATION: [detailed explanation]`;
 
     return parseQuestion(content);
   } catch (error) {
-    console.error('OpenAI API Error:', error);
+    if (__DEV__) { console.error('OpenAI API Error:', error); }
     throw error;
   }
 }

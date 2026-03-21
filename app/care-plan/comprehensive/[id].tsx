@@ -29,7 +29,7 @@ export default function ComprehensiveCarePlanScreen() {
       setCarePlan(data.care_plan_data as AnesthesiaCarePlan);
       setCaseDescription(data.case_description || '');
     } catch (error: any) {
-      console.error('Error loading care plan:', error);
+      if (__DEV__) { console.error('Error loading care plan:', error); }
     } finally {
       setLoading(false);
     }

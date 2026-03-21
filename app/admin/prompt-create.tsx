@@ -62,7 +62,7 @@ export default function CreatePromptScreen() {
 
       router.back();
     } catch (error: any) {
-      console.error('Error creating prompt:', error);
+      if (__DEV__) { console.error('Error creating prompt:', error); }
       if (Platform.OS === 'web') {
         alert('Failed to create prompt');
       } else {

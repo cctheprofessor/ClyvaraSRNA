@@ -42,7 +42,7 @@ export default function PlanScreen() {
       if (error) throw error;
       setRecentPlans(data || []);
     } catch (error) {
-      console.error('Error loading recent plans:', error);
+      if (__DEV__) { console.error('Error loading recent plans:', error); }
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ export default function PlanScreen() {
 
               setRecentPlans((prev) => prev.filter((plan) => plan.id !== planId));
             } catch (error: any) {
-              console.error('Error deleting plan:', error);
+              if (__DEV__) { console.error('Error deleting plan:', error); }
               Alert.alert('Error', error?.message || 'Failed to delete care plan. Please try again.');
             }
           },
@@ -152,7 +152,7 @@ export default function PlanScreen() {
                   <TouchableOpacity
                     style={styles.deleteButton}
                     onPress={() => {
-                      console.log('Delete button pressed for plan:', plan.id);
+                      if (__DEV__) { console.log('Delete button pressed for plan:', plan.id); }
                       handleDeletePlan(plan.id, plan.care_plan_data.procedure.primaryProcedure);
                     }}
                     activeOpacity={0.7}

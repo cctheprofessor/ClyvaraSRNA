@@ -96,7 +96,7 @@ export default function TAAvailabilityScreen() {
 
       setSlots(slotsWithJsDays);
     } catch (error: any) {
-      console.error('Error loading availability:', error);
+      if (__DEV__) { console.error('Error loading availability:', error); }
       Alert.alert('Error', 'Failed to load availability');
     } finally {
       setLoading(false);
@@ -181,7 +181,7 @@ export default function TAAvailabilityScreen() {
 
       router.replace('/(tabs)/tools/ta-dashboard');
     } catch (error: any) {
-      console.error('Error saving availability:', error);
+      if (__DEV__) { console.error('Error saving availability:', error); }
       Alert.alert('Error', 'Failed to save availability');
     } finally {
       setSaving(false);

@@ -127,7 +127,7 @@ export default function CreateImagePostModal({
       onPostCreated();
       onClose();
     } catch (error: any) {
-      console.error('Error uploading image:', error);
+      if (__DEV__) { console.error('Error uploading image:', error); }
       Alert.alert('Upload Failed', error.message || 'Failed to upload image');
     } finally {
       setUploading(false);

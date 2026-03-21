@@ -71,7 +71,7 @@ export default function AskAnonymouslyScreen() {
 
       setQuestions(questionsWithCounts);
     } catch (error) {
-      console.error('Error loading questions:', error);
+      if (__DEV__) { console.error('Error loading questions:', error); }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -96,7 +96,7 @@ export default function AskAnonymouslyScreen() {
         await loadQuestions();
       }
     } catch (error) {
-      console.error('Error posting question:', error);
+      if (__DEV__) { console.error('Error posting question:', error); }
     } finally {
       setSubmitting(false);
     }
@@ -122,7 +122,7 @@ export default function AskAnonymouslyScreen() {
         await loadQuestions();
       }
     } catch (error) {
-      console.error('Error posting response:', error);
+      if (__DEV__) { console.error('Error posting response:', error); }
     } finally {
       setSubmitting(false);
     }

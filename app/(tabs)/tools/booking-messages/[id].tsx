@@ -71,7 +71,7 @@ export default function BookingMessages() {
       if (bookingError) throw bookingError;
 
       if (!bookingData) {
-        console.error('Booking not found');
+        if (__DEV__) { console.error('Booking not found'); }
         router.back();
         return;
       }
@@ -90,7 +90,7 @@ export default function BookingMessages() {
 
       await markMessagesAsRead();
     } catch (error: any) {
-      console.error('[BookingMessages] Error loading:', error);
+      if (__DEV__) { console.error('[BookingMessages] Error loading:', error); }
     } finally {
       setLoading(false);
     }
@@ -175,7 +175,7 @@ export default function BookingMessages() {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     } catch (error: any) {
-      console.error('[BookingMessages] Send error:', error);
+      if (__DEV__) { console.error('[BookingMessages] Send error:', error); }
     } finally {
       setSending(false);
     }

@@ -79,7 +79,7 @@ export default function ProfileScreen() {
   }, [profile]);
 
   const handleSave = async () => {
-    console.log('[Profile] Starting profile update...');
+    if (__DEV__) { console.log('[Profile] Starting profile update...'); }
     setLoading(true);
 
     const updates = {
@@ -102,17 +102,17 @@ export default function ProfileScreen() {
       specialty_interest: formData.specialty_interest || null,
     };
 
-    console.log('[Profile] Update payload:', updates);
+    if (__DEV__) { console.log('[Profile] Update payload:', updates); }
 
     const { error } = await updateProfile(updates);
 
     setLoading(false);
 
     if (error) {
-      console.error('[Profile] Update failed:', error);
+      if (__DEV__) { console.error('[Profile] Update failed:', error); }
       Alert.alert('Error', `Failed to update profile: ${error.message || 'Unknown error'}`);
     } else {
-      console.log('[Profile] Update successful!');
+      if (__DEV__) { console.log('[Profile] Update successful!'); }
       setEditing(false);
       Alert.alert('Success', 'Profile updated successfully');
     }
@@ -173,7 +173,7 @@ export default function ProfileScreen() {
         throw new Error('No checkout URL received');
       }
     } catch (error: any) {
-      console.error('Donation error:', error);
+      if (__DEV__) { console.error('Donation error:', error); }
       Alert.alert('Error', error.message || 'Failed to process donation');
     } finally {
       setDonationLoading(false);
@@ -243,7 +243,7 @@ export default function ProfileScreen() {
     setMlSyncLoading(true);
 
     try {
-      console.log('Starting ML sync for user:', user.id);
+      if (__DEV__) { console.log('Starting ML sync for user:', user.id); }
       const mlData = await mlClient.syncUser({
         external_user_id: user.id,
         email: user.email || '',
@@ -253,10 +253,10 @@ export default function ProfileScreen() {
         institution: profile.institution,
         expected_graduation: profile.expected_graduation || undefined,
       });
-      console.log('ML sync successful, received user_id:', mlData.user_id);
+      if (__DEV__) { console.log('ML sync successful, received user_id:', mlData.user_id); }
 
       const syncTimestamp = new Date().toISOString();
-      console.log('Updating profile with ml_user_id:', mlData.user_id, 'at', syncTimestamp);
+      if (__DEV__) { console.log('Updating profile with ml_user_id:', mlData.user_id, 'at', syncTimestamp); }
 
       const { error: profileUpdateError } = await supabase
         .from('profiles')
@@ -267,11 +267,11 @@ export default function ProfileScreen() {
         .eq('id', user.id);
 
       if (profileUpdateError) {
-        console.error('Failed to update profile:', profileUpdateError);
+        if (__DEV__) { console.error('Failed to update profile:', profileUpdateError); }
         throw new Error('Failed to update profile after sync');
       }
 
-      console.log('Profile updated successfully');
+      if (__DEV__) { console.log('Profile updated successfully'); }
 
       const { error: syncStatusError } = await supabase.from('ml_sync_status').upsert(
         {
@@ -286,18 +286,18 @@ export default function ProfileScreen() {
       );
 
       if (syncStatusError) {
-        console.error('Failed to update sync status:', syncStatusError);
+        if (__DEV__) { console.error('Failed to update sync status:', syncStatusError); }
       }
 
-      console.log('Refreshing profile to get updated data...');
+      if (__DEV__) { console.log('Refreshing profile to get updated data...'); }
       await refreshProfile();
-      console.log('Profile refreshed, new timestamp should be visible');
+      if (__DEV__) { console.log('Profile refreshed, new timestamp should be visible'); }
 
       questionCacheService.preFetchAfterSync(mlData.user_id);
 
       Alert.alert('Success', 'Successfully synced with Clyvara Analytica! You can now access practice questions.');
     } catch (error: any) {
-      console.error('ML sync error:', error);
+      if (__DEV__) { console.error('ML sync error:', error); }
 
       const errorMessage = error.message || 'Failed to sync with ML backend';
       const isNetworkError = errorMessage.includes('fetch') || errorMessage.includes('network');
@@ -327,7 +327,7 @@ export default function ProfileScreen() {
       );
 
       if (syncStatusError) {
-        console.error('Failed to update sync status:', syncStatusError);
+        if (__DEV__) { console.error('Failed to update sync status:', syncStatusError); }
       }
     } finally {
       setMlSyncLoading(false);
@@ -779,6 +779,16 @@ export default function ProfileScreen() {
         )}
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Legal</Text>
+          <Pressable style={styles.legalButton} onPress={() => router.push('/(auth)/terms-of-service' as any)}>
+            <Text style={styles.legalButtonText}>Terms of Service</Text>
+          </Pressable>
+          <Pressable style={styles.legalButton} onPress={() => router.push('/(auth)/privacy-policy' as any)}>
+            <Text style={styles.legalButtonText}>Privacy Policy</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
           <Pressable style={styles.signOutButton} onPress={handleSignOut}>
             <LogOut color="#dc2626" size={20} />
@@ -1088,6 +1098,16 @@ const styles = StyleSheet.create({
   adminButtonText: {
     ...Typography.bodyBold,
     color: Colors.primary,
+  },
+  legalButton: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: 2,
+  },
+  legalButtonText: {
+    fontSize: 15,
+    color: Colors.text.secondary,
   },
   signOutButton: {
     backgroundColor: Colors.background,

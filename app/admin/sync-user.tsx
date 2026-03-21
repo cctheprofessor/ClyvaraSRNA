@@ -94,7 +94,7 @@ export default function SyncUserScreen() {
 
       setResult((prev) => prev + `✅ Successfully synced!\n✅ ML User ID: ${mlData.user_id}\n`);
     } catch (error) {
-      console.error('Sync error:', error);
+      if (__DEV__) { console.error('Sync error:', error); }
       setResult((prev) => prev + `\n❌ Error: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setLoading(false);

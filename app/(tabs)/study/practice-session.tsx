@@ -21,7 +21,7 @@ import { mlClient } from '@/lib/ml-backend-client';
 import { validateAnswer } from '@/lib/answer-validator';
 import { rationaleCacheService } from '@/lib/rationale-cache-service';
 import { isDiagnosticRequiredError } from '@/types/errors';
-import { ArrowRight, CheckCircle } from 'lucide-react-native';
+import { ArrowRight, CircleCheck as CheckCircle } from 'lucide-react-native';
 
 interface SessionAnswer {
   question_id: string;
@@ -127,7 +127,7 @@ export default function PracticeSessionScreen() {
 
           setQuestions(newQuestionsData);
         } catch (genError) {
-          console.error('Error generating questions:', genError);
+          if (__DEV__) { console.error('Error generating questions:', genError); }
           throw new Error('No questions available for this topic. Question generation failed. Please try again later.');
         } finally {
           setGeneratingQuestions(false);
@@ -139,7 +139,7 @@ export default function PracticeSessionScreen() {
       setCurrentIndex(session.current_question_index);
       setStartTime(new Date());
     } catch (error) {
-      console.error('Error loading session:', error);
+      if (__DEV__) { console.error('Error loading session:', error); }
 
       if (isDiagnosticRequiredError(error)) {
         setShowDiagnosticModal(true);
@@ -173,7 +173,7 @@ export default function PracticeSessionScreen() {
           return null;
       }
     } catch (error) {
-      console.error('[PracticeSession] Failed to parse answer:', error);
+      if (__DEV__) { console.error('[PracticeSession] Failed to parse answer:', error); }
       return null;
     }
   };
@@ -240,7 +240,7 @@ export default function PracticeSessionScreen() {
           correct_answers: result.correct_answers,
         });
       }).catch(error => {
-        console.warn('[PracticeSession] API submission failed', error);
+        if (__DEV__) { console.warn('[PracticeSession] API submission failed', error); }
         if (!cachedRationale) {
           setAnswerResults(prev => ({
             ...prev,
@@ -276,7 +276,7 @@ export default function PracticeSessionScreen() {
 
       setCurrentAnswerSubmitted(true);
     } catch (error) {
-      console.error('Error submitting answer:', error);
+      if (__DEV__) { console.error('Error submitting answer:', error); }
       Alert.alert('Error', 'Failed to submit answer');
     } finally {
       setSubmitting(false);
@@ -311,7 +311,7 @@ export default function PracticeSessionScreen() {
 
       setShowResults(true);
     } catch (error) {
-      console.error('Error completing session:', error);
+      if (__DEV__) { console.error('Error completing session:', error); }
       Alert.alert('Error', 'Failed to save session results');
     }
   };

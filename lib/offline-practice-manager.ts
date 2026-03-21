@@ -77,7 +77,7 @@ export class OfflinePracticeManager {
 
       return status;
     } catch (error) {
-      console.error('Failed to get cache status:', error);
+      if (__DEV__) { console.error('Failed to get cache status:', error); }
       return null;
     }
   }
@@ -86,7 +86,7 @@ export class OfflinePracticeManager {
     try {
       await storage.setItem(CACHE_STATUS_KEY, JSON.stringify(statusInfo));
     } catch (error) {
-      console.error('Failed to set cache status:', error);
+      if (__DEV__) { console.error('Failed to set cache status:', error); }
       throw error;
     }
   }
@@ -97,7 +97,7 @@ export class OfflinePracticeManager {
       existingQueue.push(response);
       await storage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(existingQueue));
     } catch (error) {
-      console.error('Failed to queue response:', error);
+      if (__DEV__) { console.error('Failed to queue response:', error); }
       throw error;
     }
   }
@@ -107,7 +107,7 @@ export class OfflinePracticeManager {
       const queueData = await storage.getItem(OFFLINE_QUEUE_KEY);
       return queueData ? JSON.parse(queueData) : [];
     } catch (error) {
-      console.error('Failed to get queue:', error);
+      if (__DEV__) { console.error('Failed to get queue:', error); }
       return [];
     }
   }
@@ -116,7 +116,7 @@ export class OfflinePracticeManager {
     try {
       await storage.removeItem(OFFLINE_QUEUE_KEY);
     } catch (error) {
-      console.error('Failed to clear queue:', error);
+      if (__DEV__) { console.error('Failed to clear queue:', error); }
       throw error;
     }
   }
@@ -153,7 +153,7 @@ export class OfflinePracticeManager {
 
       return { success: true, syncedCount: result.synced_count };
     } catch (error) {
-      console.error('Failed to sync offline queue:', error);
+      if (__DEV__) { console.error('Failed to sync offline queue:', error); }
       return {
         success: false,
         syncedCount: 0,
@@ -164,7 +164,7 @@ export class OfflinePracticeManager {
 
   async downloadQuestionsForOffline(userId: number, count: number = 100): Promise<void> {
     if (this.isDownloading) {
-      console.log('Download already in progress, skipping...');
+      if (__DEV__) { console.log('Download already in progress, skipping...'); }
       return;
     }
 
@@ -203,9 +203,9 @@ export class OfflinePracticeManager {
         questionCount: questions.length,
       });
 
-      console.log(`Successfully cached ${questions.length} questions for user ${userId}`);
+      if (__DEV__) { console.log(`Successfully cached ${questions.length} questions for user ${userId}`); }
     } catch (error) {
-      console.error('Failed to download questions:', error);
+      if (__DEV__) { console.error('Failed to download questions:', error); }
       await this.setCacheStatus({
         status: 'error',
         userId,
@@ -236,12 +236,12 @@ export class OfflinePracticeManager {
       const { validQuestions, rejectedQuestions } = filterValidQuestions(parsed.questions);
 
       if (rejectedQuestions.length > 0) {
-        console.warn(`[OfflinePracticeManager] Filtered ${rejectedQuestions.length} invalid cached questions`);
+        if (__DEV__) { console.warn(`[OfflinePracticeManager] Filtered ${rejectedQuestions.length} invalid cached questions`); }
       }
 
       const isStale = this.isCacheStale(parsed.downloadedAt);
       if (isStale) {
-        console.warn('Cached questions are stale');
+        if (__DEV__) { console.warn('Cached questions are stale'); }
         await this.setCacheStatus({
           status: 'stale',
           userId,
@@ -259,7 +259,7 @@ export class OfflinePracticeManager {
 
       return validQuestions;
     } catch (error) {
-      console.error('Failed to get cached questions:', error);
+      if (__DEV__) { console.error('Failed to get cached questions:', error); }
       return null;
     }
   }
@@ -283,7 +283,7 @@ export class OfflinePracticeManager {
       const metadata = await storage.getItem(CACHE_METADATA_KEY);
       return metadata ? JSON.parse(metadata) : null;
     } catch (error) {
-      console.error('Failed to get cache metadata:', error);
+      if (__DEV__) { console.error('Failed to get cache metadata:', error); }
       return null;
     }
   }
@@ -300,7 +300,7 @@ export class OfflinePracticeManager {
       await storage.removeItem(CACHED_QUESTIONS_KEY);
       await storage.removeItem(CACHE_METADATA_KEY);
     } catch (error) {
-      console.error('Failed to clear cached questions:', error);
+      if (__DEV__) { console.error('Failed to clear cached questions:', error); }
       throw error;
     }
   }
@@ -323,11 +323,11 @@ export class OfflinePracticeManager {
 
       if (excludedIds.length > 0) {
         availableQuestions = cached.filter(q => !excludedIds.includes(q.id));
-        console.log(`[OfflinePracticeManager] Filtered out ${cached.length - availableQuestions.length} recently answered questions`);
+        if (__DEV__) { console.log(`[OfflinePracticeManager] Filtered out ${cached.length - availableQuestions.length} recently answered questions`); }
       }
 
       if (availableQuestions.length < count && cached.length >= count) {
-        console.warn('[OfflinePracticeManager] Not enough fresh questions, including some recent ones');
+        if (__DEV__) { console.warn('[OfflinePracticeManager] Not enough fresh questions, including some recent ones'); }
         availableQuestions = cached;
       }
     }
@@ -360,9 +360,9 @@ export class OfflinePracticeManager {
 
         if (filtered.length >= count * 0.7) {
           availableQuestions = filtered;
-          console.log(`[OfflinePracticeManager] Using ${availableQuestions.length} fresh questions (excluded ${excludedIds.length})`);
+          if (__DEV__) { console.log(`[OfflinePracticeManager] Using ${availableQuestions.length} fresh questions (excluded ${excludedIds.length})`); }
         } else {
-          console.warn('[OfflinePracticeManager] Not enough fresh questions, using all available');
+          if (__DEV__) { console.warn('[OfflinePracticeManager] Not enough fresh questions, using all available'); }
         }
       }
     }
@@ -390,12 +390,12 @@ export class OfflinePracticeManager {
 
   async refreshCacheAfterSession(userId: number, count: number = 50): Promise<void> {
     try {
-      console.log('[OfflinePracticeManager] Refreshing cache after session...');
+      if (__DEV__) { console.log('[OfflinePracticeManager] Refreshing cache after session...'); }
 
       const freshQuestions = await mlClient.getNextQuestions(userId, count);
 
       if (freshQuestions.length === 0) {
-        console.warn('[OfflinePracticeManager] No fresh questions received from ML backend');
+        if (__DEV__) { console.warn('[OfflinePracticeManager] No fresh questions received from ML backend'); }
         return;
       }
 
@@ -422,9 +422,9 @@ export class OfflinePracticeManager {
         questionCount: freshQuestions.length,
       });
 
-      console.log(`[OfflinePracticeManager] Cache refreshed with ${freshQuestions.length} new questions`);
+      if (__DEV__) { console.log(`[OfflinePracticeManager] Cache refreshed with ${freshQuestions.length} new questions`); }
     } catch (error) {
-      console.error('[OfflinePracticeManager] Failed to refresh cache:', error);
+      if (__DEV__) { console.error('[OfflinePracticeManager] Failed to refresh cache:', error); }
     }
   }
 }

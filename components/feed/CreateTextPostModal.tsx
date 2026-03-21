@@ -64,7 +64,7 @@ export default function CreateTextPostModal({
       onPostCreated();
       onClose();
     } catch (error: any) {
-      console.error('Error creating post:', error);
+      if (__DEV__) { console.error('Error creating post:', error); }
       Alert.alert('Post Failed', error.message || 'Failed to create post');
     } finally {
       setPosting(false);

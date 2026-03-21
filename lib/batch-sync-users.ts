@@ -163,7 +163,7 @@ export class BatchUserSyncManager {
 
         await this.delay(1000);
       } catch (error) {
-        console.error(`Batch sync failed for batch starting at ${i}:`, error);
+        if (__DEV__) { console.error(`Batch sync failed for batch starting at ${i}:`, error); }
 
         for (const user of batch) {
           results.failed++;

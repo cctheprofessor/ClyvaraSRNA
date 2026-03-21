@@ -11,7 +11,7 @@ import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
 import SessionResults from '@/components/study/SessionResults';
 import DiagnosticRequiredModal from '@/components/study/DiagnosticRequiredModal';
-import { ArrowLeft, ArrowRight, CheckCircle, Send, RotateCcw } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, CircleCheck as CheckCircle, Send, RotateCcw } from 'lucide-react-native';
 import { Question, AnswerFormat } from '@/types/question';
 import { filterValidQuestions } from '@/lib/question-validator';
 import { validateAnswer } from '@/lib/answer-validator';
@@ -82,7 +82,7 @@ export default function Practice50Screen() {
         loadQuestions();
       }
     } catch (error) {
-      console.error('[Practice50] Failed to check for saved session:', error);
+      if (__DEV__) { console.error('[Practice50] Failed to check for saved session:', error); }
       loadQuestions();
     }
   };
@@ -111,7 +111,7 @@ export default function Practice50Screen() {
         await questionSessionTracker.startNewSession(profile.ml_user_id);
       }
     } catch (error) {
-      console.error('[Practice50] Failed to resume session:', error);
+      if (__DEV__) { console.error('[Practice50] Failed to resume session:', error); }
       setShowResumeModal(false);
       loadQuestions();
     }
@@ -144,7 +144,7 @@ export default function Practice50Screen() {
         lastUpdated: Date.now(),
       });
     } catch (error) {
-      console.error('[Practice50] Failed to save session state:', error);
+      if (__DEV__) { console.error('[Practice50] Failed to save session state:', error); }
     }
   };
 
@@ -164,7 +164,7 @@ export default function Practice50Screen() {
       const { validQuestions: validCachedQuestions, rejectedQuestions: rejectedCachedQuestions } = filterValidQuestions(cachedQuestions);
 
       if (rejectedCachedQuestions.length > 0) {
-        console.warn(`[Practice50] Filtered ${rejectedCachedQuestions.length} invalid cached questions`);
+        if (__DEV__) { console.warn(`[Practice50] Filtered ${rejectedCachedQuestions.length} invalid cached questions`); }
       }
 
       cachedQuestions = validCachedQuestions;
@@ -172,7 +172,7 @@ export default function Practice50Screen() {
       await questionSessionTracker.startNewSession(profile.ml_user_id);
 
       if (cachedQuestions.length >= 50) {
-        console.log('Loading questions from cache (fast path)');
+        if (__DEV__) { console.log('Loading questions from cache (fast path)'); }
         setQuestions(cachedQuestions);
         setStartTime(Date.now());
         setQuestionStartTime(Date.now());
@@ -180,23 +180,23 @@ export default function Practice50Screen() {
         return;
       }
 
-      console.log('Cache insufficient, fetching from API...');
+      if (__DEV__) { console.log('Cache insufficient, fetching from API...'); }
       try {
         let fetchedQuestions: Question[] = [];
 
         try {
-          console.log('Attempting to fetch 50 questions...');
+          if (__DEV__) { console.log('Attempting to fetch 50 questions...'); }
           fetchedQuestions = await mlClient.getNextQuestions(profile.ml_user_id, 50);
         } catch (fetchError) {
-          console.warn('Failed to fetch 50 questions, trying 25 instead...', fetchError);
+          if (__DEV__) { console.warn('Failed to fetch 50 questions, trying 25 instead...', fetchError); }
 
           try {
             const firstBatch = await mlClient.getNextQuestions(profile.ml_user_id, 25);
             const secondBatch = await mlClient.getNextQuestions(profile.ml_user_id, 25);
             fetchedQuestions = [...firstBatch, ...secondBatch];
-            console.log(`Successfully fetched questions in two batches: ${firstBatch.length} + ${secondBatch.length}`);
+            if (__DEV__) { console.log(`Successfully fetched questions in two batches: ${firstBatch.length} + ${secondBatch.length}`); }
           } catch (batchError) {
-            console.error('Batch fetch also failed:', batchError);
+            if (__DEV__) { console.error('Batch fetch also failed:', batchError); }
             throw batchError;
           }
         }
@@ -204,7 +204,7 @@ export default function Practice50Screen() {
         const { validQuestions, rejectedQuestions } = filterValidQuestions(fetchedQuestions);
 
         if (rejectedQuestions.length > 0) {
-          console.warn(`[Practice50] Filtered ${rejectedQuestions.length} invalid API questions`);
+          if (__DEV__) { console.warn(`[Practice50] Filtered ${rejectedQuestions.length} invalid API questions`); }
         }
 
         const combined = [...validQuestions, ...cachedQuestions];
@@ -217,7 +217,7 @@ export default function Practice50Screen() {
 
         setQuestions(finalQuestions);
       } catch (apiError: any) {
-        console.log('API failed, using available cache...', apiError);
+        if (__DEV__) { console.log('API failed, using available cache...', apiError); }
         if (cachedQuestions.length > 0) {
           setQuestions(cachedQuestions);
         } else {
@@ -261,7 +261,7 @@ export default function Practice50Screen() {
           return null;
       }
     } catch (error) {
-      console.error('[Practice50] Failed to parse answer:', error);
+      if (__DEV__) { console.error('[Practice50] Failed to parse answer:', error); }
       return null;
     }
   };
@@ -303,7 +303,7 @@ export default function Practice50Screen() {
 
     const parsedAnswer = parseAnswer(currentQuestion, serializedAnswer);
     if (!parsedAnswer) {
-      console.error('[Practice50] Failed to parse answer');
+      if (__DEV__) { console.error('[Practice50] Failed to parse answer'); }
       return;
     }
 
@@ -339,7 +339,7 @@ export default function Practice50Screen() {
           response_time_seconds: responseTime,
         });
 
-        console.log('[Practice50] Submit answer result:', result);
+        if (__DEV__) { console.log('[Practice50] Submit answer result:', result); }
 
         setAnswerResults(prev => ({
           ...prev,
@@ -359,7 +359,7 @@ export default function Practice50Screen() {
           correct_answers: result.correct_answers,
         });
       } catch (error) {
-        console.warn('[Practice50] API submission failed', error);
+        if (__DEV__) { console.warn('[Practice50] API submission failed', error); }
         await offlinePracticeManager.queueResponse({
           student_id: studentId,
           question_id: currentQuestion.id,
@@ -432,7 +432,7 @@ export default function Practice50Screen() {
 
     if (profile?.ml_user_id) {
       offlinePracticeManager.refreshCacheAfterSession(profile.ml_user_id, 100).catch(error => {
-        console.warn('[Practice50] Failed to refresh cache:', error);
+        if (__DEV__) { console.warn('[Practice50] Failed to refresh cache:', error); }
       });
 
       await questionSessionTracker.endSession(profile.ml_user_id);

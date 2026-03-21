@@ -70,7 +70,7 @@ export default function FocusedTopicScreen() {
       if (error) throw error;
       setActiveSessions(data || []);
     } catch (error) {
-      console.error('Error loading sessions:', error);
+      if (__DEV__) { console.error('Error loading sessions:', error); }
     } finally {
       setLoadingSessions(false);
     }
@@ -147,7 +147,7 @@ export default function FocusedTopicScreen() {
         },
       });
     } catch (error) {
-      console.error('Error starting session:', error);
+      if (__DEV__) { console.error('Error starting session:', error); }
       Alert.alert('Error', 'Failed to start practice session');
     } finally {
       setLoading(false);
@@ -179,7 +179,7 @@ export default function FocusedTopicScreen() {
 
       setActiveSessions((prev) => prev.filter((s) => s.id !== sessionId));
     } catch (error) {
-      console.error('Error deleting session:', error);
+      if (__DEV__) { console.error('Error deleting session:', error); }
       Alert.alert('Error', 'Failed to delete session');
     }
   };

@@ -16,7 +16,7 @@ import { Stack, router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { generateCarePlanWithOpenAI, CarePlanValidationError } from '@/lib/anesthesia-ai-engine';
-import { ArrowLeft, Home, FileText, GraduationCap, Stethoscope, User } from 'lucide-react-native';
+import { ArrowLeft, Hop as Home, FileText, GraduationCap, Stethoscope, User } from 'lucide-react-native';
 import PageHeader from '@/components/PageHeader';
 
 export default function GenerateCarePlanScreen() {
@@ -76,7 +76,7 @@ export default function GenerateCarePlanScreen() {
 
       router.push(`/care-plan/comprehensive/${data.id}` as any);
     } catch (error: any) {
-      console.error('Error generating care plan:', error);
+      if (__DEV__) { console.error('Error generating care plan:', error); }
       if (error instanceof CarePlanValidationError) {
         Alert.alert('Validation Error', error.message);
       } else {

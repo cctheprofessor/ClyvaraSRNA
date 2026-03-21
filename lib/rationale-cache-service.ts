@@ -16,13 +16,13 @@ export class RationaleCacheService {
         .maybeSingle();
 
       if (error) {
-        console.error('[RationaleCache] Error fetching rationale:', error);
+        if (__DEV__) { console.error('[RationaleCache] Error fetching rationale:', error); }
         return null;
       }
 
       return data;
     } catch (error) {
-      console.error('[RationaleCache] Failed to get rationale:', error);
+      if (__DEV__) { console.error('[RationaleCache] Failed to get rationale:', error); }
       return null;
     }
   }
@@ -42,10 +42,10 @@ export class RationaleCacheService {
         });
 
       if (error) {
-        console.error('[RationaleCache] Error setting rationale:', error);
+        if (__DEV__) { console.error('[RationaleCache] Error setting rationale:', error); }
       }
     } catch (error) {
-      console.error('[RationaleCache] Failed to set rationale:', error);
+      if (__DEV__) { console.error('[RationaleCache] Failed to set rationale:', error); }
     }
   }
 
@@ -66,10 +66,10 @@ export class RationaleCacheService {
         });
 
       if (error) {
-        console.error('[RationaleCache] Error batch setting rationales:', error);
+        if (__DEV__) { console.error('[RationaleCache] Error batch setting rationales:', error); }
       }
     } catch (error) {
-      console.error('[RationaleCache] Failed to batch set rationales:', error);
+      if (__DEV__) { console.error('[RationaleCache] Failed to batch set rationales:', error); }
     }
   }
 }

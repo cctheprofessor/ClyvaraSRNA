@@ -101,7 +101,7 @@ export default function BookTASession() {
 
       setTas(data || []);
     } catch (error: any) {
-      console.error('Error loading TAs:', error);
+      if (__DEV__) { console.error('Error loading TAs:', error); }
       Alert.alert('Error', 'Failed to load TAs');
     } finally {
       setLoading(false);
@@ -111,7 +111,7 @@ export default function BookTASession() {
   async function loadTAAvailability(taId: string) {
     setLoadingAvailability(true);
     try {
-      console.log('=== Loading availability for TA:', taId);
+      if (__DEV__) { console.log('=== Loading availability for TA:', taId); }
 
       const { data: availData, error: availError } = await supabase
         .from('ta_availability')
@@ -120,10 +120,10 @@ export default function BookTASession() {
         .order('day_of_week', { ascending: true })
         .order('start_time', { ascending: true });
 
-      console.log('Query result:', { availData, availError });
+      if (__DEV__) { console.log('Query result:', { availData, availError }); }
 
       if (availError) {
-        console.error('Availability query error:', availError);
+        if (__DEV__) { console.error('Availability query error:', availError); }
         throw availError;
       }
 
@@ -135,20 +135,20 @@ export default function BookTASession() {
         .gte('session_date', new Date().toISOString().split('T')[0]);
 
       if (bookingsError) {
-        console.error('Bookings query error:', bookingsError);
+        if (__DEV__) { console.error('Bookings query error:', bookingsError); }
         throw bookingsError;
       }
 
-      console.log('Raw availability data from DB:', availData);
-      console.log('Number of availability slots:', availData?.length);
-      console.log('Day of week values in DB:', availData?.map(a => a.day_of_week));
+      if (__DEV__) { console.log('Raw availability data from DB:', availData); }
+      if (__DEV__) { console.log('Number of availability slots:', availData?.length); }
+      if (__DEV__) { console.log('Day of week values in DB:', availData?.map(a => a.day_of_week)); }
 
       setAvailability(availData || []);
       setExistingBookings(bookingsData || []);
 
       calculateAvailableDates(availData || []);
     } catch (error: any) {
-      console.error('Error loading availability:', error);
+      if (__DEV__) { console.error('Error loading availability:', error); }
       Alert.alert('Error', 'Failed to load availability');
     } finally {
       setLoadingAvailability(false);
@@ -183,7 +183,7 @@ export default function BookTASession() {
 
   function calculateAvailableTimeSlots(date: string) {
     if (!selectedTA || availability.length === 0) {
-      console.log('Cannot calculate slots:', { selectedTA: !!selectedTA, availabilityLength: availability.length });
+      if (__DEV__) { console.log('Cannot calculate slots:', { selectedTA: !!selectedTA, availabilityLength: availability.length }); }
       return;
     }
 
@@ -191,19 +191,19 @@ export default function BookTASession() {
     const jsDay = selectedDateObj.getDay();
     const isoDay = jsToIsoDay(jsDay);
 
-    console.log('Calculating time slots for:', { date, jsDay, isoDay, availabilityRecords: availability.length });
-    console.log('All availability day_of_week values:', availability.map(a => a.day_of_week));
-    console.log('Looking for day_of_week === ', isoDay);
+    if (__DEV__) { console.log('Calculating time slots for:', { date, jsDay, isoDay, availabilityRecords: availability.length }); }
+    if (__DEV__) { console.log('All availability day_of_week values:', availability.map(a => a.day_of_week)); }
+    if (__DEV__) { console.log('Looking for day_of_week === ', isoDay); }
 
     const dayAvailability = availability.filter(slot => slot.day_of_week === isoDay);
 
     if (dayAvailability.length === 0) {
-      console.log('No availability for this day of week - no match found');
+      if (__DEV__) { console.log('No availability for this day of week - no match found'); }
       setAvailableTimeSlots([]);
       return;
     }
 
-    console.log('Found availability windows:', dayAvailability);
+    if (__DEV__) { console.log('Found availability windows:', dayAvailability); }
 
     const slots: TimeSlot[] = [];
 
@@ -231,12 +231,14 @@ export default function BookTASession() {
       new Map(slots.map(slot => [slot.time, slot])).values()
     ).sort((a, b) => a.time.localeCompare(b.time));
 
+    if (__DEV__) {
     console.log('Final time slots:', {
       total: uniqueSlots.length,
       available: uniqueSlots.filter(s => s.available).length,
       unavailable: uniqueSlots.filter(s => !s.available).length,
       slots: uniqueSlots
     });
+    }
 
     setAvailableTimeSlots(uniqueSlots);
   }
@@ -245,10 +247,10 @@ export default function BookTASession() {
     const now = new Date();
     const slotDateTime = new Date(`${date}T${time}:00`);
 
-    console.log('Checking slot:', { date, time, slotDateTime: slotDateTime.toString(), now: now.toString() });
+    if (__DEV__) { console.log('Checking slot:', { date, time, slotDateTime: slotDateTime.toString(), now: now.toString() }); }
 
     if (slotDateTime <= now) {
-      console.log('Slot is in the past');
+      if (__DEV__) { console.log('Slot is in the past'); }
       return false;
     }
 
@@ -256,7 +258,7 @@ export default function BookTASession() {
     if (date === todayDateString) {
       const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
       if (slotDateTime < twoHoursFromNow) {
-        console.log('Slot is within 2 hours from now (today only)', { twoHoursFromNow: twoHoursFromNow.toString() });
+        if (__DEV__) { console.log('Slot is within 2 hours from now (today only)', { twoHoursFromNow: twoHoursFromNow.toString() }); }
         return false;
       }
     }
@@ -285,7 +287,7 @@ export default function BookTASession() {
     const isoDay = jsToIsoDay(jsDay);
     const dayAvailability = availability.filter(slot => slot.day_of_week === isoDay);
 
-    console.log('Day availability check:', { jsDay, isoDay, dayAvailabilityCount: dayAvailability.length, slotStartMinutes, slotEndMinutes, selectedDuration });
+    if (__DEV__) { console.log('Day availability check:', { jsDay, isoDay, dayAvailabilityCount: dayAvailability.length, slotStartMinutes, slotEndMinutes, selectedDuration }); }
 
     for (const avail of dayAvailability) {
       const [availStartHours, availStartMins] = avail.start_time.split(':').map(Number);
@@ -293,6 +295,7 @@ export default function BookTASession() {
       const availStartMinutes = availStartHours * 60 + availStartMins;
       const availEndMinutes = availEndHours * 60 + availEndMins;
 
+      if (__DEV__) {
       console.log('Checking availability window:', {
         availStartMinutes,
         availEndMinutes,
@@ -300,14 +303,15 @@ export default function BookTASession() {
         slotEndMinutes,
         fits: slotStartMinutes >= availStartMinutes && slotEndMinutes <= availEndMinutes
       });
+      }
 
       if (slotStartMinutes >= availStartMinutes && slotEndMinutes <= availEndMinutes) {
-        console.log('Slot is available!');
+        if (__DEV__) { console.log('Slot is available!'); }
         return true;
       }
     }
 
-    console.log('Slot does not fit in any availability window');
+    if (__DEV__) { console.log('Slot does not fit in any availability window'); }
     return false;
   }
 
@@ -361,7 +365,7 @@ export default function BookTASession() {
         );
       }, 300);
     } catch (error: any) {
-      console.error('Booking error:', error);
+      if (__DEV__) { console.error('Booking error:', error); }
       Alert.alert('Error', error.message || 'Failed to submit booking request');
     } finally {
       setBooking(false);
@@ -533,7 +537,7 @@ export default function BookTASession() {
                             !dateOption.hasAvailability && styles.dateCardDisabled,
                           ]}
                           onPress={() => {
-                            console.log('Selected date:', dateOption.date, 'Day:', fullDayName);
+                            if (__DEV__) { console.log('Selected date:', dateOption.date, 'Day:', fullDayName); }
                             setSelectedDate(dateOption.date);
                             setSelectedTime('');
                           }}

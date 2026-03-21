@@ -16,7 +16,7 @@ import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Home, FileText, GraduationCap, Stethoscope, User } from 'lucide-react-native';
+import { ArrowLeft, Hop as Home, FileText, GraduationCap, Stethoscope, User } from 'lucide-react-native';
 import PageHeader from '@/components/PageHeader';
 
 export default function EditCarePlanScreen() {
@@ -74,7 +74,7 @@ export default function EditCarePlanScreen() {
 
       router.replace(`/care-plan/comprehensive/${id}` as any);
     } catch (error: any) {
-      console.error('Error regenerating care plan:', error);
+      if (__DEV__) { console.error('Error regenerating care plan:', error); }
       Alert.alert('Error', error.message || 'Failed to regenerate care plan');
     } finally {
       setLoading(false);

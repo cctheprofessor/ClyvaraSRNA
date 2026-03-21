@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, ChevronDown, Stethoscope } from 'lucide-react-native';
+import { ArrowLeft, ChevronDown, Stethoscope, Square, SquareCheck as CheckSquare } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { CRNA_SCHOOLS, ROLES, PROGRAM_TRACKS } from '@/constants/crna-schools';
 
@@ -33,6 +33,7 @@ export default function SignupScreen() {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showSchoolPicker, setShowSchoolPicker] = useState(false);
   const [showProgramTrackPicker, setShowProgramTrackPicker] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
@@ -65,6 +66,11 @@ export default function SignupScreen() {
   const handleSignup = async () => {
     if (!fullName || !email || !password || !confirmPassword || !institution || !enrollmentDate || !role || !specialtyInterest) {
       setError('Please fill in all required fields');
+      return;
+    }
+
+    if (!agreedToTerms) {
+      setError('You must agree to the Terms of Service and Privacy Policy to continue');
       return;
     }
 
@@ -289,9 +295,23 @@ export default function SignupScreen() {
             </Pressable>
           </View>
 
-          <Text style={styles.disclaimer}>
-            By creating an account, you agree that this tool is for educational purposes only.
-          </Text>
+          <Pressable style={styles.termsRow} onPress={() => setAgreedToTerms(!agreedToTerms)}>
+            {agreedToTerms
+              ? <CheckSquare color={Colors.primary} size={20} />
+              : <Square color={Colors.text.tertiary} size={20} />
+            }
+            <Text style={styles.termsText}>
+              I agree to the{' '}
+              <Text style={styles.termsLink} onPress={() => router.push('/(auth)/terms-of-service')}>
+                Terms of Service
+              </Text>
+              {' '}and{' '}
+              <Text style={styles.termsLink} onPress={() => router.push('/(auth)/privacy-policy')}>
+                Privacy Policy
+              </Text>
+              . I understand this tool is for educational purposes only.
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
 
@@ -616,5 +636,22 @@ const styles = StyleSheet.create({
   clearText: {
     color: Colors.error,
     fontWeight: '600',
+  },
+  termsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.text.secondary,
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: Colors.primary,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });

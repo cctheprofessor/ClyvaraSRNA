@@ -19,18 +19,18 @@ export class QuestionCacheService {
 
   async preFetchQuestions(userId: number, silent: boolean = true): Promise<void> {
     if (!userId) {
-      console.warn('[CacheService] No user ID provided, skipping pre-fetch');
+      if (__DEV__) { console.warn('[CacheService] No user ID provided, skipping pre-fetch'); }
       return;
     }
 
     const now = Date.now();
     if (now - this.lastRefreshAttempt < this.config.minRefreshInterval) {
-      console.log('[CacheService] Skipping pre-fetch, too soon since last attempt');
+      if (__DEV__) { console.log('[CacheService] Skipping pre-fetch, too soon since last attempt'); }
       return;
     }
 
     if (this.refreshInProgress) {
-      console.log('[CacheService] Pre-fetch already in progress');
+      if (__DEV__) { console.log('[CacheService] Pre-fetch already in progress'); }
       return;
     }
 
@@ -42,21 +42,23 @@ export class QuestionCacheService {
 
       if (!shouldRefresh) {
         const status = await offlinePracticeManager.getCacheStatus(userId);
+        if (__DEV__) {
         console.log('[CacheService] Cache is fresh, skipping download', {
           status: status?.status,
           questionCount: status?.questionCount,
         });
+        }
         return;
       }
 
-      console.log('[CacheService] Starting background cache download...');
+      if (__DEV__) { console.log('[CacheService] Starting background cache download...'); }
       await offlinePracticeManager.downloadQuestionsForOffline(userId, this.config.cacheSize);
-      console.log('[CacheService] Cache download completed successfully');
+      if (__DEV__) { console.log('[CacheService] Cache download completed successfully'); }
     } catch (error) {
       if (!silent) {
         throw error;
       }
-      console.error('[CacheService] Background cache download failed (silent):', error);
+      if (__DEV__) { console.error('[CacheService] Background cache download failed (silent):', error); }
     } finally {
       this.refreshInProgress = false;
     }
@@ -65,7 +67,7 @@ export class QuestionCacheService {
   async preFetchOnLogin(userId: number): Promise<void> {
     if (!this.config.autoRefreshEnabled) return;
 
-    console.log('[CacheService] Triggering pre-fetch on login for user:', userId);
+    if (__DEV__) { console.log('[CacheService] Triggering pre-fetch on login for user:', userId); }
 
     setTimeout(async () => {
       await this.preFetchQuestions(userId, true);
@@ -75,7 +77,7 @@ export class QuestionCacheService {
   async preFetchOnAppStart(userId: number): Promise<void> {
     if (!this.config.autoRefreshEnabled) return;
 
-    console.log('[CacheService] Triggering pre-fetch on app start for user:', userId);
+    if (__DEV__) { console.log('[CacheService] Triggering pre-fetch on app start for user:', userId); }
 
     setTimeout(async () => {
       await this.preFetchQuestions(userId, true);
@@ -85,7 +87,7 @@ export class QuestionCacheService {
   async preFetchAfterSync(userId: number): Promise<void> {
     if (!this.config.autoRefreshEnabled) return;
 
-    console.log('[CacheService] Triggering pre-fetch after ML sync for user:', userId);
+    if (__DEV__) { console.log('[CacheService] Triggering pre-fetch after ML sync for user:', userId); }
 
     setTimeout(async () => {
       await this.preFetchQuestions(userId, true);
@@ -115,7 +117,7 @@ export class QuestionCacheService {
   }
 
   async manualRefresh(userId: number): Promise<void> {
-    console.log('[CacheService] Manual refresh requested for user:', userId);
+    if (__DEV__) { console.log('[CacheService] Manual refresh requested for user:', userId); }
     await this.preFetchQuestions(userId, false);
   }
 
@@ -129,17 +131,17 @@ export class QuestionCacheService {
 
   async syncOfflineQueueAndRefresh(userId: number): Promise<void> {
     try {
-      console.log('[CacheService] Syncing offline queue before cache refresh...');
+      if (__DEV__) { console.log('[CacheService] Syncing offline queue before cache refresh...'); }
       const hasPending = await offlinePracticeManager.hasPendingResponses();
 
       if (hasPending) {
         const result = await offlinePracticeManager.syncOfflineQueue(userId);
-        console.log('[CacheService] Offline queue synced:', result);
+        if (__DEV__) { console.log('[CacheService] Offline queue synced:', result); }
       }
 
       await this.preFetchQuestions(userId, true);
     } catch (error) {
-      console.error('[CacheService] Failed to sync and refresh:', error);
+      if (__DEV__) { console.error('[CacheService] Failed to sync and refresh:', error); }
       throw error;
     }
   }

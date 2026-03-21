@@ -50,7 +50,7 @@ export default function TADashboard() {
       if (profileError) throw profileError;
 
       if (!profileData) {
-        console.log('[TADashboard] No TA profile found, redirecting to setup');
+        if (__DEV__) { console.log('[TADashboard] No TA profile found, redirecting to setup'); }
         router.push('/tools/ta-profile-setup');
         return;
       }
@@ -87,7 +87,7 @@ export default function TADashboard() {
         awaitingPaymentCount: awaitingPayment.length,
       });
     } catch (error: any) {
-      console.error('[TADashboard] Error loading dashboard:', error);
+      if (__DEV__) { console.error('[TADashboard] Error loading dashboard:', error); }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -98,7 +98,7 @@ export default function TADashboard() {
     if (!user) return;
 
     try {
-      console.log('[TADashboard] Approving booking:', bookingId);
+      if (__DEV__) { console.log('[TADashboard] Approving booking:', bookingId); }
 
       const { data, error } = await supabase
         .from('ta_bookings')
@@ -112,22 +112,22 @@ export default function TADashboard() {
         .single();
 
       if (error) {
-        console.error('[TADashboard] Approve error:', error);
+        if (__DEV__) { console.error('[TADashboard] Approve error:', error); }
         throw error;
       }
 
-      console.log('[TADashboard] Booking approved:', data);
+      if (__DEV__) { console.log('[TADashboard] Booking approved:', data); }
       setConfirmingAction(null);
       loadDashboard();
     } catch (error: any) {
-      console.error('[TADashboard] Approve error:', error);
+      if (__DEV__) { console.error('[TADashboard] Approve error:', error); }
       setConfirmingAction(null);
     }
   }
 
   async function rejectBooking(bookingId: string, reason: string) {
     try {
-      console.log('[TADashboard] Rejecting booking:', bookingId, 'reason:', reason);
+      if (__DEV__) { console.log('[TADashboard] Rejecting booking:', bookingId, 'reason:', reason); }
 
       const { data, error } = await supabase
         .from('ta_bookings')
@@ -141,15 +141,15 @@ export default function TADashboard() {
         .single();
 
       if (error) {
-        console.error('[TADashboard] Reject error:', error);
+        if (__DEV__) { console.error('[TADashboard] Reject error:', error); }
         throw error;
       }
 
-      console.log('[TADashboard] Booking rejected:', data);
+      if (__DEV__) { console.log('[TADashboard] Booking rejected:', data); }
       setConfirmingAction(null);
       loadDashboard();
     } catch (error: any) {
-      console.error('[TADashboard] Reject error:', error);
+      if (__DEV__) { console.error('[TADashboard] Reject error:', error); }
       setConfirmingAction(null);
     }
   }
@@ -178,10 +178,10 @@ export default function TADashboard() {
         throw new Error(error.error || 'Failed to complete booking');
       }
 
-      console.log('[TADashboard] Session marked as completed');
+      if (__DEV__) { console.log('[TADashboard] Session marked as completed'); }
       loadDashboard();
     } catch (error: any) {
-      console.error('[TADashboard] Complete error:', error);
+      if (__DEV__) { console.error('[TADashboard] Complete error:', error); }
     }
   }
 

@@ -66,7 +66,7 @@ export class QuestionSessionTracker {
       this.currentSessionIds.add(questionId);
       await this.updateCurrentSession(userId, questionId);
     } catch (error) {
-      console.error('Failed to mark question as answered:', error);
+      if (__DEV__) { console.error('Failed to mark question as answered:', error); }
     }
   }
 
@@ -89,7 +89,7 @@ export class QuestionSessionTracker {
         return attemptTime > cutoffTime;
       });
     } catch (error) {
-      console.error('Failed to get recent questions:', error);
+      if (__DEV__) { console.error('Failed to get recent questions:', error); }
       return [];
     }
   }
@@ -105,7 +105,7 @@ export class QuestionSessionTracker {
       const key = `${RECENT_QUESTIONS_KEY}_${userId}`;
       await storage.setItem(key, JSON.stringify(recentQuestions));
     } catch (error) {
-      console.error('Failed to clear old history:', error);
+      if (__DEV__) { console.error('Failed to clear old history:', error); }
     }
   }
 
@@ -144,7 +144,7 @@ export class QuestionSessionTracker {
         await storage.setItem(key, JSON.stringify(session));
       }
     } catch (error) {
-      console.error('Failed to update current session:', error);
+      if (__DEV__) { console.error('Failed to update current session:', error); }
     }
   }
 
@@ -160,7 +160,7 @@ export class QuestionSessionTracker {
       const session: SessionData = JSON.parse(data);
       return session.questionIds;
     } catch (error) {
-      console.error('Failed to get current session questions:', error);
+      if (__DEV__) { console.error('Failed to get current session questions:', error); }
       return [];
     }
   }
@@ -171,7 +171,7 @@ export class QuestionSessionTracker {
       await storage.removeItem(key);
       this.currentSessionIds.clear();
     } catch (error) {
-      console.error('Failed to end session:', error);
+      if (__DEV__) { console.error('Failed to end session:', error); }
     }
   }
 

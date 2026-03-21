@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         questionCacheService.preFetchOnAppStart(data.ml_user_id);
       }
     } catch (error) {
-      console.error('Error loading profile:', error);
+      if (__DEV__) { console.error('Error loading profile:', error); }
     } finally {
       setLoading(false);
     }
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Create profile directly - don't rely on trigger
-      console.log('[SignUp] Creating profile for user:', data.user.id);
+      if (__DEV__) { console.log('[SignUp] Creating profile for user:', data.user.id); }
 
       const { data: insertData, error: insertError } = await supabase
         .from('profiles')
@@ -151,11 +151,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select();
 
       if (insertError) {
-        console.error('[SignUp] Profile creation failed:', insertError);
+        if (__DEV__) { console.error('[SignUp] Profile creation failed:', insertError); }
         return { error: insertError };
       }
 
-      console.log('[SignUp] Profile created successfully:', insertData);
+      if (__DEV__) { console.log('[SignUp] Profile created successfully:', insertData); }
 
       try {
         const mlClient = new MLBackendClient();
@@ -184,11 +184,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           last_sync_at: new Date().toISOString(),
         });
 
-        console.log('Successfully synced new user to ML backend:', mlData.user_id);
+        if (__DEV__) { console.log('Successfully synced new user to ML backend:', mlData.user_id); }
 
         questionCacheService.preFetchAfterSync(mlData.user_id);
       } catch (mlError) {
-        console.error('ML sync failed during registration:', mlError);
+        if (__DEV__) { console.error('ML sync failed during registration:', mlError); }
         await supabase.from('ml_sync_status').insert({
           user_id: data.user.id,
           sync_status: 'pending',
@@ -240,10 +240,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error('No user logged in') };
 
+    if (__DEV__) {
     console.log('[AuthContext] Updating profile:', {
       userId: user.id,
       updates: Object.keys(updates),
     });
+    }
 
     const { data, error } = await supabase
       .from('profiles')
@@ -252,11 +254,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .select();
 
     if (error) {
-      console.error('[AuthContext] Profile update failed:', error);
+      if (__DEV__) { console.error('[AuthContext] Profile update failed:', error); }
       return { error };
     }
 
-    console.log('[AuthContext] Profile updated successfully:', data);
+    if (__DEV__) { console.log('[AuthContext] Profile updated successfully:', data); }
     await loadProfile(user.id, false);
 
     return { error: null };

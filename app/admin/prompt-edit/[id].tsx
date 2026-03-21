@@ -51,7 +51,7 @@ export default function EditPromptScreen() {
       setPromptType(data.prompt_type);
       setIsActive(data.is_active);
     } catch (error: any) {
-      console.error('Error loading prompt:', error);
+      if (__DEV__) { console.error('Error loading prompt:', error); }
       if (Platform.OS === 'web') {
         alert('Failed to load prompt');
       } else {
@@ -94,7 +94,7 @@ export default function EditPromptScreen() {
 
       router.back();
     } catch (error: any) {
-      console.error('Error updating prompt:', error);
+      if (__DEV__) { console.error('Error updating prompt:', error); }
       if (Platform.OS === 'web') {
         alert('Failed to update prompt');
       } else {

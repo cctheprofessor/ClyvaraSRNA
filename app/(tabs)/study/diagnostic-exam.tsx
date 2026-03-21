@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
-import { CheckCircle, AlertCircle, Send, ArrowRight, RotateCcw, PlayCircle } from 'lucide-react-native';
+import { CircleCheck as CheckCircle, CircleAlert as AlertCircle, Send, ArrowRight, RotateCcw, CirclePlay as PlayCircle } from 'lucide-react-native';
 import { Question, AnswerFormat } from '@/types/question';
 import { validateAnswer, ValidationResult } from '@/lib/answer-validator';
 import { rationaleCacheService } from '@/lib/rationale-cache-service';
@@ -78,7 +78,7 @@ export default function DiagnosticExamScreen() {
       const savedSession = await sessionPersistenceService.getActiveSession('diagnostic');
 
       if (savedSession && savedSession.questions.length > 0) {
-        console.log('[DiagnosticExam] Found existing session, showing resume dialog');
+        if (__DEV__) { console.log('[DiagnosticExam] Found existing session, showing resume dialog'); }
         setExistingSession(savedSession);
         setResumeDialogVisible(true);
         setLoading(false);
@@ -100,7 +100,7 @@ export default function DiagnosticExamScreen() {
 
       await saveSessionState(diagnosticQuestions, 0, {}, {}, []);
     } catch (err: any) {
-      console.error('[DiagnosticExam] Error loading questions:', err);
+      if (__DEV__) { console.error('[DiagnosticExam] Error loading questions:', err); }
       setError(err.message || 'Failed to load diagnostic exam. Please try again.');
       setLoading(false);
     }
@@ -128,14 +128,14 @@ export default function DiagnosticExamScreen() {
 
       await sessionPersistenceService.saveSession(state);
     } catch (error) {
-      console.error('[DiagnosticExam] Failed to save session:', error);
+      if (__DEV__) { console.error('[DiagnosticExam] Failed to save session:', error); }
     }
   };
 
   const handleResumeSession = () => {
     if (!existingSession) return;
 
-    console.log('[DiagnosticExam] Resuming session from question', existingSession.currentIndex);
+    if (__DEV__) { console.log('[DiagnosticExam] Resuming session from question', existingSession.currentIndex); }
     sessionPersistenceService.setCurrentSessionId(existingSession.id);
     setQuestions(existingSession.questions);
     setCurrentIndex(existingSession.currentIndex);
@@ -190,7 +190,7 @@ export default function DiagnosticExamScreen() {
 
       await saveSessionState(diagnosticQuestions, 0, {}, {}, []);
     } catch (err: any) {
-      console.error('[DiagnosticExam] Error starting new session:', err);
+      if (__DEV__) { console.error('[DiagnosticExam] Error starting new session:', err); }
       setError(err.message || 'Failed to start new exam. Please try again.');
       setLoading(false);
     }
@@ -222,7 +222,7 @@ export default function DiagnosticExamScreen() {
           return null;
       }
     } catch (error) {
-      console.error('[DiagnosticExam] Failed to parse answer:', error);
+      if (__DEV__) { console.error('[DiagnosticExam] Failed to parse answer:', error); }
       return null;
     }
   };
@@ -237,7 +237,7 @@ export default function DiagnosticExamScreen() {
 
     const parsedAnswer = parseAnswer(currentQuestion, currentAnswer);
     if (!parsedAnswer) {
-      console.error('[DiagnosticExam] Failed to parse answer');
+      if (__DEV__) { console.error('[DiagnosticExam] Failed to parse answer'); }
       return;
     }
 
@@ -267,6 +267,7 @@ export default function DiagnosticExamScreen() {
       });
 
       if (backendResult.success && backendResult.rationale) {
+        if (__DEV__) {
         console.log('[DiagnosticExam] Backend result:', {
           is_correct: backendResult.is_correct,
           has_rationale: !!backendResult.rationale,
@@ -276,6 +277,7 @@ export default function DiagnosticExamScreen() {
           validation_correct_pairs: validationResult.correct_pairs,
           question_type: currentQuestion.question_type,
         });
+        }
 
         const correctAnswersForDisplay = backendResult.correct_answers ||
           validationResult.correct_answers ||
@@ -303,7 +305,7 @@ export default function DiagnosticExamScreen() {
         return;
       }
     } catch (err) {
-      console.log('[DiagnosticExam] Backend submission failed, falling back to cache and local validation');
+      if (__DEV__) { console.log('[DiagnosticExam] Backend submission failed, falling back to cache and local validation'); }
     }
 
     const cachedRationale = await rationaleCacheService.getRationale(currentQuestion.id);
@@ -374,14 +376,14 @@ export default function DiagnosticExamScreen() {
         .eq('id', profile!.id);
 
       if (updateError) {
-        console.error('[DiagnosticExam] Error updating profile:', updateError);
+        if (__DEV__) { console.error('[DiagnosticExam] Error updating profile:', updateError); }
         throw updateError;
       }
 
       try {
         await mlClient.completeDiagnosticExam(profile!.ml_user_id!);
       } catch (err) {
-        console.log('[DiagnosticExam] Backend completion failed, continuing with local data');
+        if (__DEV__) { console.log('[DiagnosticExam] Backend completion failed, continuing with local data'); }
       }
 
       await sessionPersistenceService.completeSession();
@@ -390,7 +392,7 @@ export default function DiagnosticExamScreen() {
 
       router.replace('/(tabs)/study/diagnostic-results');
     } catch (err: any) {
-      console.error('[DiagnosticExam] Error completing diagnostic:', err);
+      if (__DEV__) { console.error('[DiagnosticExam] Error completing diagnostic:', err); }
       Alert.alert('Error', 'Failed to complete diagnostic. Please try again.');
       setSubmitting(false);
     }

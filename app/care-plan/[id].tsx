@@ -40,7 +40,7 @@ export default function CarePlanDetailScreen() {
       if (error) throw error;
       setCarePlan(data);
     } catch (error: any) {
-      console.error('Error loading care plan:', error);
+      if (__DEV__) { console.error('Error loading care plan:', error); }
     } finally {
       setLoading(false);
     }

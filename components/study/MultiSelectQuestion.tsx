@@ -56,11 +56,13 @@ export default function MultiSelectQuestion({
   };
 
   if (!question.options || !Array.isArray(question.options) || question.options.length === 0) {
+    if (__DEV__) {
     console.error('MultiSelectQuestion: Invalid or empty options', {
       questionId: question.id,
       options: question.options,
       fullQuestion: JSON.stringify(question, null, 2)
     });
+    }
     return (
       <View style={styles.container}>
         <Text style={styles.hint}>Select all that apply</Text>

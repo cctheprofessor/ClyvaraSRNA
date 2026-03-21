@@ -71,7 +71,7 @@ export default function TAProfileSetup() {
         setIsActive(data.is_active);
       }
     } catch (error: any) {
-      console.error('Error loading profile:', error);
+      if (__DEV__) { console.error('Error loading profile:', error); }
     } finally {
       setLoading(false);
     }
@@ -129,7 +129,7 @@ export default function TAProfileSetup() {
 
       router.replace('/(tabs)/tools/ta-dashboard');
     } catch (error: any) {
-      console.error('Error saving profile:', error);
+      if (__DEV__) { console.error('Error saving profile:', error); }
       Alert.alert('Error', 'Failed to save profile');
     } finally {
       setSaving(false);

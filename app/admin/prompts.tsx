@@ -41,7 +41,7 @@ export default function AdminPromptsScreen() {
       if (error) throw error;
       setPrompts(data || []);
     } catch (error: any) {
-      console.error('Error loading prompts:', error);
+      if (__DEV__) { console.error('Error loading prompts:', error); }
       Alert.alert('Error', 'Failed to load prompts');
     } finally {
       setLoading(false);
@@ -61,7 +61,7 @@ export default function AdminPromptsScreen() {
         prev.map((p) => (p.id === prompt.id ? { ...p, is_active: !p.is_active } : p))
       );
     } catch (error: any) {
-      console.error('Error toggling prompt:', error);
+      if (__DEV__) { console.error('Error toggling prompt:', error); }
       Alert.alert('Error', 'Failed to update prompt');
     }
   };
@@ -82,7 +82,7 @@ export default function AdminPromptsScreen() {
               setPrompts((prev) => prev.filter((p) => p.id !== promptId));
               Alert.alert('Success', 'Prompt deleted');
             } catch (error: any) {
-              console.error('Error deleting prompt:', error);
+              if (__DEV__) { console.error('Error deleting prompt:', error); }
               Alert.alert('Error', 'Failed to delete prompt');
             }
           },

@@ -65,7 +65,7 @@ export default function AnalyticsScreen() {
       setInsights(data);
     } catch (err) {
       setError('Unable to load insights. Please try again later.');
-      console.error('Analytics error:', err);
+      if (__DEV__) { console.error('Analytics error:', err); }
     } finally {
       setLoading(false);
     }

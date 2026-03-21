@@ -168,6 +168,7 @@ export default function QuestionRenderer({
     }
   };
 
+  if (__DEV__) {
   console.log('[QuestionRenderer] Rendering question:', {
     id: question.id,
     type: question.question_type,
@@ -177,6 +178,7 @@ export default function QuestionRenderer({
     showResult,
     isCorrect,
   });
+  }
 
   return (
     <View style={styles.container}>

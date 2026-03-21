@@ -93,14 +93,14 @@ export class QuestionRepairService {
     });
 
     if (validSubQuestions.length === 0) {
-      console.log(`[QuestionRepairService] Clinical scenario ${question.id} has no valid sub-questions, cannot repair`);
+      if (__DEV__) { console.log(`[QuestionRepairService] Clinical scenario ${question.id} has no valid sub-questions, cannot repair`); }
       return null;
     }
 
     if (validSubQuestions.length !== question.options.sub_questions.length) {
       question.options.sub_questions = validSubQuestions;
       wasRepaired = true;
-      console.log(`[QuestionRepairService] Repaired clinical scenario ${question.id} by filtering ${question.options.sub_questions.length - validSubQuestions.length} invalid sub-questions`);
+      if (__DEV__) { console.log(`[QuestionRepairService] Repaired clinical scenario ${question.id} by filtering ${question.options.sub_questions.length - validSubQuestions.length} invalid sub-questions`); }
     }
 
     return { question, wasRepaired };
@@ -167,27 +167,27 @@ export class QuestionRepairService {
    */
   private static repairMatching(question: any): { question: any; wasRepaired: boolean } | null {
     if (!question.options || typeof question.options !== 'object') {
-      console.log(`[QuestionRepairService] Matching question ${question.id} has invalid options structure`);
+      if (__DEV__) { console.log(`[QuestionRepairService] Matching question ${question.id} has invalid options structure`); }
       return null;
     }
 
     if (!question.options.correct_pairs || typeof question.options.correct_pairs !== 'object') {
-      console.log(`[QuestionRepairService] Matching question ${question.id} missing correct_pairs`);
+      if (__DEV__) { console.log(`[QuestionRepairService] Matching question ${question.id} missing correct_pairs`); }
       return null;
     }
 
     if (Object.keys(question.options.correct_pairs).length === 0) {
-      console.log(`[QuestionRepairService] Matching question ${question.id} has empty correct_pairs - unrepairable`);
+      if (__DEV__) { console.log(`[QuestionRepairService] Matching question ${question.id} has empty correct_pairs - unrepairable`); }
       return null;
     }
 
     if (!Array.isArray(question.options.column_a) || question.options.column_a.length === 0) {
-      console.log(`[QuestionRepairService] Matching question ${question.id} has empty column_a`);
+      if (__DEV__) { console.log(`[QuestionRepairService] Matching question ${question.id} has empty column_a`); }
       return null;
     }
 
     if (!Array.isArray(question.options.column_b) || question.options.column_b.length === 0) {
-      console.log(`[QuestionRepairService] Matching question ${question.id} has empty column_b`);
+      if (__DEV__) { console.log(`[QuestionRepairService] Matching question ${question.id} has empty column_b`); }
       return null;
     }
 
@@ -201,17 +201,17 @@ export class QuestionRepairService {
    */
   private static repairOrdering(question: any): { question: any; wasRepaired: boolean } | null {
     if (!question.options || typeof question.options !== 'object') {
-      console.log(`[QuestionRepairService] Ordering question ${question.id} has invalid options structure`);
+      if (__DEV__) { console.log(`[QuestionRepairService] Ordering question ${question.id} has invalid options structure`); }
       return null;
     }
 
     if (!Array.isArray(question.options.steps) || question.options.steps.length === 0) {
-      console.log(`[QuestionRepairService] Ordering question ${question.id} has no steps`);
+      if (__DEV__) { console.log(`[QuestionRepairService] Ordering question ${question.id} has no steps`); }
       return null;
     }
 
     if (!Array.isArray(question.options.correct_order) || question.options.correct_order.length === 0) {
-      console.log(`[QuestionRepairService] Ordering question ${question.id} has empty correct_order`);
+      if (__DEV__) { console.log(`[QuestionRepairService] Ordering question ${question.id} has empty correct_order`); }
       return null;
     }
 
@@ -220,7 +220,7 @@ export class QuestionRepairService {
     const stepsLength = stepIds.length;
 
     if (orderLength !== stepsLength) {
-      console.log(`[QuestionRepairService] Ordering question ${question.id} has mismatched lengths: ${orderLength} order vs ${stepsLength} steps`);
+      if (__DEV__) { console.log(`[QuestionRepairService] Ordering question ${question.id} has mismatched lengths: ${orderLength} order vs ${stepsLength} steps`); }
 
       const validOrderIds = question.options.correct_order.filter((id: string) =>
         stepIds.includes(id)

@@ -40,11 +40,11 @@ class SessionPersistenceService {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('[SessionPersistence] No user found when checking for active session');
+        if (__DEV__) { console.log('[SessionPersistence] No user found when checking for active session'); }
         return null;
       }
 
-      console.log('[SessionPersistence] Checking for active session:', sessionType);
+      if (__DEV__) { console.log('[SessionPersistence] Checking for active session:', sessionType); }
 
       const { data, error } = await supabase
         .from('practice_session_state')
@@ -57,35 +57,37 @@ class SessionPersistenceService {
         .maybeSingle();
 
       if (error) {
-        console.error('[SessionPersistence] Error querying sessions:', error);
+        if (__DEV__) { console.error('[SessionPersistence] Error querying sessions:', error); }
         return null;
       }
 
       if (!data) {
-        console.log('[SessionPersistence] No active session found');
+        if (__DEV__) { console.log('[SessionPersistence] No active session found'); }
         return null;
       }
 
       const session: SavedSession = data;
+      if (__DEV__) {
       console.log('[SessionPersistence] Found session:', {
         id: session.id,
         currentIndex: session.current_index,
         questionCount: session.questions.length,
         submittedCount: session.submitted_questions.length,
       });
+      }
 
       // Ignore sessions older than 24 hours
       const lastUpdated = new Date(session.last_updated).getTime();
       const now = Date.now();
       if (now - lastUpdated > 24 * 60 * 60 * 1000) {
-        console.log('[SessionPersistence] Session too old, deleting');
+        if (__DEV__) { console.log('[SessionPersistence] Session too old, deleting'); }
         await this.deleteSession(session.id);
         return null;
       }
 
       return this.deserializeSession(session);
     } catch (error) {
-      console.error('[SessionPersistence] Failed to get active session:', error);
+      if (__DEV__) { console.error('[SessionPersistence] Failed to get active session:', error); }
       return null;
     }
   }
@@ -107,7 +109,7 @@ class SessionPersistenceService {
         await this.saveSessionImmediate(state);
         this.pendingState = null;
       } catch (error) {
-        console.error('[SessionPersistence] Failed to save session:', error);
+        if (__DEV__) { console.error('[SessionPersistence] Failed to save session:', error); }
       }
     }, 500);
   }
@@ -117,7 +119,7 @@ class SessionPersistenceService {
    */
   async flushPendingSave(): Promise<void> {
     if (this.saveTimeout) {
-      console.log('[SessionPersistence] Flushing pending save...');
+      if (__DEV__) { console.log('[SessionPersistence] Flushing pending save...'); }
       clearTimeout(this.saveTimeout);
       this.saveTimeout = null;
     }
@@ -126,12 +128,12 @@ class SessionPersistenceService {
       try {
         await this.saveSessionImmediate(this.pendingState);
         this.pendingState = null;
-        console.log('[SessionPersistence] Pending save flushed successfully');
+        if (__DEV__) { console.log('[SessionPersistence] Pending save flushed successfully'); }
       } catch (error) {
-        console.error('[SessionPersistence] Failed to flush pending save:', error);
+        if (__DEV__) { console.error('[SessionPersistence] Failed to flush pending save:', error); }
       }
     } else {
-      console.log('[SessionPersistence] No pending save to flush');
+      if (__DEV__) { console.log('[SessionPersistence] No pending save to flush'); }
     }
   }
 
@@ -142,7 +144,7 @@ class SessionPersistenceService {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('[SessionPersistence] No user found, skipping save');
+        if (__DEV__) { console.log('[SessionPersistence] No user found, skipping save'); }
         return;
       }
 
@@ -162,11 +164,13 @@ class SessionPersistenceService {
 
       if (this.currentSessionId) {
         // Update existing session
+        if (__DEV__) {
         console.log('[SessionPersistence] Updating existing session:', this.currentSessionId, {
           sessionType: state.sessionType,
           currentIndex: state.currentIndex,
           submittedCount: state.submittedQuestions.length,
         });
+        }
 
         const { error } = await supabase
           .from('practice_session_state')
@@ -174,16 +178,18 @@ class SessionPersistenceService {
           .eq('id', this.currentSessionId);
 
         if (error) {
-          console.error('[SessionPersistence] Update failed:', error);
+          if (__DEV__) { console.error('[SessionPersistence] Update failed:', error); }
           throw error;
         }
-        console.log('[SessionPersistence] Session updated successfully');
+        if (__DEV__) { console.log('[SessionPersistence] Session updated successfully'); }
       } else {
         // Create new session
+        if (__DEV__) {
         console.log('[SessionPersistence] Creating new session:', {
           sessionType: state.sessionType,
           questionCount: state.questions.length,
         });
+        }
 
         const { data, error } = await supabase
           .from('practice_session_state')
@@ -192,16 +198,16 @@ class SessionPersistenceService {
           .single();
 
         if (error) {
-          console.error('[SessionPersistence] Insert failed:', error);
+          if (__DEV__) { console.error('[SessionPersistence] Insert failed:', error); }
           throw error;
         }
         if (data) {
           this.currentSessionId = data.id;
-          console.log('[SessionPersistence] New session created with ID:', this.currentSessionId);
+          if (__DEV__) { console.log('[SessionPersistence] New session created with ID:', this.currentSessionId); }
         }
       }
     } catch (error) {
-      console.error('[SessionPersistence] Failed to save session:', error);
+      if (__DEV__) { console.error('[SessionPersistence] Failed to save session:', error); }
       throw error;
     }
   }
@@ -223,7 +229,7 @@ class SessionPersistenceService {
         this.currentSessionId = null;
       }
     } catch (error) {
-      console.error('[SessionPersistence] Failed to complete session:', error);
+      if (__DEV__) { console.error('[SessionPersistence] Failed to complete session:', error); }
     }
   }
 
@@ -241,7 +247,7 @@ class SessionPersistenceService {
         this.currentSessionId = null;
       }
     } catch (error) {
-      console.error('[SessionPersistence] Failed to delete session:', error);
+      if (__DEV__) { console.error('[SessionPersistence] Failed to delete session:', error); }
     }
   }
 
@@ -261,7 +267,7 @@ class SessionPersistenceService {
         .eq('user_id', user.id)
         .lt('last_updated', twentyFourHoursAgo);
     } catch (error) {
-      console.error('[SessionPersistence] Failed to cleanup old sessions:', error);
+      if (__DEV__) { console.error('[SessionPersistence] Failed to cleanup old sessions:', error); }
     }
   }
 

@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { mlClient } from '@/lib/ml-backend-client';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
-import { CheckCircle, TrendingUp, TrendingDown, Award, Target, AlertCircle } from 'lucide-react-native';
+import { CircleCheck as CheckCircle, TrendingUp, TrendingDown, Award, Target, CircleAlert as AlertCircle } from 'lucide-react-native';
 
 interface DiagnosticResults {
   attempt_id: string;
@@ -79,7 +79,7 @@ export default function DiagnosticResultsScreen() {
           return;
         }
       } catch (err) {
-        console.log('[DiagnosticResults] Backend results not available, using local data');
+        if (__DEV__) { console.log('[DiagnosticResults] Backend results not available, using local data'); }
       }
 
       const score = profile.diagnostic_score || 0;
@@ -109,7 +109,7 @@ export default function DiagnosticResultsScreen() {
       setResults(basicResults);
       setLoading(false);
     } catch (err: any) {
-      console.error('[DiagnosticResults] Error loading results:', err);
+      if (__DEV__) { console.error('[DiagnosticResults] Error loading results:', err); }
       setError(err.message || 'Failed to load results. Please try again.');
       setLoading(false);
     }
