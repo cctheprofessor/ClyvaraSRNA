@@ -181,6 +181,13 @@ export interface PreoperativeRecommendations {
   rationale: string;
 }
 
+export interface CitationItem {
+  title: string;
+  organization: string;
+  year: string;
+  url: string;
+}
+
 export interface AnesthesiaCarePlan {
   patient: PatientInfo;
   procedure: ProcedureInfo;
@@ -200,4 +207,5 @@ export interface AnesthesiaCarePlan {
   checklist: ChecklistItem[];
   rationales: RationaleItem[];
   preoperativeRecommendations: PreoperativeRecommendations;
+  citations?: CitationItem[];
 }

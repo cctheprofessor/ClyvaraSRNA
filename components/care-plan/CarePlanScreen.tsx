@@ -1,4 +1,4 @@
-import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Pressable, Platform, Image } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Pressable, Platform, Image, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AnesthesiaCarePlan } from '@/types/anesthesia-care-plan';
 import { SectionCard } from './SectionCard';
@@ -7,7 +7,7 @@ import { KeyValueRow } from './KeyValueRow';
 import { MedicationList } from './MedicationList';
 import { ChecklistSection } from './ChecklistSection';
 import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
-import { Home, ArrowLeft, FileText, GraduationCap, Stethoscope, User } from 'lucide-react-native';
+import { ArrowLeft, FileText, GraduationCap, Stethoscope, User, ExternalLink, TriangleAlert as AlertTriangle } from 'lucide-react-native';
 import PageHeader from '@/components/PageHeader';
 
 interface CarePlanScreenProps {
@@ -40,6 +40,12 @@ export function CarePlanScreen({ carePlan, caseDescription, carePlanId }: CarePl
     router.replace('/(tabs)/home');
   };
 
+  const handleOpenCitation = (url: string) => {
+    Linking.openURL(url).catch(() => {});
+  };
+
+  const { citations } = carePlan;
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -55,6 +61,14 @@ export function CarePlanScreen({ carePlan, caseDescription, carePlanId }: CarePl
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
+
+        {/* Disclaimer Banner */}
+        <View style={styles.disclaimerBanner}>
+          <AlertTriangle color={Colors.warning} size={16} />
+          <Text style={styles.disclaimerBannerText}>
+            This plan is AI-generated for educational and planning purposes only. It is not a substitute for clinical judgment. All recommendations are based on published clinical guidelines — see References at the bottom of this plan.
+          </Text>
+        </View>
         {/* Patient & Procedure */}
         <SectionCard title="Patient & Procedure Information">
         <View style={styles.infoGrid}>
@@ -654,6 +668,60 @@ export function CarePlanScreen({ carePlan, caseDescription, carePlanId }: CarePl
         </SectionCard>
       )}
 
+      {/* References & Clinical Guidelines */}
+      <SectionCard title="References & Clinical Guidelines">
+        <Text style={styles.citationsIntro}>
+          This care plan is informed by the following published clinical guidelines and standards. Tap any reference to view the source.
+        </Text>
+        {citations && citations.length > 0 ? (
+          citations.map((citation, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.citationItem}
+              onPress={() => handleOpenCitation(citation.url)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.citationContent}>
+                <Text style={styles.citationTitle}>{citation.title}</Text>
+                <Text style={styles.citationMeta}>{citation.organization} · {citation.year}</Text>
+              </View>
+              <ExternalLink color={Colors.primary} size={16} />
+            </TouchableOpacity>
+          ))
+        ) : (
+          <View>
+            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://www.asahq.org/standards-and-practice-parameters/standards-for-basic-anesthetic-monitoring')} activeOpacity={0.7}>
+              <View style={styles.citationContent}>
+                <Text style={styles.citationTitle}>Standards for Basic Anesthetic Monitoring</Text>
+                <Text style={styles.citationMeta}>American Society of Anesthesiologists · 2020</Text>
+              </View>
+              <ExternalLink color={Colors.primary} size={16} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://www.asahq.org/standards-and-practice-parameters/practice-guidelines-for-management-of-the-difficult-airway')} activeOpacity={0.7}>
+              <View style={styles.citationContent}>
+                <Text style={styles.citationTitle}>Practice Guidelines for Management of the Difficult Airway</Text>
+                <Text style={styles.citationMeta}>American Society of Anesthesiologists · 2022</Text>
+              </View>
+              <ExternalLink color={Colors.primary} size={16} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://journals.lww.com/anesthesia-analgesia/fulltext/2020/02000/fourth_consensus_guidelines_for_the_management_of.29.aspx')} activeOpacity={0.7}>
+              <View style={styles.citationContent}>
+                <Text style={styles.citationTitle}>Fourth Consensus Guidelines for the Management of Postoperative Nausea and Vomiting</Text>
+                <Text style={styles.citationMeta}>Society for Ambulatory Anesthesia (SAMBA) · 2020</Text>
+              </View>
+              <ExternalLink color={Colors.primary} size={16} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://www.aana.com/practice/clinical-practice-resources/scope-and-standards-for-nurse-anesthesia-practice')} activeOpacity={0.7}>
+              <View style={styles.citationContent}>
+                <Text style={styles.citationTitle}>Scope and Standards for Nurse Anesthesia Practice</Text>
+                <Text style={styles.citationMeta}>American Association of Nurse Anesthesiology (AANA) · 2023</Text>
+              </View>
+              <ExternalLink color={Colors.primary} size={16} />
+            </TouchableOpacity>
+          </View>
+        )}
+      </SectionCard>
+
       </ScrollView>
 
       {/* Edit Case Button (for saved plans) */}
@@ -977,6 +1045,54 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  disclaimerBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    backgroundColor: Colors.warning + '18',
+    borderRadius: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.warning,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  disclaimerBannerText: {
+    flex: 1,
+    fontSize: 12,
+    color: Colors.text.secondary,
+    lineHeight: 18,
+  },
+  citationsIntro: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+    lineHeight: 19,
+    marginBottom: Spacing.md,
+    fontStyle: 'italic',
+  },
+  citationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundTertiary,
+    borderRadius: 8,
+    padding: Spacing.sm + 2,
+    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  citationContent: {
+    flex: 1,
+  },
+  citationTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.primary,
+    lineHeight: 18,
+    marginBottom: 2,
+  },
+  citationMeta: {
+    fontSize: 11,
+    color: Colors.text.tertiary,
+    fontWeight: '500',
   },
   footer: {
     marginTop: Spacing.md,

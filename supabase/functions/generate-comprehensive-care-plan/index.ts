@@ -57,8 +57,43 @@ Required structure:
   "specialConsiderations": {"positioningConcerns": string[], "nerveInjuryPrevention": string[], "infectionPrevention": string[], "temperatureManagement": string[], "mhPreparedness": string},
   "checklist": [{"label": string, "category": "Preop"|"Intraop"|"Postop", "isCritical": boolean}],
   "rationales": [{"title": string, "detail": string, "linkedSection": string}],
-  "preoperativeRecommendations": {"recommendedConsults": [{"specialty": string, "reason": string, "urgency": "Required"|"Recommended"}], "recommendedLabs": [{"test": string, "reason": string, "urgency": "Required"|"Recommended"}], "recommendedImaging": [{"study": string, "reason": string, "urgency": "Required"|"Recommended"}], "rationale": string}
+  "preoperativeRecommendations": {"recommendedConsults": [{"specialty": string, "reason": string, "urgency": "Required"|"Recommended"}], "recommendedLabs": [{"test": string, "reason": string, "urgency": "Required"|"Recommended"}], "recommendedImaging": [{"study": string, "reason": string, "urgency": "Required"|"Recommended"}], "rationale": string},
+  "citations": [{"title": string, "organization": string, "year": string, "url": string}]
 }
+
+CRITICAL CITATIONS REQUIREMENT:
+You MUST always include a "citations" array with 5-10 relevant clinical guideline sources that support the recommendations in this care plan. Citations must be real, publicly accessible guidelines. Choose from the following authoritative sources based on the patient's conditions and procedure:
+
+ASA Guidelines:
+- {"title": "Practice Guidelines for Preoperative Fasting", "organization": "American Society of Anesthesiologists", "year": "2023", "url": "https://www.asahq.org/standards-and-practice-parameters/practice-guidelines-for-preoperative-fasting-and-the-use-of-pharmacologic-agents-to-reduce-the-risk-of-pulmonary-aspiration"}
+- {"title": "Practice Guidelines for Management of the Difficult Airway", "organization": "American Society of Anesthesiologists", "year": "2022", "url": "https://www.asahq.org/standards-and-practice-parameters/practice-guidelines-for-management-of-the-difficult-airway"}
+- {"title": "Standards for Basic Anesthetic Monitoring", "organization": "American Society of Anesthesiologists", "year": "2020", "url": "https://www.asahq.org/standards-and-practice-parameters/standards-for-basic-anesthetic-monitoring"}
+- {"title": "ASA Physical Status Classification System", "organization": "American Society of Anesthesiologists", "year": "2020", "url": "https://www.asahq.org/standards-and-practice-parameters/statement-on-asa-physical-status-classification-system"}
+- {"title": "Practice Advisory for Preanesthesia Evaluation", "organization": "American Society of Anesthesiologists", "year": "2012", "url": "https://www.asahq.org/standards-and-practice-parameters/practice-advisory-for-preanesthesia-evaluation"}
+
+PONV Guidelines:
+- {"title": "Fourth Consensus Guidelines for the Management of Postoperative Nausea and Vomiting", "organization": "Society for Ambulatory Anesthesia (SAMBA)", "year": "2020", "url": "https://journals.lww.com/anesthesia-analgesia/fulltext/2020/02000/fourth_consensus_guidelines_for_the_management_of.29.aspx"}
+
+Cardiac/Perioperative:
+- {"title": "2024 ACC/AHA Guideline for Perioperative Cardiovascular Management", "organization": "American College of Cardiology / American Heart Association", "year": "2024", "url": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001285"}
+
+Malignant Hyperthermia:
+- {"title": "Clinical Grading Scale for Malignant Hyperthermia", "organization": "Malignant Hyperthermia Association of the United States (MHAUS)", "year": "2024", "url": "https://www.mhaus.org/healthcare-professionals/managing-mh/"}
+
+Regional Anesthesia:
+- {"title": "ASRA Practice Advisory on Neurologic Complications in Regional Anesthesia", "organization": "American Society of Regional Anesthesia and Pain Medicine (ASRA)", "year": "2022", "url": "https://www.asra.com/guidelines-articles/original-articles/article-item/asra-news/2022/05/01/practice-advisory-on-neurologic-complications-in-regional-anesthesia"}
+- {"title": "ASRA Anticoagulation Guidelines", "organization": "American Society of Regional Anesthesia and Pain Medicine (ASRA)", "year": "2022", "url": "https://www.asra.com/guidelines-articles/guidelines/guideline-item/guidelines/2021/11/01/2022-american-society-of-regional-anesthesia-and-pain-medicine-practice-guidelines-for-the-management-of-regional-anesthesia-in-the-patient-receiving-antithrombotic-or-thrombolytic-therapy"}
+
+Pain Management:
+- {"title": "Multimodal Analgesia for Postoperative Pain Management", "organization": "American Society of Anesthesiologists", "year": "2012", "url": "https://www.asahq.org/standards-and-practice-parameters/practice-guidelines-for-acute-pain-management-in-the-perioperative-setting"}
+
+Airway Management:
+- {"title": "NAP4: Major Complications of Airway Management in the UK", "organization": "Royal College of Anaesthetists / Difficult Airway Society", "year": "2011", "url": "https://www.nationalauditprojects.org.uk/NAP4_home"}
+
+AANA:
+- {"title": "AANA Scope and Standards for Nurse Anesthesia Practice", "organization": "American Association of Nurse Anesthesiology (AANA)", "year": "2023", "url": "https://www.aana.com/practice/clinical-practice-resources/scope-and-standards-for-nurse-anesthesia-practice"}
+
+Select citations that are most relevant to the specific patient, procedure, and clinical decisions made in this care plan. Always include at minimum the ASA Standards for Basic Anesthetic Monitoring and one PONV guideline.
 
 CRITICAL MEDICATION CONSIDERATIONS:
 You MUST analyze every medication the patient is taking and include anesthetic implications in the "medicationAnestheticImplications" array in the history section. For EACH medication listed, provide a specific implication string. For each medication class, consider:
