@@ -226,10 +226,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    setLoading(true);
     setProfile(null);
     setIsAdmin(false);
     setIsTA(false);
+    await supabase.auth.signOut();
   };
 
   const resetPassword = async (email: string) => {

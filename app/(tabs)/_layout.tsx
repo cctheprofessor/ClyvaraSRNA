@@ -1,18 +1,10 @@
-import { Tabs, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { Tabs } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors } from '@/constants/theme';
 import { CustomTabBar } from '@/components/CustomTabBar';
 
 export default function TabsLayout() {
   const { session, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !session) {
-      router.replace('/(auth)/welcome');
-    }
-  }, [session, loading]);
 
   if (loading || !session) {
     return null;
