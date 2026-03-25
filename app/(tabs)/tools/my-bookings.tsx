@@ -7,8 +7,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Linking,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -16,7 +14,7 @@ import { supabase } from '../../../lib/supabase';
 import { BookingWithDetails } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Calendar, Clock, Star, Circle as XCircle, Bell, CircleCheck as CheckCircle, CreditCard, Video, MessageCircle } from 'lucide-react-native';
+import { Calendar, Clock, Star, Circle as XCircle, Bell, CircleCheck as CheckCircle, Video, MessageCircle } from 'lucide-react-native';
 
 export default function MyBookings() {
   const router = useRouter();
@@ -26,7 +24,6 @@ export default function MyBookings() {
   const [refreshing, setRefreshing] = useState(false);
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
   const [cancelingBookingId, setCancelingBookingId] = useState<string | null>(null);
-  const [payingBookingId, setPayingBookingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadBookings();
@@ -130,56 +127,6 @@ export default function MyBookings() {
     }
   }
 
-  async function proceedToPayment(bookingId: string) {
-    setPayingBookingId(bookingId);
-
-    try {
-      const { EXPO_PUBLIC_SUPABASE_URL } = process.env;
-      const apiUrl = `${EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ta-booking-checkout`;
-
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          booking_id: bookingId,
-          success_url: `${EXPO_PUBLIC_SUPABASE_URL}`,
-          cancel_url: `${EXPO_PUBLIC_SUPABASE_URL}`,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create checkout');
-      }
-
-      const { url } = await response.json();
-
-      if (url) {
-        if (__DEV__) { console.log('[MyBookings] Opening payment checkout:', url); }
-        const supported = await Linking.canOpenURL(url);
-
-        if (supported) {
-          await Linking.openURL(url);
-        } else {
-          Alert.alert('Error', 'Unable to open payment link. Please try again.');
-        }
-      } else {
-        throw new Error('No payment URL returned');
-      }
-    } catch (error: any) {
-      if (__DEV__) { console.error('[MyBookings] Payment error:', error); }
-      Alert.alert('Payment Error', error.message || 'Failed to proceed to payment. Please try again.');
-    } finally {
-      setPayingBookingId(null);
-    }
-  }
-
   async function leaveReview(bookingId: string, taId: string) {
     router.push({
       pathname: '/tools/leave-review',
@@ -200,14 +147,6 @@ export default function MyBookings() {
 
   const awaitingApprovalBookings = bookings
     .filter(b => b.status === 'awaiting_approval')
-    .sort((a, b) => {
-      const dateA = new Date(`${a.session_date}T${a.start_time}`);
-      const dateB = new Date(`${b.session_date}T${b.start_time}`);
-      return dateB.getTime() - dateA.getTime();
-    });
-
-  const approvedBookings = bookings
-    .filter(b => b.status === 'approved')
     .sort((a, b) => {
       const dateA = new Date(`${a.session_date}T${a.start_time}`);
       const dateB = new Date(`${b.session_date}T${b.start_time}`);
@@ -331,101 +270,6 @@ export default function MyBookings() {
           </>
         )}
 
-        {approvedBookings.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Ready for Payment</Text>
-
-            {approvedBookings.map((booking) => {
-              const isCanceling = cancelingBookingId === booking.id;
-              const isPaying = payingBookingId === booking.id;
-              return (
-                <View key={booking.id} style={[styles.bookingCard, styles.approvedCard]}>
-                  {booking.ta_profiles?.display_name && (
-                    <View style={styles.headerRow}>
-                      <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
-                      <View style={[styles.statusBadge, { backgroundColor: '#4CAF50' }]}>
-                        <CheckCircle size={12} color="#fff" />
-                        <Text style={styles.statusText}>Approved</Text>
-                      </View>
-                    </View>
-                  )}
-
-                  <View style={styles.bookingHeader}>
-                    <View style={styles.dateTime}>
-                      <Calendar size={16} color={Colors.primary} />
-                      <Text style={styles.bookingDate}>{booking.session_date}</Text>
-                    </View>
-                    <View style={styles.dateTime}>
-                      <Clock size={16} color={Colors.primary} />
-                      <Text style={styles.bookingTime}>{booking.start_time}</Text>
-                      <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
-                    </View>
-                  </View>
-
-                  <View style={[styles.infoBox, { backgroundColor: '#E8F5E9' }]}>
-                    <Text style={styles.infoText}>
-                      TA approved! Complete payment to confirm your session.
-                    </Text>
-                  </View>
-
-                  {!isCanceling ? (
-                    <View style={styles.bookingFooter}>
-                      <Text style={styles.bookingTotal}>${booking.total_amount}</Text>
-
-                      <View style={styles.actionButtons}>
-                        <TouchableOpacity
-                          style={styles.cancelButton}
-                          onPress={() => setCancelingBookingId(booking.id)}
-                          disabled={isPaying}
-                        >
-                          <XCircle size={16} color="#ff4444" />
-                          <Text style={styles.cancelButtonText}>Cancel</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={[styles.payButton, isPaying && styles.payButtonDisabled]}
-                          onPress={() => proceedToPayment(booking.id)}
-                          disabled={isPaying}
-                        >
-                          {isPaying ? (
-                            <ActivityIndicator size="small" color="#fff" />
-                          ) : (
-                            <>
-                              <CreditCard size={16} color="#fff" />
-                              <Text style={styles.payButtonText}>Pay Now</Text>
-                            </>
-                          )}
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.confirmationBox}>
-                      <Text style={styles.confirmationText}>
-                        Cancel this booking request?
-                      </Text>
-                      <View style={styles.confirmationActions}>
-                        <TouchableOpacity
-                          style={styles.confirmCancelButton}
-                          onPress={() => setCancelingBookingId(null)}
-                        >
-                          <Text style={styles.confirmCancelButtonText}>No</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={styles.confirmButton}
-                          onPress={() => cancelAwaitingBooking(booking.id)}
-                        >
-                          <Text style={styles.confirmButtonText}>Yes, Cancel</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  )}
-                </View>
-              );
-            })}
-          </>
-        )}
-
         <Text style={styles.sectionTitle}>Upcoming Sessions</Text>
 
         {upcomingBookings.length === 0 ? (
@@ -441,11 +285,6 @@ export default function MyBookings() {
         ) : (
           upcomingBookings.map((booking) => {
             const isCanceling = cancelingBookingId === booking.id;
-            const sessionDateTime = new Date(`${booking.session_date}T${booking.start_time}`);
-            const now = new Date();
-            const hoursUntil = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-            const willRefund = hoursUntil >= 24;
-
             return (
               <View key={booking.id} style={styles.bookingCard}>
                 {booking.ta_profiles?.display_name && (
@@ -528,9 +367,7 @@ export default function MyBookings() {
                 ) : (
                   <View style={styles.confirmationBox}>
                     <Text style={styles.confirmationText}>
-                      {willRefund
-                        ? 'Cancel this booking? You will receive a full refund.'
-                        : 'Cancel this booking? No refund will be issued (less than 24 hours notice).'}
+                      Cancel this booking?
                     </Text>
                     <View style={styles.confirmationActions}>
                       <TouchableOpacity
@@ -912,23 +749,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.text.primary,
     lineHeight: 18,
-  },
-  payButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  payButtonDisabled: {
-    opacity: 0.6,
-  },
-  payButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
   },
   confirmationBox: {
     backgroundColor: '#fff',

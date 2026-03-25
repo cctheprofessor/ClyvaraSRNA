@@ -6,7 +6,6 @@ export interface TAProfile {
   base_rate_30min: number;
   specialties: string[];
   is_active: boolean;
-  stripe_account_id: string | null;
   meeting_link: string | null;
   total_sessions: number;
   average_rating: number;
@@ -39,8 +38,6 @@ export interface TABooking {
   status: BookingStatus;
   meeting_link: string | null;
   notes: string | null;
-  stripe_payment_intent_id: string | null;
-  stripe_transfer_id: string | null;
   approved_at: string | null;
   approved_by: string | null;
   rejected_at: string | null;

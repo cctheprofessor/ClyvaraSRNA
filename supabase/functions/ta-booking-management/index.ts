@@ -1,19 +1,10 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
-import Stripe from 'npm:stripe@17.7.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
-
-const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
-const stripe = new Stripe(stripeSecret, {
-  appInfo: {
-    name: 'Clyvara TA Bookings',
-    version: '1.0.0',
-  },
-});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -64,7 +55,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get booking details
     const { data: booking, error: bookingError } = await supabase
       .from('ta_bookings')
       .select('*, ta_profiles!inner(user_id)')
@@ -78,7 +68,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify user has permission (either student or TA)
     const isStudent = booking.student_id === user.id;
     const isTA = booking.ta_profiles.user_id === user.id;
 
@@ -91,11 +80,11 @@ Deno.serve(async (req) => {
 
     switch (action) {
       case 'cancel':
-        return await handleCancellation(booking, user.id, cancellation_reason, isStudent);
-      
+        return await handleCancellation(booking, user.id, cancellation_reason);
+
       case 'complete':
-        return await handleCompletion(booking, user.id, isTA);
-      
+        return await handleCompletion(booking, isTA);
+
       default:
         return new Response(JSON.stringify({ error: 'Invalid action' }), {
           status: 400,
@@ -115,9 +104,7 @@ async function handleCancellation(
   booking: any,
   userId: string,
   cancellationReason: string,
-  isStudent: boolean
 ) {
-  // Check if booking can be cancelled
   if (booking.status === 'cancelled' || booking.status === 'completed') {
     return new Response(
       JSON.stringify({ error: 'Booking cannot be cancelled in current status' }),
@@ -128,41 +115,10 @@ async function handleCancellation(
     );
   }
 
-  // Calculate hours until session
-  const sessionDateTime = new Date(`${booking.session_date}T${booking.start_time}`);
-  const now = new Date();
-  const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-  // Determine if refund should be issued (24 hours before)
-  const shouldRefund = hoursUntilSession >= 24;
-
-  let refundId = null;
-
-  // Issue refund if applicable and payment was processed
-  if (shouldRefund && booking.stripe_payment_intent_id) {
-    try {
-      // Get the payment intent to refund
-      const paymentIntent = await stripe.paymentIntents.retrieve(
-        booking.stripe_payment_intent_id
-      );
-
-      if (paymentIntent.status === 'succeeded') {
-        const refund = await stripe.refunds.create({
-          payment_intent: booking.stripe_payment_intent_id,
-        });
-        refundId = refund.id;
-      }
-    } catch (error: any) {
-      console.error('Refund error:', error);
-      // Continue with cancellation even if refund fails
-    }
-  }
-
-  // Update booking status
   const { error: updateError } = await supabase
     .from('ta_bookings')
     .update({
-      status: shouldRefund ? 'refunded' : 'cancelled',
+      status: 'cancelled',
       cancelled_by: userId,
       cancelled_at: new Date().toISOString(),
       cancellation_reason: cancellationReason || null,
@@ -182,14 +138,7 @@ async function handleCancellation(
   }
 
   return new Response(
-    JSON.stringify({
-      success: true,
-      refunded: shouldRefund,
-      refund_id: refundId,
-      message: shouldRefund
-        ? 'Booking cancelled and refunded successfully'
-        : 'Booking cancelled (no refund - less than 24 hours notice)',
-    }),
+    JSON.stringify({ success: true, message: 'Booking cancelled successfully' }),
     {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -197,12 +146,7 @@ async function handleCancellation(
   );
 }
 
-async function handleCompletion(
-  booking: any,
-  userId: string,
-  isTA: boolean
-) {
-  // Only TAs can mark sessions as complete
+async function handleCompletion(booking: any, isTA: boolean) {
   if (!isTA) {
     return new Response(
       JSON.stringify({ error: 'Only TAs can mark sessions as completed' }),
@@ -213,7 +157,6 @@ async function handleCompletion(
     );
   }
 
-  // Check if booking is confirmed
   if (booking.status !== 'confirmed') {
     return new Response(
       JSON.stringify({ error: 'Only confirmed bookings can be marked as completed' }),
@@ -224,7 +167,6 @@ async function handleCompletion(
     );
   }
 
-  // Update booking status
   const { error: updateError } = await supabase
     .from('ta_bookings')
     .update({
@@ -246,10 +188,7 @@ async function handleCompletion(
   }
 
   return new Response(
-    JSON.stringify({
-      success: true,
-      message: 'Session marked as completed successfully',
-    }),
+    JSON.stringify({ success: true, message: 'Session marked as completed successfully' }),
     {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

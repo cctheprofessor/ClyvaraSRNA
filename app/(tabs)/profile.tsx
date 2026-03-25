@@ -8,7 +8,6 @@ import {
   Pressable,
   Alert,
   Modal,
-  Linking,
   ActivityIndicator,
   FlatList,
 } from 'react-native';
@@ -32,7 +31,6 @@ export default function ProfileScreen() {
   const [showSchoolPicker, setShowSchoolPicker] = useState(false);
   const [showEnrollmentDatePicker, setShowEnrollmentDatePicker] = useState(false);
   const [showExpectedGraduationPicker, setShowExpectedGraduationPicker] = useState(false);
-  const [donationLoading, setDonationLoading] = useState(false);
   const [mlSyncLoading, setMlSyncLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -132,64 +130,6 @@ export default function ProfileScreen() {
     if (error) {
       setDeleteLoading(false);
       setDeleteError('Something went wrong. Please try again.');
-    }
-  };
-
-  const handleDonation = async (donationType: 'one_time' | 'monthly') => {
-    if (!user) {
-      Alert.alert('Error', 'You must be logged in to donate');
-      return;
-    }
-
-    setDonationLoading(true);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        Alert.alert('Error', 'Authentication required');
-        setDonationLoading(false);
-        return;
-      }
-
-      const successUrl = `${process.env.EXPO_PUBLIC_APP_URL || 'https://clyvara.app'}?donation=success`;
-      const cancelUrl = `${process.env.EXPO_PUBLIC_APP_URL || 'https://clyvara.app'}?donation=cancelled`;
-
-      const amount = donationType === 'one_time' ? 20 : 7;
-
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/stripe-checkout`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            amount,
-            donation_type: donationType,
-            success_url: successUrl,
-            cancel_url: cancelUrl,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create checkout session');
-      }
-
-      const { url } = await response.json();
-
-      if (url) {
-        await Linking.openURL(url);
-      } else {
-        throw new Error('No checkout URL received');
-      }
-    } catch (error: any) {
-      if (__DEV__) { console.error('Donation error:', error); }
-      Alert.alert('Error', error.message || 'Failed to process donation');
-    } finally {
-      setDonationLoading(false);
     }
   };
 
@@ -360,42 +300,6 @@ export default function ProfileScreen() {
             <User color="#ffffff" size={40} />
           </View>
           <Text style={styles.email}>{user?.email}</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Donation</Text>
-          <View style={styles.form}>
-            <Text style={styles.donationText}>
-              Help us help you!
-            </Text>
-            <View style={styles.donationButtons}>
-              <Pressable
-                style={[styles.donationButton, donationLoading && styles.donationButtonDisabled]}
-                onPress={() => handleDonation('one_time')}
-                disabled={donationLoading}
-              >
-                {donationLoading ? (
-                  <ActivityIndicator size="small" color={Colors.text.light} />
-                ) : (
-                  <Text style={styles.donationButtonText}>One-Time $20</Text>
-                )}
-              </Pressable>
-              <Pressable
-                style={[styles.donationButton, donationLoading && styles.donationButtonDisabled]}
-                onPress={() => handleDonation('monthly')}
-                disabled={donationLoading}
-              >
-                {donationLoading ? (
-                  <ActivityIndicator size="small" color={Colors.text.light} />
-                ) : (
-                  <Text style={styles.donationButtonText}>Monthly $7</Text>
-                )}
-              </Pressable>
-            </View>
-            <Text style={styles.donationFooter}>
-              Your support helps us maintain and improve Clyvara
-            </Text>
-          </View>
         </View>
 
         <View style={styles.section}>
@@ -1234,42 +1138,6 @@ const styles = StyleSheet.create({
   pickerItemText: {
     fontSize: 16,
     color: Colors.text.primary,
-  },
-  donationText: {
-    fontSize: 15,
-    color: Colors.text.secondary,
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-  donationButtons: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    marginTop: Spacing.sm,
-  },
-  donationButton: {
-    flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: Spacing.md,
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 50,
-  },
-  donationButtonDisabled: {
-    opacity: 0.6,
-  },
-  donationButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.text.light,
-  },
-  donationFooter: {
-    fontSize: 13,
-    color: Colors.text.tertiary,
-    textAlign: 'center',
-    marginTop: Spacing.xs,
-    fontStyle: 'italic',
   },
   syncButton: {
     flexDirection: 'row',
