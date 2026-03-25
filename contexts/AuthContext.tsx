@@ -18,6 +18,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error: any }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
   refreshProfile: () => Promise<void>;
+  deleteAccount: () => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -271,6 +272,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const deleteAccount = async () => {
+    if (!user) return { error: new Error('No user logged in') };
+
+    try {
+      const { error } = await supabase.rpc('delete_user_account');
+      if (error) return { error };
+
+      setProfile(null);
+      setIsAdmin(false);
+      setIsTA(false);
+      await supabase.auth.signOut();
+      return { error: null };
+    } catch (error) {
+      return { error };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -286,6 +304,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resetPassword,
         updateProfile,
         refreshProfile,
+        deleteAccount,
       }}
     >
       {children}

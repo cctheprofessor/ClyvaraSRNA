@@ -13,7 +13,7 @@ import {
   FlatList,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings, RefreshCw, ClipboardCheck, Mail } from 'lucide-react-native';
+import { User, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings, RefreshCw, ClipboardCheck, Mail, Trash2 } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { ROLES, PROGRAM_TRACKS, CRNA_SCHOOLS } from '@/constants/crna-schools';
 import PageHeader from '@/components/PageHeader';
@@ -23,7 +23,7 @@ import { mlClient } from '@/lib/ml-backend-client';
 import { questionCacheService } from '@/lib/question-cache-service';
 
 export default function ProfileScreen() {
-  const { profile, user, signOut, updateProfile, isAdmin, refreshProfile } = useAuth();
+  const { profile, user, signOut, updateProfile, isAdmin, refreshProfile, deleteAccount } = useAuth();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
@@ -34,6 +34,9 @@ export default function ProfileScreen() {
   const [showExpectedGraduationPicker, setShowExpectedGraduationPicker] = useState(false);
   const [donationLoading, setDonationLoading] = useState(false);
   const [mlSyncLoading, setMlSyncLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
     first_name: profile?.first_name || '',
@@ -120,6 +123,16 @@ export default function ProfileScreen() {
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    setDeleteError(null);
+    const { error } = await deleteAccount();
+    if (error) {
+      setDeleteLoading(false);
+      setDeleteError('Something went wrong. Please try again.');
+    }
   };
 
   const handleDonation = async (donationType: 'one_time' | 'monthly') => {
@@ -794,6 +807,10 @@ export default function ProfileScreen() {
             <LogOut color="#dc2626" size={20} />
             <Text style={styles.signOutText}>Sign Out</Text>
           </Pressable>
+          <Pressable style={styles.deleteAccountButton} onPress={() => { setDeleteError(null); setShowDeleteModal(true); }}>
+            <Trash2 color="#dc2626" size={20} />
+            <Text style={styles.deleteAccountText}>Delete Account</Text>
+          </Pressable>
         </View>
 
         <Text style={styles.version}>Version 1.0.0</Text>
@@ -898,6 +915,41 @@ export default function ProfileScreen() {
                 </Pressable>
               )}
             />
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showDeleteModal} animationType="fade" transparent>
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <View style={styles.deleteModalIconContainer}>
+              <Trash2 color="#dc2626" size={32} />
+            </View>
+            <Text style={styles.deleteModalTitle}>Delete Account</Text>
+            <Text style={styles.deleteModalBody}>
+              This will permanently delete your account and all associated data, including your study history, practice sessions, care plans, and bookings. This action cannot be undone.
+            </Text>
+            {deleteError && (
+              <Text style={styles.deleteModalError}>{deleteError}</Text>
+            )}
+            <Pressable
+              style={[styles.deleteConfirmButton, deleteLoading && styles.deleteConfirmButtonDisabled]}
+              onPress={handleDeleteAccount}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text style={styles.deleteConfirmButtonText}>Permanently Delete My Account</Text>
+              )}
+            </Pressable>
+            <Pressable
+              style={styles.deleteCancelButton}
+              onPress={() => setShowDeleteModal(false)}
+              disabled={deleteLoading}
+            >
+              <Text style={styles.deleteCancelButtonText}>Cancel</Text>
+            </Pressable>
           </View>
         </View>
       </Modal>
@@ -1293,5 +1345,91 @@ const styles = StyleSheet.create({
   clearText: {
     color: Colors.error,
     fontWeight: '600',
+  },
+  deleteAccountButton: {
+    backgroundColor: '#fff5f5',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  deleteAccountText: {
+    ...Typography.bodyBold,
+    color: Colors.error,
+  },
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
+  },
+  deleteModalContent: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  deleteModalIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#fff5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
+  deleteModalTitle: {
+    ...Typography.h3,
+    color: Colors.text.primary,
+    textAlign: 'center',
+  },
+  deleteModalBody: {
+    fontSize: 15,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  deleteModalError: {
+    fontSize: 14,
+    color: Colors.error,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  deleteConfirmButton: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: BorderRadius.sm,
+    alignItems: 'center',
+    backgroundColor: '#dc2626',
+    marginTop: Spacing.xs,
+    minHeight: 50,
+    justifyContent: 'center',
+  },
+  deleteConfirmButtonDisabled: {
+    opacity: 0.6,
+  },
+  deleteConfirmButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  deleteCancelButton: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: BorderRadius.sm,
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundSecondary,
+  },
+  deleteCancelButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.text.secondary,
   },
 });
