@@ -31,7 +31,8 @@ export default function TermsOfServiceScreen() {
         <Text style={styles.sectionTitle}>2. Educational Purpose Only</Text>
         <Text style={styles.body}>
           Clyvara is an educational tool designed to assist nurse anesthesia students and professionals with exam preparation and learning. The content provided through Clyvara, including AI-generated questions, study plans, and anesthesia care plan templates, is for educational purposes only.{'\n\n'}
-          CLYVARA IS NOT A CLINICAL DECISION-MAKING TOOL. Content within the app should never be used as a substitute for professional medical judgment, clinical guidelines, or the advice of qualified healthcare professionals.
+          CLYVARA IS NOT A CLINICAL DECISION-MAKING TOOL. Content within the app should never be used as a substitute for professional medical judgment, clinical guidelines, or the advice of qualified healthcare professionals.{'\n\n'}
+          Users should always seek the advice of a physician or other qualified healthcare provider with any questions regarding a medical condition before making any healthcare decisions.
         </Text>
 
         <Text style={styles.sectionTitle}>3. Eligibility</Text>

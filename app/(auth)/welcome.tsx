@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BookOpen, Calculator, GraduationCap } from 'lucide-react-native';
+import { BookOpen, Calculator, GraduationCap, Info } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 
 export default function WelcomeScreen() {
@@ -54,9 +54,14 @@ export default function WelcomeScreen() {
           </Pressable>
         </View>
 
-        <Text style={styles.disclaimer}>
-          For educational purposes only. Not a substitute for professional medical judgment.
-        </Text>
+        <View style={styles.disclaimerBox}>
+          <View style={styles.disclaimerRow}>
+            <Info color="rgba(255,255,255,0.85)" size={15} style={styles.disclaimerIcon} />
+            <Text style={styles.disclaimer}>
+              For educational purposes only. Always consult a physician or qualified healthcare provider before making any medical decisions.
+            </Text>
+          </View>
+        </View>
       </View>
     </LinearGradient>
   );
@@ -136,11 +141,28 @@ const styles = StyleSheet.create({
     color: Colors.text.light,
     ...Typography.bodyBold,
   },
+  disclaimerBox: {
+    marginTop: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.45)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: BorderRadius.md,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    maxWidth: 320,
+  },
+  disclaimerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  disclaimerIcon: {
+    marginTop: 1,
+  },
   disclaimer: {
-    fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.7)',
-    textAlign: 'center',
-    marginTop: 32,
-    maxWidth: 300,
+    flex: 1,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.85)',
+    lineHeight: 18,
   },
 });
