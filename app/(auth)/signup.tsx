@@ -295,11 +295,13 @@ export default function SignupScreen() {
             </Pressable>
           </View>
 
-          <Pressable style={styles.termsRow} onPress={() => setAgreedToTerms(!agreedToTerms)}>
-            {agreedToTerms
-              ? <CheckSquare color={Colors.primary} size={20} />
-              : <Square color={Colors.text.tertiary} size={20} />
-            }
+          <View style={styles.termsRow}>
+            <Pressable onPress={() => setAgreedToTerms(!agreedToTerms)} style={styles.termsCheckbox}>
+              {agreedToTerms
+                ? <CheckSquare color={Colors.primary} size={20} />
+                : <Square color={Colors.text.tertiary} size={20} />
+              }
+            </Pressable>
             <Text style={styles.termsText}>
               I agree to the{' '}
               <Text style={styles.termsLink} onPress={() => router.push('/(auth)/terms-of-service')}>
@@ -315,7 +317,7 @@ export default function SignupScreen() {
               </Text>
               {' '}for processing. I will be asked for explicit permission before any data is sent to OpenAI.
             </Text>
-          </Pressable>
+          </View>
         </View>
       </ScrollView>
 
@@ -652,6 +654,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.text.secondary,
     lineHeight: 20,
+  },
+  termsCheckbox: {
+    paddingTop: 1,
   },
   termsLink: {
     color: Colors.primary,
