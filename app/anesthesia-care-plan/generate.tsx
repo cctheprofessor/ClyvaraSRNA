@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,12 +16,48 @@ import { Stack, router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { generateCarePlanWithOpenAI, CarePlanValidationError } from '@/lib/anesthesia-ai-engine';
-import { ArrowLeft, Hop as Home, FileText, GraduationCap, Stethoscope, User } from 'lucide-react-native';
+import { ArrowLeft, Hop as Home, FileText, GraduationCap, Stethoscope, User, Info } from 'lucide-react-native';
 import PageHeader from '@/components/PageHeader';
+import AIConsentModal from '@/components/AIConsentModal';
 
 export default function GenerateCarePlanScreen() {
   const [caseDescription, setCaseDescription] = useState('');
   const [loading, setLoading] = useState(false);
+  const [consentGiven, setConsentGiven] = useState<boolean | null>(null);
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [pendingGenerate, setPendingGenerate] = useState(false);
+
+  useEffect(() => {
+    checkConsent();
+  }, []);
+
+  const checkConsent = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('ai_care_plan_consent_given')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    setConsentGiven(data?.ai_care_plan_consent_given ?? false);
+  };
+
+  const recordConsent = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    await supabase
+      .from('profiles')
+      .update({
+        ai_care_plan_consent_given: true,
+        ai_care_plan_consent_at: new Date().toISOString(),
+      })
+      .eq('id', session.user.id);
+
+    setConsentGiven(true);
+  };
 
   const handleGoHome = () => {
     router.replace('/(tabs)');
@@ -33,6 +69,30 @@ export default function GenerateCarePlanScreen() {
       return;
     }
 
+    if (!consentGiven) {
+      setPendingGenerate(true);
+      setShowConsentModal(true);
+      return;
+    }
+
+    await runGenerate();
+  };
+
+  const handleConsentAccept = async () => {
+    setShowConsentModal(false);
+    await recordConsent();
+    if (pendingGenerate) {
+      setPendingGenerate(false);
+      await runGenerate();
+    }
+  };
+
+  const handleConsentDecline = () => {
+    setShowConsentModal(false);
+    setPendingGenerate(false);
+  };
+
+  const runGenerate = async () => {
     setLoading(true);
 
     try {
@@ -95,6 +155,13 @@ export default function GenerateCarePlanScreen() {
         }}
       />
 
+      <AIConsentModal
+        visible={showConsentModal}
+        variant="care-plan"
+        onAccept={handleConsentAccept}
+        onDecline={handleConsentDecline}
+      />
+
       <View style={styles.headerContainer}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <ArrowLeft color={Colors.primary} size={24} />
@@ -107,6 +174,15 @@ export default function GenerateCarePlanScreen() {
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+
+        <View style={styles.aiNotice}>
+          <Info color={Colors.secondary} size={16} />
+          <Text style={styles.aiNoticeText}>
+            This feature sends your case description to{' '}
+            <Text style={styles.aiNoticeBold}>OpenAI, Inc.</Text>
+            {' '}for AI processing. Do not include real patient names or identifying information.
+          </Text>
+        </View>
 
         <View style={styles.inputSection}>
           <Text style={styles.label}>Case Description</Text>
@@ -164,7 +240,6 @@ export default function GenerateCarePlanScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom Tab Navigation */}
       <View style={styles.tabBarContainer}>
         <View style={styles.tabBar}>
           <TouchableOpacity style={styles.tab} onPress={() => router.push('/(tabs)')}>
@@ -234,6 +309,27 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.md,
+  },
+  aiNotice: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    backgroundColor: Colors.secondaryLight + '40',
+    borderRadius: BorderRadius.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.secondary,
+    padding: Spacing.sm,
+    marginBottom: Spacing.md,
+    alignItems: 'flex-start',
+  },
+  aiNoticeText: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+    lineHeight: 20,
+    flex: 1,
+  },
+  aiNoticeBold: {
+    fontWeight: '700',
+    color: Colors.text.primary,
   },
   inputSection: {
     marginBottom: Spacing.lg,

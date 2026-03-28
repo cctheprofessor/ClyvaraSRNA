@@ -309,7 +309,11 @@ export default function SignupScreen() {
               <Text style={styles.termsLink} onPress={() => router.push('/(auth)/privacy-policy')}>
                 Privacy Policy
               </Text>
-              . I understand this tool is for educational purposes only.
+              . I understand this app is for educational purposes only and that certain AI-powered features (care plan generation and study plans) send data I enter to{' '}
+              <Text style={styles.termsLink} onPress={() => router.push('/(auth)/privacy-policy')}>
+                OpenAI, Inc.
+              </Text>
+              {' '}for processing. I will be asked for explicit permission before any data is sent to OpenAI.
             </Text>
           </Pressable>
         </View>

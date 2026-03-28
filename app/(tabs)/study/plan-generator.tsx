@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,13 +14,17 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { generateStudyPlan } from '@/lib/openai';
-import { ArrowLeft, Calendar, Clock, Target, Sparkles } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, Target, Sparkles, Info } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import AIConsentModal from '@/components/AIConsentModal';
 
 export default function StudyPlanGenerator() {
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [consentGiven, setConsentGiven] = useState<boolean | null>(null);
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [pendingGenerate, setPendingGenerate] = useState(false);
   const [formData, setFormData] = useState({
     examDate: '',
     studyHoursPerWeek: '10',
@@ -31,6 +35,32 @@ export default function StudyPlanGenerator() {
   });
 
   const knowledgeLevels = ['Beginner', 'Intermediate', 'Advanced'];
+
+  useEffect(() => {
+    checkConsent();
+  }, []);
+
+  const checkConsent = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('profiles')
+      .select('ai_study_plan_consent_given')
+      .eq('id', user.id)
+      .maybeSingle();
+    setConsentGiven(data?.ai_study_plan_consent_given ?? false);
+  };
+
+  const recordConsent = async () => {
+    if (!user) return;
+    await supabase
+      .from('profiles')
+      .update({
+        ai_study_plan_consent_given: true,
+        ai_study_plan_consent_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+    setConsentGiven(true);
+  };
 
   const handleGenerate = async () => {
     if (!formData.examDate || !formData.studyHoursPerWeek) {
@@ -44,6 +74,30 @@ export default function StudyPlanGenerator() {
       return;
     }
 
+    if (!consentGiven) {
+      setPendingGenerate(true);
+      setShowConsentModal(true);
+      return;
+    }
+
+    await runGenerate();
+  };
+
+  const handleConsentAccept = async () => {
+    setShowConsentModal(false);
+    await recordConsent();
+    if (pendingGenerate) {
+      setPendingGenerate(false);
+      await runGenerate();
+    }
+  };
+
+  const handleConsentDecline = () => {
+    setShowConsentModal(false);
+    setPendingGenerate(false);
+  };
+
+  const runGenerate = async () => {
     setLoading(true);
 
     try {
@@ -96,6 +150,13 @@ export default function StudyPlanGenerator() {
 
   return (
     <View style={styles.container}>
+      <AIConsentModal
+        visible={showConsentModal}
+        variant="study-plan"
+        onAccept={handleConsentAccept}
+        onDecline={handleConsentDecline}
+      />
+
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <ArrowLeft color={Colors.primary} size={24} />
@@ -110,6 +171,16 @@ export default function StudyPlanGenerator() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+
+        <View style={styles.aiNotice}>
+          <Info color={Colors.secondary} size={16} />
+          <Text style={styles.aiNoticeText}>
+            This feature sends your study preferences to{' '}
+            <Text style={styles.aiNoticeBold}>OpenAI, Inc.</Text>
+            {' '}to generate a personalized plan. You will be asked to consent before any data is sent.
+          </Text>
+        </View>
+
         <View style={styles.form}>
           <View style={styles.inputGroup}>
             <View style={styles.labelRow}>
@@ -286,6 +357,26 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     gap: 16,
+  },
+  aiNotice: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    backgroundColor: Colors.secondaryLight + '40',
+    borderRadius: BorderRadius.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.secondary,
+    padding: Spacing.sm,
+    alignItems: 'flex-start',
+  },
+  aiNoticeText: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+    lineHeight: 20,
+    flex: 1,
+  },
+  aiNoticeBold: {
+    fontWeight: '700',
+    color: Colors.text.primary,
   },
   form: {
     backgroundColor: Colors.background,
