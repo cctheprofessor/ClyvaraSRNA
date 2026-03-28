@@ -697,21 +697,21 @@ export function CarePlanScreen({ carePlan, caseDescription, carePlanId }: CarePl
               </View>
               <ExternalLink color={Colors.primary} size={16} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://www.asahq.org/standards-and-practice-parameters/practice-guidelines-for-management-of-the-difficult-airway')} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://pubmed.ncbi.nlm.nih.gov/34762729/')} activeOpacity={0.7}>
               <View style={styles.citationContent}>
                 <Text style={styles.citationTitle}>Practice Guidelines for Management of the Difficult Airway</Text>
                 <Text style={styles.citationMeta}>American Society of Anesthesiologists · 2022</Text>
               </View>
               <ExternalLink color={Colors.primary} size={16} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://journals.lww.com/anesthesia-analgesia/fulltext/2020/02000/fourth_consensus_guidelines_for_the_management_of.29.aspx')} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://journals.lww.com/anesthesia-analgesia/abstract/2020/08000/fourth_consensus_guidelines_for_the_management_of.16.aspx')} activeOpacity={0.7}>
               <View style={styles.citationContent}>
                 <Text style={styles.citationTitle}>Fourth Consensus Guidelines for the Management of Postoperative Nausea and Vomiting</Text>
                 <Text style={styles.citationMeta}>Society for Ambulatory Anesthesia (SAMBA) · 2020</Text>
               </View>
               <ExternalLink color={Colors.primary} size={16} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://www.aana.com/practice/clinical-practice-resources/scope-and-standards-for-nurse-anesthesia-practice')} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://www.aana.com/practice-manual/aana-practice-manual-standards-for-nurse-anesthesia-practice/')} activeOpacity={0.7}>
               <View style={styles.citationContent}>
                 <Text style={styles.citationTitle}>Scope and Standards for Nurse Anesthesia Practice</Text>
                 <Text style={styles.citationMeta}>American Association of Nurse Anesthesiology (AANA) · 2023</Text>
