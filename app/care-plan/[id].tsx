@@ -9,7 +9,7 @@ const GENERAL_CITATIONS = [
   { title: 'Standards for Basic Anesthetic Monitoring', organization: 'American Society of Anesthesiologists', year: '2020', url: 'https://www.asahq.org/standards-and-practice-parameters/standards-for-basic-anesthetic-monitoring' },
   { title: 'Practice Guidelines for Management of the Difficult Airway', organization: 'American Society of Anesthesiologists', year: '2022', url: 'https://pubmed.ncbi.nlm.nih.gov/34762729/' },
   { title: 'Fourth Consensus Guidelines for the Management of Postoperative Nausea and Vomiting', organization: 'Society for Ambulatory Anesthesia (SAMBA)', year: '2020', url: 'https://journals.lww.com/anesthesia-analgesia/abstract/2020/08000/fourth_consensus_guidelines_for_the_management_of.16.aspx' },
-  { title: 'Scope and Standards for Nurse Anesthesia Practice', organization: 'American Association of Nurse Anesthesiology (AANA)', year: '2023', url: 'https://www.aana.com/practice-manual/aana-practice-manual-standards-for-nurse-anesthesia-practice/' },
+  { title: 'Scope and Standards for Nurse Anesthesia Practice', organization: 'American Association of Nurse Anesthesiology (AANA)', year: '2023', url: 'https://www.aana.com/practice/professional-practice-manual/' },
   { title: '2024 ACC/AHA Guideline for Perioperative Cardiovascular Management', organization: 'American College of Cardiology / American Heart Association', year: '2024', url: 'https://www.ahajournals.org/doi/10.1161/CIR.0000000000001285' },
 ];
 
