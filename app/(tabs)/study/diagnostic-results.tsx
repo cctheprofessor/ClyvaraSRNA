@@ -128,9 +128,9 @@ export default function DiagnosticResultsScreen() {
       case 'medium':
         return Colors.warning;
       case 'low':
-        return Colors.info;
+        return Colors.secondary;
       default:
-        return Colors.textSecondary;
+        return Colors.text.secondary;
     }
   };
 
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: Spacing.md,
     fontSize: Typography.body.fontSize,
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
     textAlign: 'center',
   },
   errorContainer: {
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     fontSize: Typography.h3.fontSize,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   overallScore: {
     marginTop: Spacing.xs,
@@ -389,12 +389,12 @@ const styles = StyleSheet.create({
   overallPercentage: {
     fontSize: Typography.h2.fontSize,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
   },
   completedDate: {
     marginTop: Spacing.sm,
     fontSize: Typography.small.fontSize,
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
   },
   section: {
     margin: Spacing.md,
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Typography.h3.fontSize,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
     marginBottom: Spacing.md,
   },
   sectionHeaderWithIcon: {
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   },
   sectionDescription: {
     fontSize: Typography.small.fontSize,
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
     marginBottom: Spacing.md,
   },
   scoreItem: {
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   },
   scoreItemLabel: {
     fontSize: Typography.body.fontSize,
-    color: Colors.text,
+    color: Colors.text.primary,
     flex: 1,
   },
   scoreItemValue: {
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    backgroundColor: Colors.border,
+    backgroundColor: Colors.border.light,
     borderRadius: BorderRadius.sm,
     overflow: 'hidden',
   },
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
   listItemText: {
     flex: 1,
     fontSize: Typography.body.fontSize,
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   recommendationCard: {
     padding: Spacing.md,
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Typography.body.fontSize,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.text.primary,
   },
   priorityBadge: {
     paddingVertical: 2,
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   },
   recommendationReason: {
     fontSize: Typography.small.fontSize,
-    color: Colors.textSecondary,
+    color: Colors.text.secondary,
   },
   continueButton: {
     flexDirection: 'row',

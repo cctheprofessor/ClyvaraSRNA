@@ -36,6 +36,10 @@ export const Colors = {
   },
 
   overlay: 'rgba(0, 0, 0, 0.5)',
+
+  info: '#4E7CB2',
+  surface: '#F9F9F9',
+  textSecondary: '#333333',
 };
 
 export const Spacing = {

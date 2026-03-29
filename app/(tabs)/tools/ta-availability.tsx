@@ -218,7 +218,7 @@ export default function TAAvailabilityScreen() {
             <View style={styles.dayHeader}>
               <Text style={styles.dayName}>{DAY_NAMES[day]}</Text>
               {selectedDay === day && (
-                <TouchableOpacity style={styles.addButton} onPress={addSlot}>
+                <TouchableOpacity style={styles.addButton} onPress={() => addSlot()}>
                   <Plus size={18} color="#fff" />
                   <Text style={styles.addButtonText}>Add Time</Text>
                 </TouchableOpacity>
