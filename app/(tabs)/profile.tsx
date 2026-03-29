@@ -12,6 +12,7 @@ import {
   FlatList,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import Constants from 'expo-constants';
 import { User, GraduationCap, Stethoscope, LogOut, Save, Briefcase, ChevronDown, Settings, RefreshCw, ClipboardCheck, Mail, Trash2 } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { ROLES, PROGRAM_TRACKS, CRNA_SCHOOLS } from '@/constants/crna-schools';
@@ -717,7 +718,7 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
-        <Text style={styles.version}>Version 1.0.0</Text>
+        <Text style={styles.version}>Version {Constants.expoConfig?.version ?? '1.2.0'}</Text>
       </ScrollView>
 
       <Modal visible={showRolePicker} animationType="slide" transparent>

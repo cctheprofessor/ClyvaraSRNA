@@ -7,45 +7,17 @@ const corsHeaders = {
 };
 
 const ML_BACKEND_URL = Deno.env.get('ML_BACKEND_URL') || 'https://clyvaraml.replit.app';
-const ML_API_KEY = Deno.env.get('ML_API_KEY') || '0Rvm9uG9jFO37Yi1OLcEzf7eIZuMQWnY';
-
-const ALLOWED_PATTERNS = [
-  /^https:\/\/.*\.webcontainer-api\.io$/,
-  /^https:\/\/.*\.local-credentialless\.webcontainer-api\.io$/,
-  /^https:\/\/.*\.replit\.dev$/,
-  /^https:\/\/.*\.repl\.co$/,
-  /^http:\/\/localhost:\d+$/,
-  /^https:\/\/.*\.bolt\.new$/,
-  /^https:\/\/.*\.expo\.dev$/,
-  /^https:\/\/.*\.supabase\.co$/,
-];
-
-const isOriginAllowed = (req: Request): boolean => {
-  const referrer = req.headers.get('referer') || req.headers.get('referrer');
-  const origin = req.headers.get('origin');
-
-  const isAllowedOrigin = origin && ALLOWED_PATTERNS.some(pattern => pattern.test(origin));
-  const isWebContainer = !referrer && !origin;
-
-  return isAllowedOrigin || isWebContainer;
-};
+const ML_API_KEY = Deno.env.get('ML_API_KEY');
 
 const getMLBackendHeaders = (includeContentType = false) => {
   const headers: Record<string, string> = {
-    'X-API-Key': ML_API_KEY,
+    'X-API-Key': ML_API_KEY ?? '',
     'X-Requested-With': 'XMLHttpRequest',
-    'Referer': 'https://rddpacqtmtsehbmcyxfa.supabase.co',
   };
 
   if (includeContentType) {
     headers['Content-Type'] = 'application/json';
   }
-
-  console.log('[ml-backend-proxy] Headers:', {
-    hasApiKey: !!ML_API_KEY,
-    apiKeyLength: ML_API_KEY?.length,
-    headers: Object.keys(headers)
-  });
 
   return headers;
 };
@@ -101,7 +73,7 @@ Deno.serve(async (req: Request) => {
         const mlUserId = url.searchParams.get('ml_user_id');
         const limit = url.searchParams.get('limit') || '25';
         const topicId = url.searchParams.get('topic_id');
-        
+
         if (!mlUserId) {
           throw new Error('Missing ml_user_id');
         }
@@ -121,18 +93,13 @@ Deno.serve(async (req: Request) => {
 
       case 'submit_answer': {
         const body = await req.json();
-        console.log('[ml-backend-proxy] Submitting answer:', {
-          ml_backend_url: ML_BACKEND_URL,
-          payload: body,
-        });
         try {
           mlResponse = await fetch(`${ML_BACKEND_URL}/api/submit-answer`, {
             method: 'POST',
             headers: getMLBackendHeaders(true),
             body: JSON.stringify(body),
           });
-        } catch (fetchError) {
-          console.error('[ml-backend-proxy] Network error when submitting answer:', fetchError);
+        } catch (_fetchError) {
           throw new Error('Failed to connect to ML Backend. The service may be offline or unreachable.');
         }
         break;
@@ -183,21 +150,12 @@ Deno.serve(async (req: Request) => {
           count: count,
         });
 
-        const downloadUrl = `${ML_BACKEND_URL}/api/questions/download-batch?${params}`;
-        console.log('[ml-backend-proxy] Downloading questions:', {
-          url: downloadUrl,
-          ml_user_id: mlUserId,
-          count,
-        });
-
         try {
-          mlResponse = await fetch(downloadUrl, {
+          mlResponse = await fetch(`${ML_BACKEND_URL}/api/questions/download-batch?${params}`, {
             method: 'GET',
             headers: getMLBackendHeaders(),
           });
-          console.log('[ml-backend-proxy] Download response status:', mlResponse.status);
-        } catch (fetchError) {
-          console.error('[ml-backend-proxy] Network error downloading questions:', fetchError);
+        } catch (_fetchError) {
           throw new Error('Failed to connect to ML Backend for question download');
         }
         break;
@@ -326,15 +284,10 @@ Deno.serve(async (req: Request) => {
           throw new Error('Missing user_id');
         }
 
-        const diagnosticQuestionsUrl = `${ML_BACKEND_URL}/api/diagnostic-exam/${mlUserId}`;
-        console.log('[ml-backend-proxy] Fetching diagnostic questions:', diagnosticQuestionsUrl);
-
-        mlResponse = await fetch(diagnosticQuestionsUrl, {
+        mlResponse = await fetch(`${ML_BACKEND_URL}/api/diagnostic-exam/${mlUserId}`, {
           method: 'GET',
           headers: getMLBackendHeaders(),
         });
-
-        console.log('[ml-backend-proxy] Diagnostic questions response:', mlResponse.status);
         break;
       }
 
@@ -344,15 +297,10 @@ Deno.serve(async (req: Request) => {
           throw new Error('Missing user_id');
         }
 
-        const diagnosticStatusUrl = `${ML_BACKEND_URL}/api/diagnostic-exam/status/${mlUserId}`;
-        console.log('[ml-backend-proxy] Fetching diagnostic status:', diagnosticStatusUrl);
-
-        mlResponse = await fetch(diagnosticStatusUrl, {
+        mlResponse = await fetch(`${ML_BACKEND_URL}/api/diagnostic-exam/status/${mlUserId}`, {
           method: 'GET',
           headers: getMLBackendHeaders(),
         });
-
-        console.log('[ml-backend-proxy] Diagnostic status response:', mlResponse.status);
         break;
       }
 
@@ -366,15 +314,11 @@ Deno.serve(async (req: Request) => {
             : String(body.user_answer),
           elapsed_time: String(body.elapsed_time),
         });
-        const submitUrl = `${ML_BACKEND_URL}/api/diagnostic-exam/submit-answer?${params}`;
-        console.log('[ml-backend-proxy] Submitting diagnostic answer:', { url: submitUrl });
 
-        mlResponse = await fetch(submitUrl, {
+        mlResponse = await fetch(`${ML_BACKEND_URL}/api/diagnostic-exam/submit-answer?${params}`, {
           method: 'POST',
           headers: getMLBackendHeaders(),
         });
-
-        console.log('[ml-backend-proxy] Submit answer response:', mlResponse.status);
         break;
       }
 
@@ -385,16 +329,11 @@ Deno.serve(async (req: Request) => {
           throw new Error('Missing user_id');
         }
 
-        const completeUrl = `${ML_BACKEND_URL}/api/diagnostic-exam/complete/${user_id}`;
-        console.log('[ml-backend-proxy] Completing diagnostic exam:', { url: completeUrl, user_id });
-
-        mlResponse = await fetch(completeUrl, {
+        mlResponse = await fetch(`${ML_BACKEND_URL}/api/diagnostic-exam/complete/${user_id}`, {
           method: 'POST',
           headers: getMLBackendHeaders(true),
           body: JSON.stringify(body),
         });
-
-        console.log('[ml-backend-proxy] Complete diagnostic response:', mlResponse.status);
         break;
       }
 
@@ -404,15 +343,10 @@ Deno.serve(async (req: Request) => {
           throw new Error('Missing user_id');
         }
 
-        const resultsUrl = `${ML_BACKEND_URL}/api/diagnostic-exam/results/${mlUserId}`;
-        console.log('[ml-backend-proxy] Fetching diagnostic results:', resultsUrl);
-
-        mlResponse = await fetch(resultsUrl, {
+        mlResponse = await fetch(`${ML_BACKEND_URL}/api/diagnostic-exam/results/${mlUserId}`, {
           method: 'GET',
           headers: getMLBackendHeaders(),
         });
-
-        console.log('[ml-backend-proxy] Diagnostic results response:', mlResponse.status);
         break;
       }
 
@@ -422,12 +356,6 @@ Deno.serve(async (req: Request) => {
 
     if (!mlResponse.ok) {
       const errorText = await mlResponse.text();
-      console.error('ML Backend API Error:', {
-        status: mlResponse.status,
-        action,
-        url: mlResponse.url,
-        error: errorText,
-      });
 
       let errorMessage = `ML Backend returned ${mlResponse.status}`;
 
@@ -462,11 +390,6 @@ Deno.serve(async (req: Request) => {
     }
 
     const data = await mlResponse.json();
-    console.log('ML Backend Success:', {
-      action,
-      url: mlResponse.url,
-      hasData: !!data,
-    });
 
     return new Response(JSON.stringify(data), {
       headers: {
@@ -475,11 +398,6 @@ Deno.serve(async (req: Request) => {
       },
     });
   } catch (error: any) {
-    console.error('ML Backend Proxy error:', {
-      message: error.message,
-      action,
-      stack: error.stack,
-    });
     return new Response(
       JSON.stringify({
         error: error.message || 'Internal server error',
