@@ -697,10 +697,10 @@ export default function ProfileScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Legal</Text>
-          <Pressable style={styles.legalButton} onPress={() => router.push('/(auth)/terms-of-service' as any)}>
+          <Pressable style={styles.legalButton} onPress={() => router.push('/(legal)/terms-of-service' as any)}>
             <Text style={styles.legalButtonText}>Terms of Service</Text>
           </Pressable>
-          <Pressable style={styles.legalButton} onPress={() => router.push('/(auth)/privacy-policy' as any)}>
+          <Pressable style={styles.legalButton} onPress={() => router.push('/(legal)/privacy-policy' as any)}>
             <Text style={styles.legalButtonText}>Privacy Policy</Text>
           </Pressable>
         </View>

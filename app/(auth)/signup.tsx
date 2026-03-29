@@ -304,15 +304,15 @@ export default function SignupScreen() {
             </Pressable>
             <Text style={styles.termsText}>
               I agree to the{' '}
-              <Text style={styles.termsLink} onPress={() => router.push('/(auth)/terms-of-service')}>
+              <Text style={styles.termsLink} onPress={() => router.push('/(legal)/terms-of-service' as any)}>
                 Terms of Service
               </Text>
               {' '}and{' '}
-              <Text style={styles.termsLink} onPress={() => router.push('/(auth)/privacy-policy')}>
+              <Text style={styles.termsLink} onPress={() => router.push('/(legal)/privacy-policy' as any)}>
                 Privacy Policy
               </Text>
               . I understand this app is for educational purposes only and that certain AI-powered features (care plan generation and study plans) send data I enter to{' '}
-              <Text style={styles.termsLink} onPress={() => router.push('/(auth)/privacy-policy')}>
+              <Text style={styles.termsLink} onPress={() => router.push('/(legal)/privacy-policy' as any)}>
                 OpenAI, Inc.
               </Text>
               {' '}for processing. I will be asked for explicit permission before any data is sent to OpenAI.

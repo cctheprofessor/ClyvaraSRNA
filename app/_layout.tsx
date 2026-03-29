@@ -40,6 +40,7 @@ export default function RootLayout() {
           <Stack.Screen name="anesthesia-care-plan" options={{ headerShown: false }} />
           <Stack.Screen name="care-plan" options={{ headerShown: false }} />
           <Stack.Screen name="tools" options={{ headerShown: false }} />
+          <Stack.Screen name="(legal)" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />
