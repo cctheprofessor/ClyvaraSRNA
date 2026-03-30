@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TouchableOpacity, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
-import { FileText, Clock, Plus, Trash2 } from 'lucide-react-native';
+import { FileText, Clock, Plus, Trash2, TriangleAlert as AlertTriangle } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import PageHeader from '@/components/PageHeader';
@@ -21,11 +21,19 @@ interface CarePlan {
   created_at: string;
 }
 
+interface PendingDelete {
+  id: string;
+  name: string;
+}
+
 export default function PlanScreen() {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { user } = useAuth();
   const [recentPlans, setRecentPlans] = useState<CarePlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     loadRecentPlans();
@@ -64,122 +72,178 @@ export default function PlanScreen() {
     }
   };
 
-  const handleDeletePlan = async (planId: string, procedureName: string) => {
-    Alert.alert(
-      'Delete Care Plan',
-      `Are you sure you want to delete "${procedureName}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { data, error } = await supabase
-                .from('comprehensive_care_plans')
-                .delete()
-                .eq('id', planId)
-                .select();
+  const confirmDelete = async () => {
+    if (!pendingDelete || !user) return;
 
-              if (error) throw error;
+    setDeleting(true);
+    setDeleteError(null);
 
-              setRecentPlans((prev) => prev.filter((plan) => plan.id !== planId));
-            } catch (error: any) {
-              if (__DEV__) { console.error('Error deleting plan:', error); }
-              Alert.alert('Error', error?.message || 'Failed to delete care plan. Please try again.');
-            }
-          },
-        },
-      ]
-    );
+    try {
+      const { error, count } = await supabase
+        .from('comprehensive_care_plans')
+        .delete({ count: 'exact' })
+        .eq('id', pendingDelete.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      if (count === 0) {
+        setDeleteError('Could not delete this care plan. Please try again.');
+        return;
+      }
+
+      setRecentPlans((prev) => prev.filter((plan) => plan.id !== pendingDelete.id));
+      setPendingDelete(null);
+    } catch (error: any) {
+      if (__DEV__) { console.error('Error deleting plan:', error); }
+      setDeleteError(error?.message || 'Failed to delete care plan. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setPendingDelete(null);
+    setDeleteError(null);
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <PageHeader
-        title="Anesthesia Care Plan"
-        subtitle="Efficient x Comprehensive"
-      />
+    <View style={styles.wrapper}>
+      <ScrollView style={styles.container}>
+        <PageHeader
+          title="Anesthesia Care Plan"
+          subtitle="Efficient x Comprehensive"
+        />
 
-      <View style={styles.content}>
-        <Pressable
-          style={styles.createButton}
-          onPress={() => router.push('/anesthesia-care-plan')}
-        >
-          <Plus color={Colors.text.light} size={24} />
-          <Text style={styles.createButtonText}>Create New Care Plan</Text>
-        </Pressable>
+        <View style={styles.content}>
+          <Pressable
+            style={styles.createButton}
+            onPress={() => router.push('/anesthesia-care-plan')}
+          >
+            <Plus color={Colors.text.light} size={24} />
+            <Text style={styles.createButtonText}>Create New Care Plan</Text>
+          </Pressable>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Clock color={Colors.text.secondary} size={20} />
-            <Text style={styles.sectionTitle}>Recent Care Plans</Text>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Clock color={Colors.text.secondary} size={20} />
+              <Text style={styles.sectionTitle}>Recent Care Plans</Text>
+            </View>
+
+            {loading ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>Loading...</Text>
+              </View>
+            ) : recentPlans.length === 0 ? (
+              <View style={styles.emptyState}>
+                <FileText color={Colors.text.tertiary} size={48} />
+                <Text style={styles.emptyStateTitle}>No Care Plans Yet</Text>
+                <Text style={styles.emptyStateText}>
+                  Create your first anesthesia care plan to get started
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.plansList}>
+                {recentPlans.map((plan) => (
+                  <View key={plan.id} style={styles.planCardWrapper}>
+                    <Pressable
+                      style={styles.planCard}
+                      onPress={() => router.push(`/care-plan/comprehensive/${plan.id}`)}
+                    >
+                      <View style={styles.planIcon}>
+                        <FileText color={Colors.primary} size={24} />
+                      </View>
+                      <View style={styles.planDetails}>
+                        <Text style={styles.planTitle}>
+                          {plan.care_plan_data.procedure.primaryProcedure}
+                        </Text>
+                        <Text style={styles.planInfo}>
+                          Age: {plan.care_plan_data.patient.age}y • Weight: {plan.care_plan_data.patient.weightKg}kg
+                        </Text>
+                        <Text style={styles.planDate}>{formatDate(plan.created_at)}</Text>
+                      </View>
+                    </Pressable>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => setPendingDelete({
+                        id: plan.id,
+                        name: plan.care_plan_data.procedure.primaryProcedure,
+                      })}
+                      activeOpacity={0.7}
+                    >
+                      <Trash2 color={Colors.error} size={20} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
 
-          {loading ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>Loading...</Text>
-            </View>
-          ) : recentPlans.length === 0 ? (
-            <View style={styles.emptyState}>
-              <FileText color={Colors.text.tertiary} size={48} />
-              <Text style={styles.emptyStateTitle}>No Care Plans Yet</Text>
-              <Text style={styles.emptyStateText}>
-                Create your first anesthesia care plan to get started
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.plansList}>
-              {recentPlans.map((plan) => (
-                <View key={plan.id} style={styles.planCardWrapper}>
-                  <Pressable
-                    style={styles.planCard}
-                    onPress={() => router.push(`/care-plan/comprehensive/${plan.id}`)}
-                  >
-                    <View style={styles.planIcon}>
-                      <FileText color={Colors.primary} size={24} />
-                    </View>
-                    <View style={styles.planDetails}>
-                      <Text style={styles.planTitle}>
-                        {plan.care_plan_data.procedure.primaryProcedure}
-                      </Text>
-                      <Text style={styles.planInfo}>
-                        Age: {plan.care_plan_data.patient.age}y • Weight: {plan.care_plan_data.patient.weightKg}kg
-                      </Text>
-                      <Text style={styles.planDate}>{formatDate(plan.created_at)}</Text>
-                    </View>
-                  </Pressable>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => {
-                      if (__DEV__) { console.log('Delete button pressed for plan:', plan.id); }
-                      handleDeletePlan(plan.id, plan.care_plan_data.procedure.primaryProcedure);
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Trash2 color={Colors.error} size={20} />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
+          <View style={styles.disclaimerCard}>
+            <Text style={styles.disclaimerTitle}>Educational Use Only</Text>
+            <Text style={styles.disclaimerText}>
+              These care plans support learning and should not replace professional medical judgment or clinical guidelines.
+            </Text>
+          </View>
         </View>
+      </ScrollView>
 
-        <View style={styles.disclaimerCard}>
-          <Text style={styles.disclaimerTitle}>Educational Use Only</Text>
-          <Text style={styles.disclaimerText}>
-            These care plans support learning and should not replace professional medical judgment or clinical guidelines.
-          </Text>
+      <Modal
+        visible={pendingDelete !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={cancelDelete}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalIcon}>
+              <AlertTriangle color={Colors.error} size={28} />
+            </View>
+            <Text style={styles.modalTitle}>Delete Care Plan</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to delete{' '}
+              <Text style={styles.modalPlanName}>&ldquo;{pendingDelete?.name}&rdquo;</Text>?
+              {'\n'}This action cannot be undone.
+            </Text>
+
+            {deleteError ? (
+              <Text style={styles.modalError}>{deleteError}</Text>
+            ) : null}
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={cancelDelete}
+                disabled={deleting}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalDeleteButton, deleting && styles.modalDeleteButtonDisabled]}
+                onPress={confirmDelete}
+                disabled={deleting}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalDeleteText}>
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
+  },
+  container: {
+    flex: 1,
   },
   content: {
     padding: Spacing.md,
@@ -246,7 +310,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.error + '15',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
   },
   planIcon: {
     width: 48,
@@ -304,5 +367,93 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.text.secondary,
     lineHeight: 18,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: Colors.overlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.lg,
+  },
+  modalCard: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+    gap: Spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  modalIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.errorLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text.primary,
+  },
+  modalMessage: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalPlanName: {
+    fontWeight: '600',
+    color: Colors.text.primary,
+  },
+  modalError: {
+    fontSize: 13,
+    color: Colors.error,
+    textAlign: 'center',
+    backgroundColor: Colors.errorLight,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+    width: '100%',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    width: '100%',
+    marginTop: Spacing.xs,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border.medium,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text.secondary,
+  },
+  modalDeleteButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.error,
+    alignItems: 'center',
+  },
+  modalDeleteButtonDisabled: {
+    opacity: 0.6,
+  },
+  modalDeleteText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.text.light,
   },
 });
