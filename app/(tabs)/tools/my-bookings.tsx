@@ -1,0 +1,821 @@
+import { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+  Linking,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../../../contexts/AuthContext';
+import { supabase } from '../../../lib/supabase';
+import { BookingWithDetails } from '../../../types/ta-booking';
+import { Colors } from '../../../constants/theme';
+import PageHeader from '../../../components/PageHeader';
+import { Calendar, Clock, Star, Circle as XCircle, Bell, CircleCheck as CheckCircle, Video, MessageCircle } from 'lucide-react-native';
+
+export default function MyBookings() {
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
+  const [cancelingBookingId, setCancelingBookingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
+  async function loadBookings() {
+    if (!user) return;
+
+    try {
+      const { data: bookingsData, error: bookingsError } = await supabase
+        .from('ta_bookings')
+        .select('*, ta_profiles(*)')
+        .eq('student_id', user.id)
+        .order('session_date', { ascending: false })
+        .order('start_time', { ascending: false });
+
+      if (bookingsError) throw bookingsError;
+
+      const { data: reviewsData, error: reviewsError } = await supabase
+        .from('booking_reviews')
+        .select('booking_id')
+        .eq('student_id', user.id);
+
+      if (reviewsError) throw reviewsError;
+
+      const reviewedBookingIds = new Set(reviewsData?.map(r => r.booking_id) || []);
+
+      const bookingsWithReviewStatus = (bookingsData || []).map(booking => ({
+        ...booking,
+        has_review: reviewedBookingIds.has(booking.id),
+      }));
+
+      setBookings(bookingsWithReviewStatus);
+    } catch (error: any) {
+      if (__DEV__) { console.error('[MyBookings] Error loading bookings:', error); }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }
+
+  async function cancelBooking(bookingId: string) {
+    try {
+      const { EXPO_PUBLIC_SUPABASE_URL } = process.env;
+      const apiUrl = `${EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ta-booking-management`;
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'cancel',
+          booking_id: bookingId,
+          cancellation_reason: 'Cancelled by student',
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to cancel booking');
+      }
+
+      if (__DEV__) { console.log('[MyBookings] Confirmed booking cancelled successfully'); }
+      setCancelingBookingId(null);
+      loadBookings();
+    } catch (error: any) {
+      if (__DEV__) { console.error('[MyBookings] Cancel error:', error); }
+      setCancelingBookingId(null);
+    }
+  }
+
+  async function cancelAwaitingBooking(bookingId: string) {
+    try {
+      if (__DEV__) { console.log('[MyBookings] Cancelling booking:', bookingId); }
+
+      const { data, error } = await supabase
+        .from('ta_bookings')
+        .update({
+          status: 'cancelled',
+          cancellation_reason: 'Cancelled by student before approval'
+        })
+        .eq('id', bookingId)
+        .select();
+
+      if (error) {
+        if (__DEV__) { console.error('[MyBookings] Cancel error:', error); }
+        throw error;
+      }
+
+      if (__DEV__) { console.log('[MyBookings] Booking cancelled:', data); }
+      setCancelingBookingId(null);
+      loadBookings();
+    } catch (error: any) {
+      if (__DEV__) { console.error('[MyBookings] Cancel error:', error); }
+      setCancelingBookingId(null);
+    }
+  }
+
+  async function leaveReview(bookingId: string, taId: string) {
+    router.push({
+      pathname: '/tools/leave-review',
+      params: { booking_id: bookingId, ta_id: taId },
+    });
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <PageHeader title="My Bookings" />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      </View>
+    );
+  }
+
+  const awaitingApprovalBookings = bookings
+    .filter(b => b.status === 'awaiting_approval')
+    .sort((a, b) => {
+      const dateA = new Date(`${a.session_date}T${a.start_time}`);
+      const dateB = new Date(`${b.session_date}T${b.start_time}`);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+  const rejectedBookings = bookings
+    .filter(b => b.status === 'rejected')
+    .sort((a, b) => {
+      const dateA = new Date(`${a.session_date}T${a.start_time}`);
+      const dateB = new Date(`${b.session_date}T${b.start_time}`);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+  const upcomingBookings = bookings
+    .filter(b => b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) > new Date())
+    .sort((a, b) => {
+      const dateA = new Date(`${a.session_date}T${a.start_time}`);
+      const dateB = new Date(`${b.session_date}T${b.start_time}`);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+  const pastBookings = bookings
+    .filter(b =>
+      b.status === 'completed' || b.status === 'refunded' ||
+      (b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) <= new Date())
+    )
+    .sort((a, b) => {
+      const dateA = new Date(`${a.session_date}T${a.start_time}`);
+      const dateB = new Date(`${b.session_date}T${b.start_time}`);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+  return (
+    <View style={styles.container}>
+      <PageHeader title="My Bookings" />
+
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => {
+            setRefreshing(true);
+            loadBookings();
+          }} />
+        }
+      >
+        {awaitingApprovalBookings.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Awaiting TA Approval</Text>
+
+            {awaitingApprovalBookings.map((booking) => {
+              const isCanceling = cancelingBookingId === booking.id;
+              return (
+                <View key={booking.id} style={[styles.bookingCard, styles.awaitingCard]}>
+                  {booking.ta_profiles?.display_name && (
+                    <View style={styles.headerRow}>
+                      <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+                      <View style={styles.statusBadge}>
+                        <Bell size={12} color="#fff" />
+                        <Text style={styles.statusText}>Pending</Text>
+                      </View>
+                    </View>
+                  )}
+
+                  <View style={styles.bookingHeader}>
+                    <View style={styles.dateTime}>
+                      <Calendar size={16} color={Colors.primary} />
+                      <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                    </View>
+                    <View style={styles.dateTime}>
+                      <Clock size={16} color={Colors.primary} />
+                      <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                      <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.infoBox}>
+                    <Text style={styles.infoText}>
+                      Waiting for TA approval. You'll be notified when they respond.
+                    </Text>
+                  </View>
+
+                  {!isCanceling ? (
+                    <View style={styles.bookingFooter}>
+                      <Text style={styles.bookingTotal}>${booking.total_amount}</Text>
+
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => setCancelingBookingId(booking.id)}
+                      >
+                        <XCircle size={16} color="#ff4444" />
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={styles.confirmationBox}>
+                      <Text style={styles.confirmationText}>
+                        Cancel this booking request?
+                      </Text>
+                      <View style={styles.confirmationActions}>
+                        <TouchableOpacity
+                          style={styles.confirmCancelButton}
+                          onPress={() => setCancelingBookingId(null)}
+                        >
+                          <Text style={styles.confirmCancelButtonText}>No</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.confirmButton}
+                          onPress={() => cancelAwaitingBooking(booking.id)}
+                        >
+                          <Text style={styles.confirmButtonText}>Yes, Cancel</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </>
+        )}
+
+        <Text style={styles.sectionTitle}>Upcoming Sessions</Text>
+
+        {upcomingBookings.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>No upcoming sessions</Text>
+            <TouchableOpacity
+              style={styles.bookButton}
+              onPress={() => router.push('/tools/book-ta-session')}
+            >
+              <Text style={styles.bookButtonText}>Book a Session</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          upcomingBookings.map((booking) => {
+            const isCanceling = cancelingBookingId === booking.id;
+            return (
+              <View key={booking.id} style={styles.bookingCard}>
+                {booking.ta_profiles?.display_name && (
+                  <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+                )}
+
+                <View style={styles.bookingHeader}>
+                  <View style={styles.dateTime}>
+                    <Calendar size={16} color={Colors.primary} />
+                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                  </View>
+                  <View style={styles.dateTime}>
+                    <Clock size={16} color={Colors.primary} />
+                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                    <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
+                  </View>
+                </View>
+
+                {booking.ta_profiles && (
+                  <View style={styles.taInfo}>
+                    <View style={styles.taRating}>
+                      <Star size={14} color="#FFD700" fill="#FFD700" />
+                      <Text style={styles.ratingText}>
+                        {booking.ta_profiles.average_rating.toFixed(1)}
+                      </Text>
+                    </View>
+                    {booking.ta_profiles.specialties && booking.ta_profiles.specialties.length > 0 && (
+                      <Text style={styles.taSpecialties} numberOfLines={1}>
+                        {booking.ta_profiles.specialties.join(', ')}
+                      </Text>
+                    )}
+                  </View>
+                )}
+
+                {booking.ta_profiles?.meeting_link && (
+                  <TouchableOpacity
+                    style={styles.meetingLinkBox}
+                    onPress={() => Linking.openURL(booking.ta_profiles!.meeting_link!)}
+                  >
+                    <Video size={20} color={Colors.primary} />
+                    <View style={styles.meetingLinkContent}>
+                      <Text style={styles.meetingLinkLabel}>Join Session</Text>
+                      <Text style={styles.meetingLinkUrl} numberOfLines={1}>
+                        {booking.ta_profiles.meeting_link}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+
+                {booking.notes && (
+                  <Text style={styles.bookingNotes} numberOfLines={2}>
+                    {booking.notes}
+                  </Text>
+                )}
+
+                {!isCanceling ? (
+                  <View style={styles.bookingFooter}>
+                    <Text style={styles.bookingTotal}>
+                      ${booking.total_amount}
+                    </Text>
+
+                    <View style={styles.actionButtons}>
+                      <TouchableOpacity
+                        style={styles.messageButton}
+                        onPress={() => router.push(`/tools/booking-messages/${booking.id}`)}
+                      >
+                        <MessageCircle size={16} color={Colors.primary} />
+                        <Text style={styles.messageButtonText}>Message</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => setCancelingBookingId(booking.id)}
+                      >
+                        <XCircle size={16} color="#ff4444" />
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.confirmationBox}>
+                    <Text style={styles.confirmationText}>
+                      Cancel this booking?
+                    </Text>
+                    <View style={styles.confirmationActions}>
+                      <TouchableOpacity
+                        style={styles.confirmCancelButton}
+                        onPress={() => setCancelingBookingId(null)}
+                      >
+                        <Text style={styles.confirmCancelButtonText}>No</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.confirmButton}
+                        onPress={() => cancelBooking(booking.id)}
+                      >
+                        <Text style={styles.confirmButtonText}>Yes, Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </View>
+            );
+          })
+        )}
+
+        {rejectedBookings.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Declined Requests</Text>
+
+            {rejectedBookings.map((booking) => (
+              <View key={booking.id} style={[styles.bookingCard, styles.pastBookingCard]}>
+                {booking.ta_profiles?.display_name && (
+                  <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+                )}
+
+                <View style={styles.bookingHeader}>
+                  <View style={styles.dateTime}>
+                    <Calendar size={16} color={Colors.text.tertiary} />
+                    <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                  </View>
+                  <View style={styles.dateTime}>
+                    <Clock size={16} color={Colors.text.tertiary} />
+                    <Text style={styles.bookingTime}>{booking.start_time}</Text>
+                    <Text style={styles.bookingDuration}>({booking.duration_minutes} min)</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.bookingHeader, { marginBottom: 0 }]}>
+                  <View style={[styles.statusBadge, { backgroundColor: '#ff4444' }]}>
+                    <Text style={styles.statusText}>Declined</Text>
+                  </View>
+                </View>
+
+                {booking.rejection_reason && (
+                  <View style={[styles.infoBox, { backgroundColor: '#FFEBEE', marginTop: 12 }]}>
+                    <Text style={styles.infoLabel}>Reason:</Text>
+                    <Text style={styles.infoText}>{booking.rejection_reason}</Text>
+                  </View>
+                )}
+              </View>
+            ))}
+          </>
+        )}
+
+        <Text style={styles.sectionTitle}>Past Sessions</Text>
+
+        {pastBookings.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>No past sessions</Text>
+          </View>
+        ) : (
+          pastBookings.map((booking) => (
+            <View key={booking.id} style={[styles.bookingCard, styles.pastBookingCard]}>
+              {booking.ta_profiles?.display_name && (
+                <Text style={styles.bookingTAName}>{booking.ta_profiles.display_name}</Text>
+              )}
+
+              <View style={styles.bookingHeader}>
+                <View style={styles.dateTime}>
+                  <Calendar size={16} color={Colors.text.tertiary} />
+                  <Text style={styles.bookingDate}>{booking.session_date}</Text>
+                </View>
+                <View style={[styles.statusBadge, styles[`status${booking.status}`]]}>
+                  <Text style={styles.statusText}>{booking.status}</Text>
+                </View>
+              </View>
+
+              <View style={styles.bookingFooter}>
+                <Text style={styles.bookingTotal}>
+                  ${booking.total_amount}
+                </Text>
+
+                {booking.status === 'completed' && !booking.has_review && (
+                  <TouchableOpacity
+                    style={styles.reviewButton}
+                    onPress={() => leaveReview(booking.id, booking.ta_id)}
+                  >
+                    <Star size={16} color="#FFD700" />
+                    <Text style={styles.reviewButtonText}>Leave Review</Text>
+                  </TouchableOpacity>
+                )}
+
+                {booking.status === 'completed' && booking.has_review && (
+                  <View style={styles.reviewedBadge}>
+                    <Star size={14} color="#FFD700" fill="#FFD700" />
+                    <Text style={styles.reviewedText}>Reviewed</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          ))
+        )}
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text.primary,
+    marginBottom: 16,
+    marginTop: 8,
+  },
+  emptyState: {
+    padding: 32,
+    alignItems: 'center',
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  emptyText: {
+    fontSize: 15,
+    color: Colors.text.tertiary,
+    marginBottom: 16,
+  },
+  bookButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  bookButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  bookingCard: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  pastBookingCard: {
+    borderColor: 'transparent',
+    opacity: 0.8,
+  },
+  bookingTAName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text.primary,
+    marginBottom: 8,
+  },
+  bookingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  dateTime: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  bookingDate: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.text.primary,
+  },
+  bookingTime: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.text.primary,
+  },
+  bookingDuration: {
+    fontSize: 13,
+    color: Colors.text.tertiary,
+  },
+  taInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
+  },
+  taRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  ratingText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.text.primary,
+  },
+  taSpecialties: {
+    fontSize: 13,
+    color: Colors.text.tertiary,
+    flex: 1,
+  },
+  bookingNotes: {
+    fontSize: 14,
+    color: Colors.text.primary,
+    lineHeight: 20,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 8,
+  },
+  bookingFooter: {
+    flexDirection: 'column',
+    gap: 12,
+  },
+  bookingTotal: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text.primary,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'flex-end',
+  },
+  messageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+  },
+  messageButtonText: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  cancelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#ff4444',
+  },
+  cancelButtonText: {
+    color: '#ff4444',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  reviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#FFD700',
+  },
+  reviewButtonText: {
+    color: Colors.text.primary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  reviewedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFF9E6',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#FFD700',
+  },
+  reviewedText: {
+    color: Colors.text.primary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statuscompleted: {
+    backgroundColor: '#4CAF50',
+  },
+  statuscancelled: {
+    backgroundColor: '#ff4444',
+  },
+  statusrefunded: {
+    backgroundColor: '#ff9800',
+  },
+  statusconfirmed: {
+    backgroundColor: Colors.primary,
+  },
+  statuspending: {
+    backgroundColor: '#FFA500',
+  },
+  statusawaiting_approval: {
+    backgroundColor: '#FFA500',
+  },
+  statusapproved: {
+    backgroundColor: '#4CAF50',
+  },
+  statusrejected: {
+    backgroundColor: '#ff4444',
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  awaitingCard: {
+    borderColor: '#FFA500',
+    backgroundColor: '#FFFAF0',
+  },
+  approvedCard: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#F1F8F4',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  infoBox: {
+    backgroundColor: '#F5F5F5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  infoLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.text.tertiary,
+    marginBottom: 4,
+  },
+  infoText: {
+    fontSize: 13,
+    color: Colors.text.primary,
+    lineHeight: 18,
+  },
+  confirmationBox: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  confirmationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  confirmationActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  confirmCancelButton: {
+    flex: 1,
+    backgroundColor: '#e0e0e0',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  confirmCancelButtonText: {
+    color: Colors.text.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  confirmButton: {
+    flex: 1,
+    backgroundColor: '#ff4444',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  meetingLinkBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#E3F2FD',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+  },
+  meetingLinkContent: {
+    flex: 1,
+  },
+  meetingLinkLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.primary,
+    marginBottom: 2,
+  },
+  meetingLinkUrl: {
+    fontSize: 12,
+    color: Colors.text.tertiary,
+  },
+});
