@@ -207,15 +207,21 @@ export default function ProfileScreen() {
         institution: profile.institution,
         expected_graduation: profile.expected_graduation || undefined,
       });
-      if (__DEV__) { console.log('ML sync successful, received user_id:', mlData.user_id); }
+
+      const mlUserId = typeof mlData.user_id === 'number' ? mlData.user_id : Number(mlData.user_id);
+      if (!mlUserId || isNaN(mlUserId)) {
+        throw new Error('ML backend did not return a valid user ID. Please try again.');
+      }
+
+      if (__DEV__) { console.log('ML sync successful, received user_id:', mlUserId); }
 
       const syncTimestamp = new Date().toISOString();
-      if (__DEV__) { console.log('Updating profile with ml_user_id:', mlData.user_id, 'at', syncTimestamp); }
+      if (__DEV__) { console.log('Updating profile with ml_user_id:', mlUserId, 'at', syncTimestamp); }
 
       const { error: profileUpdateError } = await supabase
         .from('profiles')
         .update({
-          ml_user_id: mlData.user_id,
+          ml_user_id: mlUserId,
           ml_last_synced_at: syncTimestamp,
         })
         .eq('id', user.id);
@@ -247,7 +253,7 @@ export default function ProfileScreen() {
       await refreshProfile();
       if (__DEV__) { console.log('Profile refreshed, new timestamp should be visible'); }
 
-      questionCacheService.preFetchAfterSync(mlData.user_id);
+      questionCacheService.preFetchAfterSync(mlUserId);
 
       Alert.alert('Success', 'Successfully synced with Clyvara Analytica! You can now access practice questions.');
     } catch (error: any) {
@@ -260,9 +266,9 @@ export default function ProfileScreen() {
         Alert.alert(
           'ML Backend Unavailable',
           'The ML backend service is currently unavailable. This may be because:\n\n' +
-          '• The service is starting up (Replit apps sleep when inactive)\n' +
-          '• Network connectivity issues\n' +
-          '• API configuration needs updating\n\n' +
+          '\u2022 The service is starting up (Replit apps sleep when inactive)\n' +
+          '\u2022 Network connectivity issues\n' +
+          '\u2022 API configuration needs updating\n\n' +
           'You can still use other features of the app. Practice questions will be available once the ML backend is online.'
         );
       } else {
