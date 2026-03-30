@@ -91,7 +91,7 @@ Airway Management:
 - {"title": "NAP4: Major Complications of Airway Management in the UK", "organization": "Royal College of Anaesthetists / Difficult Airway Society", "year": "2011", "url": "https://www.nationalauditprojects.org.uk/NAP4_home"}
 
 AANA:
-- {"title": "AANA Scope and Standards for Nurse Anesthesia Practice", "organization": "American Association of Nurse Anesthesiology (AANA)", "year": "2023", "url": "https://www.aana.com/practice/professional-practice-manual/"}
+- {"title": "AANA Scope and Standards for Nurse Anesthesia Practice", "organization": "American Association of Nurse Anesthesiology (AANA)", "year": "2023", "url": "https://www.aana.com/practice/clinical-practice-resources/scope-and-standards-for-nurse-anesthesia-practice"}
 
 Select citations that are most relevant to the specific patient, procedure, and clinical decisions made in this care plan. Always include at minimum the ASA Standards for Basic Anesthetic Monitoring and one PONV guideline.
 
