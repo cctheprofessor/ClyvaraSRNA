@@ -266,9 +266,9 @@ export default function ProfileScreen() {
         Alert.alert(
           'ML Backend Unavailable',
           'The ML backend service is currently unavailable. This may be because:\n\n' +
-          '• The service is starting up (Replit apps sleep when inactive)\n' +
-          '• Network connectivity issues\n' +
-          '• API configuration needs updating\n\n' +
+          '\u2022 The service is starting up (Replit apps sleep when inactive)\n' +
+          '\u2022 Network connectivity issues\n' +
+          '\u2022 API configuration needs updating\n\n' +
           'You can still use other features of the app. Practice questions will be available once the ML backend is online.'
         );
       } else {
