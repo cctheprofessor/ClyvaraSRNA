@@ -116,12 +116,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         expectedGradDate = gradDate.toISOString().substring(0, 10);
       }
 
-      // Create profile directly - don't rely on trigger
-      if (__DEV__) { console.log('[SignUp] Creating profile for user:', data.user.id); }
+      if (__DEV__) { console.log('[SignUp] Upserting profile for user:', data.user.id); }
 
-      const { data: insertData, error: insertError } = await supabase
+      const { error: upsertError } = await supabase
         .from('profiles')
-        .insert({
+        .upsert({
           id: data.user.id,
           email: email,
           full_name: fullName,
@@ -146,17 +145,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           is_admin: false,
           is_ta: false,
           diagnostic_completed: false,
-          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        })
-        .select();
+        }, { onConflict: 'id' });
 
-      if (insertError) {
-        if (__DEV__) { console.error('[SignUp] Profile creation failed:', insertError); }
-        return { error: insertError };
+      if (upsertError) {
+        if (__DEV__) { console.error('[SignUp] Profile upsert failed:', upsertError); }
+        return { error: upsertError };
       }
 
-      if (__DEV__) { console.log('[SignUp] Profile created successfully:', insertData); }
+      if (__DEV__) { console.log('[SignUp] Profile upserted successfully'); }
 
       try {
         const mlClient = new MLBackendClient();
@@ -171,10 +168,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           expected_graduation: expectedGradDate,
         });
 
+        const mlUserId = typeof mlData.user_id === 'number' ? mlData.user_id : Number(mlData.user_id);
+        if (!mlUserId || isNaN(mlUserId)) {
+          throw new Error('ML backend did not return a valid user ID');
+        }
+
         await supabase
           .from('profiles')
           .update({
-            ml_user_id: mlData.user_id,
+            ml_user_id: mlUserId,
             ml_last_synced_at: new Date().toISOString(),
           })
           .eq('id', data.user.id);
@@ -185,9 +187,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           last_sync_at: new Date().toISOString(),
         });
 
-        if (__DEV__) { console.log('Successfully synced new user to ML backend:', mlData.user_id); }
+        if (__DEV__) { console.log('Successfully synced new user to ML backend:', mlUserId); }
 
-        questionCacheService.preFetchAfterSync(mlData.user_id);
+        questionCacheService.preFetchAfterSync(mlUserId);
       } catch (mlError) {
         if (__DEV__) { console.error('ML sync failed during registration:', mlError); }
         await supabase.from('ml_sync_status').insert({

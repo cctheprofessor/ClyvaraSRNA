@@ -704,7 +704,7 @@ export function CarePlanScreen({ carePlan, caseDescription, carePlanId }: CarePl
               </View>
               <ExternalLink color={Colors.primary} size={16} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://journals.lww.com/anesthesia-analgesia/abstract/2020/08000/fourth_consensus_guidelines_for_the_management_of.16.aspx')} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://journals.lww.com/anesthesia-analgesia/fulltext/2020/02000/fourth_consensus_guidelines_for_the_management_of.29.aspx')} activeOpacity={0.7}>
               <View style={styles.citationContent}>
                 <Text style={styles.citationTitle}>Fourth Consensus Guidelines for the Management of Postoperative Nausea and Vomiting</Text>
                 <Text style={styles.citationMeta}>Society for Ambulatory Anesthesia (SAMBA) · 2020</Text>

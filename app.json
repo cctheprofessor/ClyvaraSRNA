@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.cc3610.clyvarasrna",
-      "buildNumber": "12",
+      "buildNumber": "13",
       "infoPlist": {
         "NSCameraUsageDescription": "Clyvara needs access to your camera to upload profile photos and post images.",
         "NSPhotoLibraryUsageDescription": "Clyvara needs access to your photo library to upload images.",
