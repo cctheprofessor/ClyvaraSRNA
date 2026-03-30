@@ -143,13 +143,14 @@ const styles = StyleSheet.create({
   },
   disclaimerBox: {
     marginTop: 28,
+    width: '100%',
+    maxWidth: 320,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.45)',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: BorderRadius.md,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    maxWidth: 320,
   },
   disclaimerRow: {
     flexDirection: 'row',

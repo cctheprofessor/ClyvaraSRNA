@@ -711,7 +711,7 @@ export function CarePlanScreen({ carePlan, caseDescription, carePlanId }: CarePl
               </View>
               <ExternalLink color={Colors.primary} size={16} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://www.aana.com/practice-manual/aana-practice-manual-standards-for-nurse-anesthesia-practice/')} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.citationItem} onPress={() => handleOpenCitation('https://www.aana.com/practice/professional-practice-manual/')} activeOpacity={0.7}>
               <View style={styles.citationContent}>
                 <Text style={styles.citationTitle}>Scope and Standards for Nurse Anesthesia Practice</Text>
                 <Text style={styles.citationMeta}>American Association of Nurse Anesthesiology (AANA) · 2023</Text>
