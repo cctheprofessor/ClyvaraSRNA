@@ -18,7 +18,6 @@
       "bundleIdentifier": "com.cc3610.clyvarasrna",
       "buildNumber": "13",
       "infoPlist": {
-        "NSPhotoLibraryAddUsageDescription": "Clyvara saves images to your photo library when you choose to download content from the app. For example, when you save a shared post image, it will be stored in your camera roll for later reference.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "privacyManifests": {
