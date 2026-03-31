@@ -41,6 +41,10 @@ export interface Profile {
   diagnostic_completed_at: string | null;
   diagnostic_score: number | null;
   diagnostic_attempt_id: string | null;
+
+  // ML backend consent
+  ml_backend_consent_given: boolean;
+  ml_backend_consent_at: string | null;
 }
 
 export interface CarePlan {

@@ -21,6 +21,7 @@ import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { mlClient } from '@/lib/ml-backend-client';
 import { questionCacheService } from '@/lib/question-cache-service';
+import MLBackendConsentModal from '@/components/MLBackendConsentModal';
 
 export default function ProfileScreen() {
   const { profile, user, signOut, updateProfile, isAdmin, refreshProfile, deleteAccount } = useAuth();
@@ -33,6 +34,7 @@ export default function ProfileScreen() {
   const [showEnrollmentDatePicker, setShowEnrollmentDatePicker] = useState(false);
   const [showExpectedGraduationPicker, setShowExpectedGraduationPicker] = useState(false);
   const [mlSyncLoading, setMlSyncLoading] = useState(false);
+  const [showMLConsentModal, setShowMLConsentModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -180,19 +182,8 @@ export default function ProfileScreen() {
     return `${monthNames[parseInt(month) - 1]} ${year}`;
   };
 
-  const handleMLSync = async () => {
-    if (!user || !profile) {
-      Alert.alert('Error', 'Profile not loaded');
-      return;
-    }
-
-    if (!profile.institution || !profile.enrollment_date) {
-      Alert.alert(
-        'Missing Information',
-        'Please complete your profile with Institution and Enrollment Date before syncing with ML backend.'
-      );
-      return;
-    }
+  const performMLSync = async () => {
+    if (!user || !profile) return;
 
     setMlSyncLoading(true);
 
@@ -200,12 +191,6 @@ export default function ProfileScreen() {
       if (__DEV__) { console.log('Starting ML sync for user:', user.id); }
       const mlData = await mlClient.syncUser({
         external_user_id: user.id,
-        email: user.email || '',
-        username: user.email?.split('@')[0] || '',
-        enrollment_date: profile.enrollment_date,
-        program_name: profile.program_name || 'Nurse Anesthesia Program',
-        institution: profile.institution,
-        expected_graduation: profile.expected_graduation || undefined,
       });
 
       const mlUserId = typeof mlData.user_id === 'number' ? mlData.user_id : Number(mlData.user_id);
@@ -292,6 +277,40 @@ export default function ProfileScreen() {
     } finally {
       setMlSyncLoading(false);
     }
+  };
+
+  const handleMLSync = () => {
+    if (!user || !profile) {
+      Alert.alert('Error', 'Profile not loaded');
+      return;
+    }
+    if (!profile.ml_backend_consent_given) {
+      setShowMLConsentModal(true);
+      return;
+    }
+    performMLSync();
+  };
+
+  const handleMLConsentAccept = async () => {
+    setShowMLConsentModal(false);
+    if (!user) return;
+    await supabase
+      .from('profiles')
+      .update({
+        ml_backend_consent_given: true,
+        ml_backend_consent_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+    await refreshProfile();
+    performMLSync();
+  };
+
+  const handleMLConsentDecline = () => {
+    setShowMLConsentModal(false);
+    Alert.alert(
+      'Consent Required',
+      'Adaptive learning features require consent to transmit anonymized performance data. You can enable this at any time from the Clyvara Analytica Sync section of your profile.'
+    );
   };
 
   return (
@@ -622,11 +641,6 @@ export default function ProfileScreen() {
                 <Text style={styles.syncWarning}>
                   You need to sync with the ML backend to access personalized practice questions and analytics.
                 </Text>
-                {(!profile?.institution || !profile?.enrollment_date) && (
-                  <Text style={styles.syncRequirement}>
-                    Please complete your profile with Institution and Enrollment Date first.
-                  </Text>
-                )}
                 <Pressable
                   style={[styles.syncButton, styles.syncButtonPrimary, mlSyncLoading && styles.syncButtonDisabled]}
                   onPress={handleMLSync}
@@ -864,6 +878,12 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      <MLBackendConsentModal
+        visible={showMLConsentModal}
+        onAccept={handleMLConsentAccept}
+        onDecline={handleMLConsentDecline}
+      />
 
       <Modal visible={showEnrollmentDatePicker} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
