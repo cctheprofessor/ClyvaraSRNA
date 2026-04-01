@@ -318,7 +318,7 @@ export default function SignupScreen() {
               {' '} and 
               <Text style={styles.termsLink} onPress={() => router.push('/(legal)/privacy-policy' as any)}>
                  Clyvara Analytica
-              </Text>for processing. I will be asked for explicit permission before any data is sent to OpenAI or Clyvara Analytica.
+              </Text> for processing. I will be asked for explicit permission before any data is sent to OpenAI or Clyvara Analytica.
             </Text>
           </View>
         </View>
