@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
@@ -54,7 +54,14 @@ export default function PrivacyPolicyScreen() {
           </Text>
 
           <Text style={styles.highlightBody}>
-            OpenAI's handling of data submitted via their API is governed by OpenAI's API data usage policies. For API usage, OpenAI does not use submitted data to train models by default. Please review OpenAI's privacy policy at openai.com/policies/privacy-policy for full details.
+            OpenAI's handling of data submitted via their API is governed by OpenAI's API data usage policies. For API usage, OpenAI does not use submitted data to train models by default. Please review{' '}
+            <Text
+              style={styles.link}
+              onPress={() => Linking.openURL('https://openai.com/policies/privacy-policy/')}
+            >
+              OpenAI's privacy policy
+            </Text>
+            {' '}for full details.
           </Text>
         </View>
 
@@ -206,5 +213,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.text.secondary,
     lineHeight: 22,
+  },
+  link: {
+    fontSize: 14,
+    color: Colors.primary,
+    textDecorationLine: 'underline',
   },
 });

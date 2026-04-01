@@ -1,13 +1,17 @@
+import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { Brain, Target, Focus, ChartBar as BarChart3, ClipboardCheck, Lock, CircleAlert as AlertCircle, Info } from 'lucide-react-native';
 import PageHeader from '@/components/PageHeader';
+import MLBackendConsentModal from '@/components/MLBackendConsentModal';
 
 export default function StudyScreen() {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { profile, user, refreshProfile } = useAuth();
+  const [showMLConsentModal, setShowMLConsentModal] = useState(false);
 
   const diagnosticCompleted = profile?.diagnostic_completed ?? false;
 
@@ -46,6 +50,32 @@ export default function StudyScreen() {
     },
   ];
 
+  const handleDiagnosticPress = () => {
+    if (!profile?.ml_backend_consent_given) {
+      setShowMLConsentModal(true);
+    } else {
+      router.push('/(tabs)/study/diagnostic-exam');
+    }
+  };
+
+  const handleMLConsentAccept = async () => {
+    setShowMLConsentModal(false);
+    if (!user) return;
+    await supabase
+      .from('profiles')
+      .update({
+        ml_backend_consent_given: true,
+        ml_backend_consent_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+    await refreshProfile();
+    router.push('/(tabs)/study/diagnostic-exam');
+  };
+
+  const handleMLConsentDecline = () => {
+    setShowMLConsentModal(false);
+  };
+
   const handleFeaturePress = (feature: any) => {
     if (!diagnosticCompleted && (feature.id === 'practice25' || feature.id === 'practice50' || feature.id === 'focused' || feature.id === 'analytics')) {
       return;
@@ -76,7 +106,7 @@ export default function StudyScreen() {
 
             <Pressable
               style={[styles.card, styles.diagnosticCard]}
-              onPress={() => router.push('/(tabs)/study/diagnostic-exam')}
+              onPress={handleDiagnosticPress}
             >
               <View style={[styles.iconContainer, { backgroundColor: Colors.accent }]}>
                 <ClipboardCheck color="#ffffff" size={28} />
@@ -131,6 +161,12 @@ export default function StudyScreen() {
           );
         })}
       </ScrollView>
+
+      <MLBackendConsentModal
+        visible={showMLConsentModal}
+        onAccept={handleMLConsentAccept}
+        onDecline={handleMLConsentDecline}
+      />
 
       <View style={styles.persistentNotice}>
         <View style={styles.noticeIcon}>

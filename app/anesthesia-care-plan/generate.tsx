@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -18,46 +18,9 @@ import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { generateCarePlanWithOpenAI, CarePlanValidationError } from '@/lib/anesthesia-ai-engine';
 import { ArrowLeft, Hop as Home, FileText, GraduationCap, Stethoscope, User, Info } from 'lucide-react-native';
 import PageHeader from '@/components/PageHeader';
-import AIConsentModal from '@/components/AIConsentModal';
-
 export default function GenerateCarePlanScreen() {
   const [caseDescription, setCaseDescription] = useState('');
   const [loading, setLoading] = useState(false);
-  const [consentGiven, setConsentGiven] = useState<boolean | null>(null);
-  const [showConsentModal, setShowConsentModal] = useState(false);
-  const [pendingGenerate, setPendingGenerate] = useState(false);
-
-  useEffect(() => {
-    checkConsent();
-  }, []);
-
-  const checkConsent = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const { data } = await supabase
-      .from('profiles')
-      .select('ai_care_plan_consent_given')
-      .eq('id', session.user.id)
-      .maybeSingle();
-
-    setConsentGiven(data?.ai_care_plan_consent_given ?? false);
-  };
-
-  const recordConsent = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    await supabase
-      .from('profiles')
-      .update({
-        ai_care_plan_consent_given: true,
-        ai_care_plan_consent_at: new Date().toISOString(),
-      })
-      .eq('id', session.user.id);
-
-    setConsentGiven(true);
-  };
 
   const handleGoHome = () => {
     router.replace('/(tabs)');
@@ -69,27 +32,7 @@ export default function GenerateCarePlanScreen() {
       return;
     }
 
-    if (!consentGiven) {
-      setPendingGenerate(true);
-      setShowConsentModal(true);
-      return;
-    }
-
     await runGenerate();
-  };
-
-  const handleConsentAccept = async () => {
-    setShowConsentModal(false);
-    await recordConsent();
-    if (pendingGenerate) {
-      setPendingGenerate(false);
-      await runGenerate();
-    }
-  };
-
-  const handleConsentDecline = () => {
-    setShowConsentModal(false);
-    setPendingGenerate(false);
   };
 
   const runGenerate = async () => {
@@ -153,13 +96,6 @@ export default function GenerateCarePlanScreen() {
         options={{
           headerShown: false,
         }}
-      />
-
-      <AIConsentModal
-        visible={showConsentModal}
-        variant="care-plan"
-        onAccept={handleConsentAccept}
-        onDecline={handleConsentDecline}
       />
 
       <View style={styles.headerContainer}>

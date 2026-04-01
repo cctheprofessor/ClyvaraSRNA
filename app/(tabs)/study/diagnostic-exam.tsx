@@ -6,7 +6,6 @@ import { mlClient } from '@/lib/ml-backend-client';
 import { supabase } from '@/lib/supabase';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
-import MLBackendConsentModal from '@/components/MLBackendConsentModal';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
 import { CircleCheck as CheckCircle, CircleAlert as AlertCircle, Send, ArrowRight, RotateCcw, CirclePlay as PlayCircle } from 'lucide-react-native';
 import { Question, AnswerFormat } from '@/types/question';
@@ -60,8 +59,6 @@ export default function DiagnosticExamScreen() {
   const [resumeDialogVisible, setResumeDialogVisible] = useState(false);
   const [existingSession, setExistingSession] = useState<SessionState | null>(null);
   const [submittedQuestions, setSubmittedQuestions] = useState<number[]>([]);
-  const [showMLConsentModal, setShowMLConsentModal] = useState(false);
-
   useEffect(() => {
     loadDiagnosticQuestions();
   }, []);
@@ -72,12 +69,7 @@ export default function DiagnosticExamScreen() {
       setError(null);
 
       if (!profile?.ml_user_id) {
-        if (!profile?.ml_backend_consent_given) {
-          setShowMLConsentModal(true);
-          setLoading(false);
-        } else {
-          await performMLSyncAndLoad();
-        }
+        await performMLSyncAndLoad();
         return;
       }
 
@@ -166,26 +158,6 @@ export default function DiagnosticExamScreen() {
       setError(err.message || 'Failed to connect to Clyvara Analytica. Please try again.');
       setLoading(false);
     }
-  };
-
-  const handleMLConsentAccept = async () => {
-    setShowMLConsentModal(false);
-    if (!user) return;
-    setLoading(true);
-    await supabase
-      .from('profiles')
-      .update({
-        ml_backend_consent_given: true,
-        ml_backend_consent_at: new Date().toISOString(),
-      })
-      .eq('id', user.id);
-    await refreshProfile();
-    await performMLSyncAndLoad();
-  };
-
-  const handleMLConsentDecline = () => {
-    setShowMLConsentModal(false);
-    router.back();
   };
 
   const saveSessionState = async (
@@ -625,12 +597,6 @@ export default function DiagnosticExamScreen() {
           </Pressable>
         )}
       </View>
-
-      <MLBackendConsentModal
-        visible={showMLConsentModal}
-        onAccept={handleMLConsentAccept}
-        onDecline={handleMLConsentDecline}
-      />
     </View>
   );
 }

@@ -25,8 +25,9 @@ function NavigationGuard() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const inAdminGroup = segments[0] === 'admin';
+    const inLegalGroup = segments[0] === '(legal)';
 
-    if (!session && !inAuthGroup) {
+    if (!session && !inAuthGroup && !inLegalGroup) {
       router.replace('/(auth)/welcome');
     } else if (session && inAuthGroup) {
       router.replace('/(tabs)');

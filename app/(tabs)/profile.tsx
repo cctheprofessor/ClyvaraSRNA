@@ -35,6 +35,7 @@ export default function ProfileScreen() {
   const [showExpectedGraduationPicker, setShowExpectedGraduationPicker] = useState(false);
   const [mlSyncLoading, setMlSyncLoading] = useState(false);
   const [showMLConsentModal, setShowMLConsentModal] = useState(false);
+  const [consentPurpose, setConsentPurpose] = useState<'sync' | 'navigate'>('sync');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -285,10 +286,20 @@ export default function ProfileScreen() {
       return;
     }
     if (!profile.ml_backend_consent_given) {
+      setConsentPurpose('sync');
       setShowMLConsentModal(true);
       return;
     }
     performMLSync();
+  };
+
+  const handleTakeAssessmentPress = () => {
+    if (!profile?.ml_backend_consent_given) {
+      setConsentPurpose('navigate');
+      setShowMLConsentModal(true);
+      return;
+    }
+    router.push('/(tabs)/study/diagnostic-exam');
   };
 
   const handleMLConsentAccept = async () => {
@@ -302,7 +313,11 @@ export default function ProfileScreen() {
       })
       .eq('id', user.id);
     await refreshProfile();
-    performMLSync();
+    if (consentPurpose === 'navigate') {
+      router.push('/(tabs)/study/diagnostic-exam');
+    } else {
+      performMLSync();
+    }
   };
 
   const handleMLConsentDecline = () => {
@@ -697,7 +712,7 @@ export default function ProfileScreen() {
                 </Text>
                 <Pressable
                   style={[styles.syncButton, styles.syncButtonPrimary]}
-                  onPress={() => router.push('/(tabs)/study/diagnostic-exam')}
+                  onPress={handleTakeAssessmentPress}
                 >
                   <Text style={styles.syncButtonTextPrimary}>Take Assessment</Text>
                 </Pressable>
