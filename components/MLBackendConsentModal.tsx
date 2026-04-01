@@ -1,4 +1,4 @@
-import { Modal, View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Modal, View, Text, Pressable, ScrollView, StyleSheet, Linking } from 'react-native';
 import { ShieldCheck } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 
@@ -49,7 +49,14 @@ export default function MLBackendConsentModal({ visible, onAccept, onDecline }: 
           </View>
 
           <Text style={styles.footer}>
-            You can review our full data policy at clyvarahealth.com/privacy.
+            You can review our{' '}
+            <Text
+              style={styles.footerLink}
+              onPress={() => Linking.openURL('https://clyvarahealth.com/privacy')}
+            >
+              full data policy
+            </Text>
+            {' '}for full details.
           </Text>
 
           <Pressable style={styles.acceptButton} onPress={onAccept}>
@@ -148,6 +155,11 @@ const styles = StyleSheet.create({
     color: Colors.text.tertiary,
     lineHeight: 18,
     marginBottom: Spacing.lg,
+  },
+  footerLink: {
+    fontSize: 12,
+    color: Colors.primary,
+    textDecorationLine: 'underline',
   },
   acceptButton: {
     backgroundColor: Colors.primary,

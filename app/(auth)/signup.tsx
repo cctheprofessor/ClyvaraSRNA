@@ -317,7 +317,7 @@ export default function SignupScreen() {
                 OpenAI, Inc.
               </Text>
               {' '}and{' '}  
-              <Text style={styles.termsLink} onPress={() => router.push('/(legal)/privacy-policy' as any)}>
+              <Text style={styles.termsLink} onPress={() => Linking.openURL('https://clyvarahealth.com/privacy')}>
                  Clyvara Analytica
               </Text> for processing. I will be asked for explicit permission before any data is sent to OpenAI or Clyvara Analytica.
             </Text>
