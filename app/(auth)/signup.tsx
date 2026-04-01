@@ -10,6 +10,7 @@ import {
   ScrollView,
   Modal,
   FlatList,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -312,7 +313,7 @@ export default function SignupScreen() {
                 Privacy Policy
               </Text>
               . I understand this app is for educational purposes only and that certain AI-powered features (care plan generation and practice questions) send data I enter to{' '}
-              <Text style={styles.termsLink} onPress={() => router.push('/(legal)/privacy-policy' as any)}>
+              <Text style={styles.termsLink} onPress={() => Linking.openURL('https://openai.com/policies/privacy-policy/')}>
                 OpenAI, Inc.
               </Text>
               {' '}and{' '}  
