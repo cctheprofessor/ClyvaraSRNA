@@ -96,12 +96,6 @@ export class MLBackendClient {
 
   async syncUser(userData: {
     external_user_id: string;
-    email: string;
-    username?: string;
-    enrollment_date: string;
-    program_name?: string;
-    institution: string;
-    expected_graduation?: string;
   }): Promise<{ user_id: number }> {
     if (__DEV__) { console.log('[MLBackendClient] Calling syncUser API with data:', userData); }
     const headers = await this.getAuthHeaders();
@@ -127,12 +121,6 @@ export class MLBackendClient {
 
   async batchSyncUsers(users: Array<{
     external_user_id: string;
-    email: string;
-    username?: string;
-    enrollment_date: string;
-    program_name?: string;
-    institution: string;
-    expected_graduation?: string;
   }>): Promise<{
     total_synced: number;
     successful: number;

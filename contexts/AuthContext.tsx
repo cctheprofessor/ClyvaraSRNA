@@ -160,12 +160,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const mlData = await mlClient.syncUser({
           external_user_id: data.user.id,
-          email: email,
-          username: email.split('@')[0],
-          enrollment_date: enrollmentDate,
-          program_name: 'Nurse Anesthesia Program',
-          institution: institution,
-          expected_graduation: expectedGradDate,
         });
 
         const mlUserId = typeof mlData.user_id === 'number' ? mlData.user_id : Number(mlData.user_id);

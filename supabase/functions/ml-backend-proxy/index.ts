@@ -64,7 +64,7 @@ Deno.serve(async (req: Request) => {
         mlResponse = await fetch(`${ML_BACKEND_URL}/api/users/sync`, {
           method: 'POST',
           headers: getMLBackendHeaders(true),
-          body: JSON.stringify(body),
+          body: JSON.stringify({ external_user_id: body.external_user_id }),
         });
         break;
       }
@@ -248,12 +248,15 @@ Deno.serve(async (req: Request) => {
 
       case 'batch_sync_users': {
         const body = await req.json();
+        const strippedUsers = (body.users || []).map((u: any) => ({
+          external_user_id: u.external_user_id,
+        }));
         mlResponse = await fetch(
           `${ML_BACKEND_URL}/api/users/batch-sync`,
           {
             method: 'POST',
             headers: getMLBackendHeaders(true),
-            body: JSON.stringify(body),
+            body: JSON.stringify({ users: strippedUsers }),
           }
         );
         break;

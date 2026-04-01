@@ -14,7 +14,7 @@ import { supabase } from '../../../lib/supabase';
 import { TAProfile, BookingWithDetails } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Calendar, DollarSign, CircleCheck as CheckCircle, Circle as XCircle, Bell, MessageCircle } from 'lucide-react-native';
+import { Calendar, CircleCheck as CheckCircle, Circle as XCircle, Bell, MessageCircle } from 'lucide-react-native';
 
 export default function TADashboard() {
   const router = useRouter();
@@ -26,7 +26,6 @@ export default function TADashboard() {
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
   const [confirmingAction, setConfirmingAction] = useState<{bookingId: string, action: 'approve' | 'reject'} | null>(null);
   const [stats, setStats] = useState({
-    totalEarnings: 0,
     upcomingCount: 0,
     completedCount: 0,
     pendingCount: 0,
@@ -72,13 +71,11 @@ export default function TADashboard() {
 
       const completed = bookingsData?.filter(b => b.status === 'completed') || [];
       const upcoming = bookingsData?.filter(b =>
-        b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) > new Date()
+        b.status === 'approved' && new Date(`${b.session_date}T${b.start_time}`) > new Date()
       ) || [];
       const pending = bookingsData?.filter(b => b.status === 'awaiting_approval') || [];
-      const totalEarnings = completed.reduce((sum, b) => sum + Number(b.session_rate), 0);
 
       setStats({
-        totalEarnings,
         upcomingCount: upcoming.length,
         completedCount: completed.length,
         pendingCount: pending.length,
@@ -207,7 +204,7 @@ export default function TADashboard() {
   const pendingBookings = bookings.filter(b => b.status === 'awaiting_approval');
 
   const upcomingBookings = bookings.filter(
-    b => b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) > new Date()
+    b => b.status === 'approved' && new Date(`${b.session_date}T${b.start_time}`) > new Date()
   );
 
   const pastBookings = bookings.filter(
@@ -218,9 +215,6 @@ export default function TADashboard() {
     const colorMap: Record<string, string> = {
       'completed': '#4CAF50',
       'cancelled': '#ff4444',
-      'refunded': '#ff9800',
-      'confirmed': Colors.primary,
-      'pending': '#FFA500',
       'awaiting_approval': '#FFA500',
       'approved': '#4CAF50',
       'rejected': '#ff4444',
@@ -259,12 +253,6 @@ export default function TADashboard() {
             <CheckCircle size={24} color={Colors.primary} />
             <Text style={styles.statValue}>{stats.completedCount}</Text>
             <Text style={styles.statLabel}>Completed</Text>
-          </View>
-
-          <View style={styles.statCard}>
-            <DollarSign size={24} color="#4CAF50" />
-            <Text style={styles.statValue}>${stats.totalEarnings.toFixed(2)}</Text>
-            <Text style={styles.statLabel}>Earned</Text>
           </View>
         </View>
 
@@ -310,12 +298,6 @@ export default function TADashboard() {
                       {booking.notes}
                     </Text>
                   )}
-
-                  <View style={styles.bookingFooter}>
-                    <Text style={styles.bookingRate}>
-                      You'll earn: ${booking.session_rate}
-                    </Text>
-                  </View>
 
                   {!isConfirming ? (
                     <View style={styles.approvalActions}>
@@ -405,10 +387,6 @@ export default function TADashboard() {
               )}
 
               <View style={styles.bookingFooter}>
-                <Text style={styles.bookingRate}>
-                  You earn: ${booking.session_rate}
-                </Text>
-
                 <View style={styles.actionButtons}>
                   <TouchableOpacity
                     style={styles.messageButton}
@@ -418,7 +396,7 @@ export default function TADashboard() {
                     <Text style={styles.messageButtonText}>Message</Text>
                   </TouchableOpacity>
 
-                  {booking.status === 'confirmed' && (
+                  {booking.status === 'approved' && (
                     <TouchableOpacity
                       style={styles.completeButton}
                       onPress={() => markComplete(booking.id)}
@@ -454,9 +432,7 @@ export default function TADashboard() {
               </View>
 
               <View style={styles.bookingFooter}>
-                <Text style={styles.bookingRate}>
-                  ${booking.session_rate}
-                </Text>
+                <Text style={styles.bookingDuration}>{booking.duration_minutes} min</Text>
               </View>
             </View>
           ))

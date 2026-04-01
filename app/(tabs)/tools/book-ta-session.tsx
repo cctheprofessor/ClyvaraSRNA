@@ -16,14 +16,11 @@ import {
   TAProfile,
   TAAvailability,
   DURATION_OPTIONS,
-  calculateSessionRate,
-  calculateTotalAmount,
-  SERVICE_CHARGE,
   DAY_NAMES,
 } from '../../../types/ta-booking';
 import { Colors } from '../../../constants/theme';
 import PageHeader from '../../../components/PageHeader';
-import { Star, Calendar, Clock, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { Star, ChevronDown, ChevronUp } from 'lucide-react-native';
 
 function jsToIsoDay(jsDay: number): number {
   return jsDay === 0 ? 7 : jsDay;
@@ -131,7 +128,7 @@ export default function BookTASession() {
         .from('ta_bookings')
         .select('session_date, start_time, duration_minutes')
         .eq('ta_id', taId)
-        .in('status', ['pending', 'awaiting_approval', 'approved', 'confirmed'])
+        .in('status', ['awaiting_approval', 'approved'])
         .gte('session_date', new Date().toISOString().split('T')[0]);
 
       if (bookingsError) {
@@ -267,12 +264,12 @@ export default function BookTASession() {
     const slotStartMinutes = hours * 60 + minutes;
     const slotEndMinutes = slotStartMinutes + selectedDuration;
 
-    for (const booking of existingBookings) {
-      if (booking.session_date !== date) continue;
+    for (const existingBooking of existingBookings) {
+      if (existingBooking.session_date !== date) continue;
 
-      const [bookingHours, bookingMinutes] = booking.start_time.split(':').map(Number);
+      const [bookingHours, bookingMinutes] = existingBooking.start_time.split(':').map(Number);
       const bookingStartMinutes = bookingHours * 60 + bookingMinutes;
-      const bookingEndMinutes = bookingStartMinutes + booking.duration_minutes;
+      const bookingEndMinutes = bookingStartMinutes + existingBooking.duration_minutes;
 
       if (
         (slotStartMinutes >= bookingStartMinutes && slotStartMinutes < bookingEndMinutes) ||
@@ -336,9 +333,6 @@ export default function BookTASession() {
     setBooking(true);
 
     try {
-      const sessionRate = calculateSessionRate(selectedTA.base_rate_30min, selectedDuration);
-      const totalAmount = calculateTotalAmount(selectedTA.base_rate_30min, selectedDuration);
-
       const { error: insertError } = await supabase
         .from('ta_bookings')
         .insert({
@@ -347,9 +341,6 @@ export default function BookTASession() {
           session_date: selectedDate,
           start_time: selectedTime,
           duration_minutes: selectedDuration,
-          session_rate: sessionRate,
-          service_charge: SERVICE_CHARGE,
-          total_amount: totalAmount,
           status: 'awaiting_approval',
           notes: notes.trim() || null,
         });
@@ -361,7 +352,7 @@ export default function BookTASession() {
       setTimeout(() => {
         Alert.alert(
           'Request Sent!',
-          `Your session request has been sent to ${selectedTA.display_name}. You'll be notified when they approve it, and then you can proceed with payment.`
+          `Your session request has been sent to ${selectedTA.display_name}. You'll be notified once they approve it.`
         );
       }, 300);
     } catch (error: any) {
@@ -438,7 +429,6 @@ export default function BookTASession() {
                             {ta.total_sessions} sessions
                           </Text>
                         </View>
-                        <Text style={styles.taRate}>${ta.base_rate_30min}/30min</Text>
                       </View>
 
                       {ta.bio && (
@@ -623,36 +613,18 @@ export default function BookTASession() {
 
             <Text style={styles.stepTitle}>Select Duration</Text>
 
-            {DURATION_OPTIONS.map((option) => {
-              const sessionRate = calculateSessionRate(selectedTA.base_rate_30min, option.minutes);
-              const total = sessionRate + SERVICE_CHARGE;
-
-              return (
-                <TouchableOpacity
-                  key={option.minutes}
-                  style={[
-                    styles.durationCard,
-                    selectedDuration === option.minutes && styles.durationCardSelected,
-                  ]}
-                  onPress={() => setSelectedDuration(option.minutes)}
-                >
-                  <View style={styles.durationInfo}>
-                    <Text style={styles.durationLabel}>{option.label}</Text>
-                    <View style={styles.priceBreakdown}>
-                      <Text style={styles.priceText}>
-                        Session: ${sessionRate.toFixed(2)}
-                      </Text>
-                      <Text style={styles.priceText}>
-                        Service charge: ${SERVICE_CHARGE.toFixed(2)}
-                      </Text>
-                      <Text style={styles.totalText}>
-                        Total: ${total.toFixed(2)}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+            {DURATION_OPTIONS.map((option) => (
+              <TouchableOpacity
+                key={option.minutes}
+                style={[
+                  styles.durationCard,
+                  selectedDuration === option.minutes && styles.durationCardSelected,
+                ]}
+                onPress={() => setSelectedDuration(option.minutes)}
+              >
+                <Text style={styles.durationLabel}>{option.label}</Text>
+              </TouchableOpacity>
+            ))}
 
             <TouchableOpacity
               style={styles.continueButton}
@@ -687,23 +659,6 @@ export default function BookTASession() {
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Duration:</Text>
                 <Text style={styles.summaryValue}>{selectedDuration} minutes</Text>
-              </View>
-              <View style={styles.summaryDivider} />
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Session Rate:</Text>
-                <Text style={styles.summaryValue}>
-                  ${calculateSessionRate(selectedTA.base_rate_30min, selectedDuration).toFixed(2)}
-                </Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Service Charge:</Text>
-                <Text style={styles.summaryValue}>${SERVICE_CHARGE.toFixed(2)}</Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryTotal}>Total:</Text>
-                <Text style={styles.summaryTotalValue}>
-                  ${calculateTotalAmount(selectedTA.base_rate_30min, selectedDuration).toFixed(2)}
-                </Text>
               </View>
             </View>
 
@@ -839,11 +794,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.text.tertiary,
   },
-  taRate: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
   taBio: {
     fontSize: 14,
     color: Colors.text.primary,
@@ -897,7 +847,7 @@ const styles = StyleSheet.create({
   durationCard: {
     backgroundColor: '#f9f9f9',
     borderRadius: 12,
-    padding: 16,
+    padding: 20,
     marginBottom: 12,
     borderWidth: 2,
     borderColor: 'transparent',
@@ -906,27 +856,10 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
     backgroundColor: '#f0f8ff',
   },
-  durationInfo: {
-    gap: 8,
-  },
   durationLabel: {
     fontSize: 18,
     fontWeight: '700',
     color: Colors.text.primary,
-    marginBottom: 8,
-  },
-  priceBreakdown: {
-    gap: 4,
-  },
-  priceText: {
-    fontSize: 14,
-    color: Colors.text.tertiary,
-  },
-  totalText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.text.primary,
-    marginTop: 4,
   },
   summaryCard: {
     backgroundColor: '#f9f9f9',
@@ -948,21 +881,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: Colors.text.primary,
-  },
-  summaryDivider: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginVertical: 12,
-  },
-  summaryTotal: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.text.primary,
-  },
-  summaryTotalValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.primary,
   },
   continueButton: {
     backgroundColor: Colors.primary,

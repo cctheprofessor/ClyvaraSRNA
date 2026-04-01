@@ -157,9 +157,9 @@ async function handleCompletion(booking: any, isTA: boolean) {
     );
   }
 
-  if (booking.status !== 'confirmed') {
+  if (booking.status !== 'approved') {
     return new Response(
-      JSON.stringify({ error: 'Only confirmed bookings can be marked as completed' }),
+      JSON.stringify({ error: 'Only approved bookings can be marked as completed' }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
