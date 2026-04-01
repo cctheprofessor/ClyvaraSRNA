@@ -129,7 +129,7 @@ export default function SignupScreen() {
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
+            <Text style={styles.label}>Full Name *</Text>
             <TextInput
               style={styles.inputStandalone}
               placeholder="John Doe"
@@ -141,7 +141,7 @@ export default function SignupScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>Emai *</Text>
             <TextInput
               style={styles.inputStandalone}
               placeholder="student@university.edu"
@@ -155,7 +155,7 @@ export default function SignupScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={styles.label}>Password *</Text>
             <TextInput
               style={styles.inputStandalone}
               placeholder="At least 6 characters"
@@ -168,7 +168,7 @@ export default function SignupScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirm Password</Text>
+            <Text style={styles.label}>Confirm Password *</Text>
             <TextInput
               style={styles.inputStandalone}
               placeholder="Re-enter your password"
@@ -209,7 +209,7 @@ export default function SignupScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Expected Graduation (Optional)</Text>
+            <Text style={styles.label}>Expected Graduation *</Text>
             <Pressable
               style={styles.dropdownButton}
               onPress={() => setShowGraduationDatePicker(true)}
@@ -223,7 +223,7 @@ export default function SignupScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Program Track</Text>
+            <Text style={styles.label}>Program Track *</Text>
             <Pressable
               style={styles.dropdownButton}
               onPress={() => setShowProgramTrackPicker(true)}
@@ -237,7 +237,7 @@ export default function SignupScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Role</Text>
+            <Text style={styles.label}>Role *</Text>
             <Pressable
               style={styles.dropdownButton}
               onPress={() => setShowRolePicker(true)}
@@ -251,7 +251,7 @@ export default function SignupScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Specialty Interest</Text>
+            <Text style={styles.label}>Specialty Interest *</Text>
             <View style={styles.inputContainer}>
               <Stethoscope color={Colors.text.tertiary} size={20} style={styles.inputIcon} />
               <TextInput
