@@ -738,7 +738,7 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
-        <Text style={styles.version}>Version {Constants.expoConfig?.version ?? '1.2.0'}</Text>
+        <Text style={styles.version}>Version {Constants.expoConfig?.version ?? '1.2.1'}</Text>
       </ScrollView>
 
       <Modal visible={showRolePicker} animationType="slide" transparent>
