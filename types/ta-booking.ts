@@ -3,7 +3,6 @@ export interface TAProfile {
   user_id: string;
   display_name: string;
   bio: string;
-  base_rate_30min: number;
   specialties: string[];
   is_active: boolean;
   meeting_link: string | null;
@@ -23,7 +22,7 @@ export interface TAAvailability {
   created_at: string;
 }
 
-export type BookingStatus = 'awaiting_approval' | 'approved' | 'rejected' | 'confirmed' | 'completed' | 'cancelled' | 'refunded';
+export type BookingStatus = 'awaiting_approval' | 'approved' | 'rejected' | 'completed' | 'cancelled';
 
 export interface TABooking {
   id: string;
@@ -32,9 +31,6 @@ export interface TABooking {
   session_date: string;
   start_time: string;
   duration_minutes: 30 | 60 | 90;
-  session_rate: number;
-  service_charge: number;
-  total_amount: number;
   status: BookingStatus;
   meeting_link: string | null;
   notes: string | null;
@@ -80,16 +76,13 @@ export interface BookingWithDetails extends TABooking {
 export interface DurationOption {
   minutes: 30 | 60 | 90;
   label: string;
-  multiplier: number;
 }
 
 export const DURATION_OPTIONS: DurationOption[] = [
-  { minutes: 30, label: '30 minutes', multiplier: 1.0 },
-  { minutes: 60, label: '60 minutes', multiplier: 1.8 },
-  { minutes: 90, label: '90 minutes', multiplier: 2.5 },
+  { minutes: 30, label: '30 minutes' },
+  { minutes: 60, label: '60 minutes' },
+  { minutes: 90, label: '90 minutes' },
 ];
-
-export const SERVICE_CHARGE = 2.50;
 
 export const DAY_NAMES = [
   'Sunday',
@@ -100,17 +93,6 @@ export const DAY_NAMES = [
   'Friday',
   'Saturday',
 ];
-
-export function calculateSessionRate(baseRate: number, duration: 30 | 60 | 90): number {
-  const option = DURATION_OPTIONS.find(opt => opt.minutes === duration);
-  if (!option) return baseRate;
-  return baseRate * option.multiplier;
-}
-
-export function calculateTotalAmount(baseRate: number, duration: 30 | 60 | 90): number {
-  const sessionRate = calculateSessionRate(baseRate, duration);
-  return sessionRate + SERVICE_CHARGE;
-}
 
 export interface BookingMessage {
   id: string;

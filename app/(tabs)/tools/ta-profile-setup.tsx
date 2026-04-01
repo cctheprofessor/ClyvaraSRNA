@@ -41,7 +41,6 @@ export default function TAProfileSetup() {
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [meetingLink, setMeetingLink] = useState('');
-  const [baseRate, setBaseRate] = useState('25.00');
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(true);
 
@@ -66,7 +65,6 @@ export default function TAProfileSetup() {
         setDisplayName(data.display_name || '');
         setBio(data.bio || '');
         setMeetingLink(data.meeting_link || '');
-        setBaseRate(data.base_rate_30min.toString());
         setSelectedSpecialties(data.specialties || []);
         setIsActive(data.is_active);
       }
@@ -88,12 +86,6 @@ export default function TAProfileSetup() {
   async function saveProfile() {
     if (!user) return;
 
-    const rateNum = parseFloat(baseRate);
-    if (isNaN(rateNum) || rateNum < 0) {
-      Alert.alert('Error', 'Please enter a valid rate');
-      return;
-    }
-
     if (selectedSpecialties.length === 0) {
       Alert.alert('Error', 'Please select at least one specialty');
       return;
@@ -107,7 +99,6 @@ export default function TAProfileSetup() {
         display_name: displayName.trim(),
         bio: bio.trim(),
         meeting_link: meetingLink.trim() || null,
-        base_rate_30min: rateNum,
         specialties: selectedSpecialties,
         is_active: isActive,
       };
@@ -147,9 +138,6 @@ export default function TAProfileSetup() {
     );
   }
 
-  const rate60 = (parseFloat(baseRate) * 1.8).toFixed(2);
-  const rate90 = (parseFloat(baseRate) * 2.5).toFixed(2);
-
   return (
     <View style={styles.container}>
       <PageHeader title="TA Profile Setup" />
@@ -177,7 +165,7 @@ export default function TAProfileSetup() {
 
         <Text style={styles.sectionTitle}>Meeting Link</Text>
         <Text style={styles.subtitle}>
-          Add your Google Meet or Zoom link. This will be shared with students after payment.
+          Add your Google Meet or Zoom link. This will be shared with students once their session is approved.
         </Text>
         <TextInput
           style={styles.nameInput}
@@ -188,31 +176,6 @@ export default function TAProfileSetup() {
           autoCapitalize="none"
           keyboardType="url"
         />
-
-        <Text style={styles.sectionTitle}>Base Rate (30 minutes)</Text>
-        <View style={styles.rateContainer}>
-          <Text style={styles.dollarSign}>$</Text>
-          <TextInput
-            style={styles.rateInput}
-            value={baseRate}
-            onChangeText={setBaseRate}
-            keyboardType="decimal-pad"
-            placeholder="25.00"
-            placeholderTextColor={Colors.text.tertiary}
-          />
-        </View>
-
-        <View style={styles.rateBreakdown}>
-          <Text style={styles.breakdownText}>30 min: ${baseRate}</Text>
-          <Text style={styles.breakdownText}>60 min: ${rate60}</Text>
-          <Text style={styles.breakdownText}>90 min: ${rate90}</Text>
-        </View>
-
-        <View style={styles.serviceChargeNote}>
-          <Text style={styles.noteText}>
-            A $2.50 service charge will be added to each booking
-          </Text>
-        </View>
 
         <Text style={styles.sectionTitle}>Specialties</Text>
         <Text style={styles.subtitle}>Select your areas of expertise</Text>
@@ -318,52 +281,6 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     minHeight: 100,
     textAlignVertical: 'top',
-  },
-  rateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-  },
-  dollarSign: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: Colors.text.primary,
-    marginRight: 8,
-  },
-  rateInput: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: '600',
-    color: Colors.text.primary,
-    paddingVertical: 16,
-  },
-  rateBreakdown: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 12,
-    padding: 16,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 12,
-  },
-  breakdownText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text.primary,
-  },
-  serviceChargeNote: {
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: '#e3f2fd',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.primary,
-  },
-  noteText: {
-    fontSize: 13,
-    color: Colors.text.primary,
-    fontWeight: '500',
   },
   specialtiesGrid: {
     flexDirection: 'row',

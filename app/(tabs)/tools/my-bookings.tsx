@@ -163,7 +163,7 @@ export default function MyBookings() {
     });
 
   const upcomingBookings = bookings
-    .filter(b => b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) > new Date())
+    .filter(b => b.status === 'approved' && new Date(`${b.session_date}T${b.start_time}`) > new Date())
     .sort((a, b) => {
       const dateA = new Date(`${a.session_date}T${a.start_time}`);
       const dateB = new Date(`${b.session_date}T${b.start_time}`);
@@ -172,8 +172,8 @@ export default function MyBookings() {
 
   const pastBookings = bookings
     .filter(b =>
-      b.status === 'completed' || b.status === 'refunded' ||
-      (b.status === 'confirmed' && new Date(`${b.session_date}T${b.start_time}`) <= new Date())
+      b.status === 'completed' ||
+      (b.status === 'approved' && new Date(`${b.session_date}T${b.start_time}`) <= new Date())
     )
     .sort((a, b) => {
       const dateA = new Date(`${a.session_date}T${a.start_time}`);
@@ -233,8 +233,6 @@ export default function MyBookings() {
 
                   {!isCanceling ? (
                     <View style={styles.bookingFooter}>
-                      <Text style={styles.bookingTotal}>${booking.total_amount}</Text>
-
                       <TouchableOpacity
                         style={styles.cancelButton}
                         onPress={() => setCancelingBookingId(booking.id)}
@@ -343,10 +341,6 @@ export default function MyBookings() {
 
                 {!isCanceling ? (
                   <View style={styles.bookingFooter}>
-                    <Text style={styles.bookingTotal}>
-                      ${booking.total_amount}
-                    </Text>
-
                     <View style={styles.actionButtons}>
                       <TouchableOpacity
                         style={styles.messageButton}
@@ -455,10 +449,6 @@ export default function MyBookings() {
               </View>
 
               <View style={styles.bookingFooter}>
-                <Text style={styles.bookingTotal}>
-                  ${booking.total_amount}
-                </Text>
-
                 {booking.status === 'completed' && !booking.has_review && (
                   <TouchableOpacity
                     style={styles.reviewButton}
