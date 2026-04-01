@@ -2,15 +2,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
-import {
-  Brain,
-  Target,
-  Focus,
-  BarChart3,
-  ClipboardCheck,
-  Lock,
-  AlertCircle,
-} from 'lucide-react-native';
+import { Brain, Target, Focus, ChartBar as BarChart3, ClipboardCheck, Lock, CircleAlert as AlertCircle, Info } from 'lucide-react-native';
 import PageHeader from '@/components/PageHeader';
 
 export default function StudyScreen() {
@@ -139,6 +131,15 @@ export default function StudyScreen() {
           );
         })}
       </ScrollView>
+
+      <View style={styles.persistentNotice}>
+        <View style={styles.noticeIcon}>
+          <Info size={16} color={Colors.text.tertiary} />
+        </View>
+        <Text style={styles.persistentNoticeText}>
+          This feature sends your practice question data to Clyvara Analytica to generate a personalized plan to address your specific learning needs. Clyvara Analytica is a machine learning algorithm that does not collect personal information and only utilizes anonymized data.
+        </Text>
+      </View>
     </View>
   );
 }
@@ -243,5 +244,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: BorderRadius.md,
+  },
+  persistentNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.backgroundSecondary,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+  },
+  noticeIcon: {
+    marginTop: 1,
+  },
+  persistentNoticeText: {
+    flex: 1,
+    fontSize: 11,
+    lineHeight: 16,
+    color: Colors.text.tertiary,
   },
 });
