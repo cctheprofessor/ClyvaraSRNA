@@ -311,11 +311,14 @@ export default function SignupScreen() {
               <Text style={styles.termsLink} onPress={() => router.push('/(legal)/privacy-policy' as any)}>
                 Privacy Policy
               </Text>
-              . I understand this app is for educational purposes only and that certain AI-powered features (care plan generation and study plans) send data I enter to{' '}
+              . I understand this app is for educational purposes only and that certain AI-powered features (care plan generation and practice questions) send data I enter to{' '}
               <Text style={styles.termsLink} onPress={() => router.push('/(legal)/privacy-policy' as any)}>
                 OpenAI, Inc.
               </Text>
-              {' '}for processing. I will be asked for explicit permission before any data is sent to OpenAI.
+              {' '}and
+              <Text style={styles.termsLink} onPress={() => router.push('/(legal)/privacy-policy' as any)}>
+                Clyvara Analytica
+              </Text>for processing. I will be asked for explicit permission before any data is sent to OpenAI or Clyvara Analytica.
             </Text>
           </View>
         </View>
