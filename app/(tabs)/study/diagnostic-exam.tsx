@@ -6,6 +6,7 @@ import { mlClient } from '@/lib/ml-backend-client';
 import { supabase } from '@/lib/supabase';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import PageHeader from '@/components/PageHeader';
+import MLBackendConsentModal from '@/components/MLBackendConsentModal';
 import QuestionRenderer from '@/components/study/QuestionRenderer';
 import { CircleCheck as CheckCircle, CircleAlert as AlertCircle, Send, ArrowRight, RotateCcw, CirclePlay as PlayCircle } from 'lucide-react-native';
 import { Question, AnswerFormat } from '@/types/question';
@@ -43,7 +44,7 @@ const formatCorrectPairs = (question: Question, correctPairs: Record<string, str
 
 export default function DiagnosticExamScreen() {
   const router = useRouter();
-  const { profile, refreshProfile } = useAuth();
+  const { profile, refreshProfile, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -59,6 +60,7 @@ export default function DiagnosticExamScreen() {
   const [resumeDialogVisible, setResumeDialogVisible] = useState(false);
   const [existingSession, setExistingSession] = useState<SessionState | null>(null);
   const [submittedQuestions, setSubmittedQuestions] = useState<number[]>([]);
+  const [showMLConsentModal, setShowMLConsentModal] = useState(false);
 
   useEffect(() => {
     loadDiagnosticQuestions();
@@ -70,8 +72,12 @@ export default function DiagnosticExamScreen() {
       setError(null);
 
       if (!profile?.ml_user_id) {
-        setError('Your account is not synced. Please contact support.');
-        setLoading(false);
+        if (!profile?.ml_backend_consent_given) {
+          setShowMLConsentModal(true);
+          setLoading(false);
+        } else {
+          await performMLSyncAndLoad();
+        }
         return;
       }
 
@@ -104,6 +110,82 @@ export default function DiagnosticExamScreen() {
       setError(err.message || 'Failed to load diagnostic exam. Please try again.');
       setLoading(false);
     }
+  };
+
+  const performMLSyncAndLoad = async () => {
+    if (!user) return;
+    try {
+      const mlData = await mlClient.syncUser({ external_user_id: user.id });
+      const mlUserId = typeof mlData.user_id === 'number' ? mlData.user_id : Number(mlData.user_id);
+      if (!mlUserId || isNaN(mlUserId)) {
+        throw new Error('ML backend did not return a valid user ID. Please try again.');
+      }
+
+      await supabase
+        .from('profiles')
+        .update({
+          ml_user_id: mlUserId,
+          ml_last_synced_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      await supabase.from('ml_sync_status').upsert(
+        {
+          user_id: user.id,
+          sync_status: 'active',
+          last_sync_at: new Date().toISOString(),
+          last_sync_error: null,
+        },
+        { onConflict: 'user_id' }
+      );
+
+      await refreshProfile();
+
+      const savedSession = await sessionPersistenceService.getActiveSession('diagnostic');
+      if (savedSession && savedSession.questions.length > 0) {
+        setExistingSession(savedSession);
+        setResumeDialogVisible(true);
+        setLoading(false);
+        return;
+      }
+
+      const diagnosticQuestions = await mlClient.getDiagnosticQuestions(mlUserId);
+      if (diagnosticQuestions.length === 0) {
+        setError('No diagnostic questions available. Please try again later.');
+        setLoading(false);
+        return;
+      }
+
+      setQuestions(diagnosticQuestions);
+      setStartTime(Date.now());
+      setQuestionStartTime(Date.now());
+      setLoading(false);
+      await saveSessionState(diagnosticQuestions, 0, {}, {}, []);
+    } catch (err: any) {
+      if (__DEV__) { console.error('[DiagnosticExam] ML sync error:', err); }
+      setError(err.message || 'Failed to connect to Clyvara Analytica. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  const handleMLConsentAccept = async () => {
+    setShowMLConsentModal(false);
+    if (!user) return;
+    setLoading(true);
+    await supabase
+      .from('profiles')
+      .update({
+        ml_backend_consent_given: true,
+        ml_backend_consent_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+    await refreshProfile();
+    await performMLSyncAndLoad();
+  };
+
+  const handleMLConsentDecline = () => {
+    setShowMLConsentModal(false);
+    router.back();
   };
 
   const saveSessionState = async (
@@ -543,6 +625,12 @@ export default function DiagnosticExamScreen() {
           </Pressable>
         )}
       </View>
+
+      <MLBackendConsentModal
+        visible={showMLConsentModal}
+        onAccept={handleMLConsentAccept}
+        onDecline={handleMLConsentDecline}
+      />
     </View>
   );
 }
