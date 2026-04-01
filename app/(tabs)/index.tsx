@@ -6,6 +6,7 @@ import { FileText, Clock, Plus, Trash2, TriangleAlert as AlertTriangle } from 'l
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import PageHeader from '@/components/PageHeader';
+import AIConsentModal from '@/components/AIConsentModal';
 
 interface CarePlan {
   id: string;
@@ -34,9 +35,12 @@ export default function PlanScreen() {
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [consentGiven, setConsentGiven] = useState<boolean | null>(null);
 
   useEffect(() => {
     loadRecentPlans();
+    checkConsent();
   }, []);
 
   const loadRecentPlans = async () => {
@@ -107,8 +111,51 @@ export default function PlanScreen() {
     setDeleteError(null);
   };
 
+  const checkConsent = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const { data } = await supabase
+      .from('profiles')
+      .select('ai_care_plan_consent_given')
+      .eq('id', session.user.id)
+      .maybeSingle();
+    setConsentGiven(data?.ai_care_plan_consent_given ?? false);
+  };
+
+  const recordConsent = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    await supabase
+      .from('profiles')
+      .update({
+        ai_care_plan_consent_given: true,
+        ai_care_plan_consent_at: new Date().toISOString(),
+      })
+      .eq('id', session.user.id);
+    setConsentGiven(true);
+  };
+
+  const handleCreateCarePlan = () => {
+    if (consentGiven) {
+      router.push('/anesthesia-care-plan');
+    } else {
+      setShowConsentModal(true);
+    }
+  };
+
   return (
     <View style={styles.wrapper}>
+      <AIConsentModal
+        visible={showConsentModal}
+        variant="care-plan"
+        onAccept={async () => {
+          setShowConsentModal(false);
+          await recordConsent();
+          router.push('/anesthesia-care-plan');
+        }}
+        onDecline={() => setShowConsentModal(false)}
+      />
+
       <ScrollView style={styles.container}>
         <PageHeader
           title="Anesthesia Care Plan"
@@ -118,7 +165,7 @@ export default function PlanScreen() {
         <View style={styles.content}>
           <Pressable
             style={styles.createButton}
-            onPress={() => router.push('/anesthesia-care-plan')}
+            onPress={handleCreateCarePlan}
           >
             <Plus color={Colors.text.light} size={24} />
             <Text style={styles.createButtonText}>Create New Care Plan</Text>
