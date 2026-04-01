@@ -54,9 +54,9 @@ export default function MLBackendConsentModal({ visible, onAccept, onDecline }: 
               style={styles.footerLink}
               onPress={() => Linking.openURL('https://clyvarahealth.com/privacy')}
             >
-              full data policy
+              CLyvara Analytica
             </Text>
-            {' '}for full details.
+            {' '}privacy policy for full details.
           </Text>
 
           <Pressable style={styles.acceptButton} onPress={onAccept}>
