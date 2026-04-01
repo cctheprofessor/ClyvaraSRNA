@@ -488,8 +488,7 @@ ${formData.imaging ? `Imaging: ${formData.imaging}` : ''}
         <View style={styles.infoCard}>
           <Sparkles color={Colors.warning} size={20} />
           <Text style={styles.infoText}>
-            This AI tool generates evidence-based anesthesia care plans for educational purposes.
-            Always verify with current clinical guidelines.
+            This AI tool sends your case description to OpenAI, Inc. to generate evidence-based anesthesia care plans for educational purposes. This tool is for educational purposes. Do not include real patient names or identifying information. Always verify with current clinical guidelines.
           </Text>
         </View>
 
