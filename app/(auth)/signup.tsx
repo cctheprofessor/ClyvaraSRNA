@@ -141,7 +141,7 @@ export default function SignupScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Emai *</Text>
+            <Text style={styles.label}>Email *</Text>
             <TextInput
               style={styles.inputStandalone}
               placeholder="student@university.edu"
